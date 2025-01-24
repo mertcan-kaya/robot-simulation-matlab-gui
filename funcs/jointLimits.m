@@ -33,8 +33,8 @@ function [q_posLim,q_posSafeLim,q_velLim,q_velSafeLim,q_accLim] = jointLimits(ro
         %       [-150 0 -165 -80 -85 -160] [deg]
         q_min = [-2.6180 0 -2.8798 -1.3963 -1.4835 -2.7925]'; % [rad]
         q_min_ = q_min + ones(6,1)*deg2rad(5);  % give a safety margin of 5 deg
-        %       [150 180 0 80 -5 160] [deg]
-        q_max = [2.6180 3.1416 0 1.3963 -0.0873 2.7925]'; % [rad]
+        %       [150 180 0 80 85 160] [deg]
+        q_max = [2.6180 3.1416 0 1.3963 1.4835 2.7925]'; % [rad]
         q_max_ = q_max - ones(6,1)*deg2rad(5);  % give a safety margin of 5 deg
         % joint velocity limits (rad/s): (q1..q6)
         dq_max = [pi/2 pi/2 pi/2 pi/2 pi/2 pi/2]';
