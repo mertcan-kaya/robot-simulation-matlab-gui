@@ -1,34 +1,34 @@
 function [q_posLim,q_posSafeLim,q_velLim,q_velSafeLim,q_accLim] = jointLimits(robot_model)
 
-    if robot_model == 5
+    if robot_model == 5 % Stäubli RX160L
         % joint limits (rad): (q1..q6)
         q_min = [-2.967060 -2.4 -2.62 -4.71 -1.83 -4.71]'; % [rad]
         q_min_ = q_min + ones(6,1)*deg2rad(5);  % give a safety margin of 5 deg
         q_max = [2.967060 2.4 2.62 4.71 2.09 4.71]'; % [rad]
         q_max_ = q_max - ones(6,1)*deg2rad(5);  % give a safety margin of 5 deg
         % joint velocity limits (rad/s): (q1..q6)
-        dq_max = [2.88 2.62 3.32 5.15 4.54 7.68]';
+        dq_max = deg2rad([200;200;255;315;360;870]);
         dq_max_ = dq_max - ones(6,1)*deg2rad(10);
         dq_min = -dq_max;
         dq_min_ = -dq_max_;
         % joint acceleration limits (rad/s^2): (q1..q6)
-        ddq_max = [25 25 25 25 25 25]';
+        ddq_max = [7.9;6.5;10.5;25.2;19.6;41.7];
         ddq_min = -ddq_max; 
-    elseif robot_model == 4
+    elseif robot_model == 4 % Stäubli RX160
         % joint limits (rad): (q1..q6)
         q_min = [-2.967060 -2.4 -2.62 -4.71 -1.83 -4.71]'; % [rad]
         q_min_ = q_min + ones(6,1)*deg2rad(5);  % give a safety margin of 5 deg
         q_max = [2.967060 2.4 2.62 4.71 2.09 4.71]'; % [rad]
         q_max_ = q_max - ones(6,1)*deg2rad(5);  % give a safety margin of 5 deg
         % joint velocity limits (rad/s): (q1..q6)
-        dq_max = [2.88 2.62 3.32 5.15 4.54 7.68]';
+        dq_max = deg2rad([400;400;430;540;475;760]);
         dq_max_ = dq_max - ones(6,1)*deg2rad(10);
         dq_min = -dq_max;
         dq_min_ = -dq_max_;
         % joint acceleration limits (rad/s^2): (q1..q6)
-        ddq_max = [25 25 25 25 25 25]';
+        ddq_max = [7.9;6.5;10.5;25.2;19.6;41.7];
         ddq_min = -ddq_max; 
-    elseif robot_model == 3
+    elseif robot_model == 3 % Unitree Z1
         % joint limits (deg): (q1..q6)
         %       [-150 0 -165 -80 -85 -160] [deg]
         q_min = [-2.6180 0 -2.8798 -1.3963 -1.4835 -2.7925]'; % [rad]
@@ -44,7 +44,7 @@ function [q_posLim,q_posSafeLim,q_velLim,q_velSafeLim,q_accLim] = jointLimits(ro
         % joint acceleration limits (rad/s^2): (q1..q6)
         ddq_max = [10 10 10 10 10 10]';
         ddq_min = -ddq_max; 
-    elseif robot_model == 2
+    elseif robot_model == 2 % Universal Robots U3
         % joint limits (deg): (q1..q6)
         q_min = [-pi   -pi   -pi   -pi   -pi   -pi]'; % [rad]
         q_min_ = q_min + ones(6,1)*deg2rad(5);  % give a safety margin of 5 deg
@@ -58,7 +58,7 @@ function [q_posLim,q_posSafeLim,q_velLim,q_velSafeLim,q_accLim] = jointLimits(ro
         % joint acceleration limits (rad/s^2): (q1..q6)
         ddq_max = [10 10 10 20 20 20]';
         ddq_min = -ddq_max; 
-    else
+    else % Franka Emika Robot
         % joint limits (deg): (q1..q7)
         %       [-166.0031 -101.0010 -166.0031 -176.0012 -166.0031  -1.0027 -166.0031] [deg]
         q_min = [-2.8973   -1.7628   -2.8973   -3.0718   -2.8973   -0.0175  -2.8973]'; % [rad]

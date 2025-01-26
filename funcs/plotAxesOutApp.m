@@ -2,34 +2,59 @@ function plotAxesOutApp(app)
 
     hold(app.UIAxes,'on')
 
-    TI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.q_pos);
+    TactI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.q_posAct);
+    TdesI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.q_posDes);
 
-    nv0 = [app.ms.s0.V,ones(size(app.ms.s0.V(:,1)))]*TI_h(:,:,1)';
-    nv1 = [app.ms.s1.V,ones(size(app.ms.s1.V(:,1)))]*TI_h(:,:,2)';
-    nv2 = [app.ms.s2.V,ones(size(app.ms.s2.V(:,1)))]*TI_h(:,:,3)';
-    nv3 = [app.ms.s3.V,ones(size(app.ms.s3.V(:,1)))]*TI_h(:,:,4)';
-    nv4 = [app.ms.s4.V,ones(size(app.ms.s4.V(:,1)))]*TI_h(:,:,5)';
-    nv5 = [app.ms.s5.V,ones(size(app.ms.s5.V(:,1)))]*TI_h(:,:,6)';
-    nv6 = [app.ms.s6.V,ones(size(app.ms.s6.V(:,1)))]*TI_h(:,:,7)';
+    if app.ghost_on == 1
+        nvf1 = [app.ms.s1.V,ones(size(app.ms.s1.V(:,1)))]*TdesI_h(:,:,2)';
+        nvf2 = [app.ms.s2.V,ones(size(app.ms.s2.V(:,1)))]*TdesI_h(:,:,3)';
+        nvf3 = [app.ms.s3.V,ones(size(app.ms.s3.V(:,1)))]*TdesI_h(:,:,4)';
+        nvf4 = [app.ms.s4.V,ones(size(app.ms.s4.V(:,1)))]*TdesI_h(:,:,5)';
+        nvf5 = [app.ms.s5.V,ones(size(app.ms.s5.V(:,1)))]*TdesI_h(:,:,6)';
+        nvf6 = [app.ms.s6.V,ones(size(app.ms.s6.V(:,1)))]*TdesI_h(:,:,7)';
+        if app.kin.n == 7
+            nvf7 = [app.ms.s7.V,ones(size(app.ms.s7.V(:,1)))]*TdesI_h(:,:,8)';
+        end
+    end
+    nvi0 = [app.ms.s0.V,ones(size(app.ms.s0.V(:,1)))]*TactI_h(:,:,1)';
+    nvi1 = [app.ms.s1.V,ones(size(app.ms.s1.V(:,1)))]*TactI_h(:,:,2)';
+    nvi2 = [app.ms.s2.V,ones(size(app.ms.s2.V(:,1)))]*TactI_h(:,:,3)';
+    nvi3 = [app.ms.s3.V,ones(size(app.ms.s3.V(:,1)))]*TactI_h(:,:,4)';
+    nvi4 = [app.ms.s4.V,ones(size(app.ms.s4.V(:,1)))]*TactI_h(:,:,5)';
+    nvi5 = [app.ms.s5.V,ones(size(app.ms.s5.V(:,1)))]*TactI_h(:,:,6)';
+    nvi6 = [app.ms.s6.V,ones(size(app.ms.s6.V(:,1)))]*TactI_h(:,:,7)';
     if app.kin.n == 7
-        nv7 = [app.ms.s7.V,ones(size(app.ms.s7.V(:,1)))]*TI_h(:,:,8)';
+        nvi7 = [app.ms.s7.V,ones(size(app.ms.s7.V(:,1)))]*TactI_h(:,:,8)';
     end
     if app.coord_frame_on == 1
-        nvF = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*TI_h(:,:,end)';
+        nvfF = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*TdesI_h(:,:,end)';
+        nviF = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*TactI_h(:,:,end)';
     end
 
-    set(app.Pobj.p0,'Vertices',nv0(:,1:3))
-    set(app.Pobj.p1,'Vertices',nv1(:,1:3))
-    set(app.Pobj.p2,'Vertices',nv2(:,1:3))
-    set(app.Pobj.p3,'Vertices',nv3(:,1:3))
-    set(app.Pobj.p4,'Vertices',nv4(:,1:3))
-    set(app.Pobj.p5,'Vertices',nv5(:,1:3))
-    set(app.Pobj.p6,'Vertices',nv6(:,1:3))
+    if app.ghost_on == 1
+        set(app.Pobj_d.p1,'Vertices',nvf1(:,1:3),'FaceAlpha',0.25)
+        set(app.Pobj_d.p2,'Vertices',nvf2(:,1:3),'FaceAlpha',0.25)
+        set(app.Pobj_d.p3,'Vertices',nvf3(:,1:3),'FaceAlpha',0.25)
+        set(app.Pobj_d.p4,'Vertices',nvf4(:,1:3),'FaceAlpha',0.25)
+        set(app.Pobj_d.p5,'Vertices',nvf5(:,1:3),'FaceAlpha',0.25)
+        set(app.Pobj_d.p6,'Vertices',nvf6(:,1:3),'FaceAlpha',0.25)
+        if app.kin.n == 7
+            set(app.Pobj_d.p7,'Vertices',nvf7(:,1:3),'FaceAlpha',0.25)
+        end
+    end
+    set(app.Pobj_f.p0,'Vertices',nvi0(:,1:3))
+    set(app.Pobj_f.p1,'Vertices',nvi1(:,1:3))
+    set(app.Pobj_f.p2,'Vertices',nvi2(:,1:3))
+    set(app.Pobj_f.p3,'Vertices',nvi3(:,1:3))
+    set(app.Pobj_f.p4,'Vertices',nvi4(:,1:3))
+    set(app.Pobj_f.p5,'Vertices',nvi5(:,1:3))
+    set(app.Pobj_f.p6,'Vertices',nvi6(:,1:3))
     if app.kin.n == 7
-        set(app.Pobj.p7,'Vertices',nv7(:,1:3))
+        set(app.Pobj_f.p7,'Vertices',nvi7(:,1:3))
     end
     if app.coord_frame_on == 1
-        set(app.Pobj.pF,'Vertices',nvF(:,1:3))
+        set(app.Pobj_d.pF,'Vertices',nvfF(:,1:3),'FaceAlpha',0.25)
+        set(app.Pobj_f.pF,'Vertices',nviF(:,1:3))
     end
 
     hold(app.UIAxes,'off')
