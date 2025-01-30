@@ -1,4 +1,4 @@
-function kin = kinematicParameters(robot_model)
+function kin = kinematicParameters(robot_model,ee_att)
 
     switch robot_model
         case 5
@@ -10,6 +10,15 @@ function kin = kinematicParameters(robot_model)
                    0     pi/2  0     0
                    0     0     0.110 0    ];
 
+            if ee_att == 1
+                DH(end,:) = DH(end,:) + [0,0,0.0333,pi/4];
+            elseif ee_att == 2
+                DH(end,:) = DH(end,:) + [0,0,0.0333+0.150,pi/4];
+            elseif ee_att == 3
+                DH(end,:) = DH(end,:) + [0,0,0.0333+0.181,pi/4];
+            end
+
+            kin.qELim = zeros(1,2);
             kin.j_type = [1;1;1;1;1;1];
         case 4
             DH = [ 0     0     0.550 0
@@ -20,8 +29,17 @@ function kin = kinematicParameters(robot_model)
                    0     pi/2  0     0
                    0     0     0.110 0    ];
 
+            if ee_att == 1
+                DH(end,:) = DH(end,:) + [0,0,0.0333,0];
+            elseif ee_att == 2
+                DH(end,:) = DH(end,:) + [0,0,0.0333+0.150,0];
+            elseif ee_att == 3
+                DH(end,:) = DH(end,:) + [0,0,0.0333+0.181,0];
+            end
+
+            kin.qELim = zeros(1,2);
             kin.j_type = [1;1;1;1;1;1];
-        case 3
+        case 3 % Unitree Z1
             DH = [ 0        0       0.1035      0
                    0        -pi/2   0           pi
                    0.350    0       0           pi-0.2563
@@ -30,8 +48,14 @@ function kin = kinematicParameters(robot_model)
                    0        pi/2    0           0
                    0        0       0.0982      0];
     
+            kin.qELim = zeros(1,2);
+            if ee_att == 1
+                DH(end,:) = DH(end,:) + [0,0,0.149,0];
+                kin.qELim = [0,pi/2];
+            end
+
             kin.j_type = [1;1;1;1;1;1];
-        case 2
+        case 2 % Universal Robots UR3
             DH = [ 0       0        0.1519      0
                    0       -pi/2    0           0
                    0.24365 0        0           0
@@ -40,8 +64,14 @@ function kin = kinematicParameters(robot_model)
                    0       -pi/2    0           0
                    0       0        0.0819      0];
     
+            kin.qELim = zeros(1,2);
+            if ee_att == 1
+                DH(end,:) = DH(end,:) + [0,0,0.1874,0];
+                kin.qELim = [0,pi/2];
+            end
+
             kin.j_type = [1;1;1;1;1;1];
-        otherwise
+        otherwise % Franka Emika Robot
             DH = [ 0       0     0.333 0
                    0       -pi/2 0     0
                    0       pi/2  0.316 0
@@ -50,7 +80,13 @@ function kin = kinematicParameters(robot_model)
                    0       pi/2  0     0
                    0.088   pi/2  0     0
                    0       0     0.107 0    ];
-    
+            
+            kin.qELim = zeros(1,2);
+            if ee_att == 1
+                DH(end,:) = DH(end,:) + [0,0,0.115,-pi/4];
+                kin.qELim = [0,0.040];
+            end
+
             kin.j_type = [1;1;1;1;1;1;1];
     end
 
