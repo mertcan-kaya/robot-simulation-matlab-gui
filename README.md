@@ -1,10 +1,10 @@
 # robot-simulation-matlab-gui
 Robot Simulation MATLAB GUI
 
-![image](https://github.com/user-attachments/assets/55442cfd-9f86-46ef-8581-5a5dfca623cf)
+![image](https://github.com/user-attachments/assets/bab5053f-2b8e-463c-bdd6-c20759affca9)
 
-![image](https://github.com/user-attachments/assets/60fe0a2a-a5cb-4437-9132-e3d6d7c107ae)
+![image](https://github.com/user-attachments/assets/82a19678-384d-4744-aeb8-ec8e2c3f7899)
 
-![image](https://github.com/user-attachments/assets/2c06b97e-a45c-4898-ade7-d84cadec52d5)
+![image](https://github.com/user-attachments/assets/b30defce-6846-4943-a9c9-ec1dfcff4753)
 
-![image](https://github.com/user-attachments/assets/5bddf11d-18c7-4d73-b3b3-aa06c11cda59)
+![image](https://github.com/user-attachments/assets/826f94be-f02a-4857-8d8d-60f1e426874c)
