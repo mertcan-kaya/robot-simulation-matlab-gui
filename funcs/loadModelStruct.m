@@ -169,7 +169,6 @@ function loadModelStruct(app)
             set(app.Pobj_d.p7, 'EdgeColor', 'none');            % Set the edge color
         end
         if app.ee_att > 0
-            disp("app.ee_att > 0")
             if app.robot_model == 1 || app.robot_model == 3
                 app.Pobj_d.pE = patch(app.UIAxes,'Faces', app.ms.sE.F, 'Vertices', app.ms.sE.V);
                 set(app.Pobj_d.pE, 'facec', 'flat');                % Set the face color flat
@@ -241,14 +240,12 @@ function loadModelStruct(app)
                 set(app.Pobj_d.pIFb, 'FaceVertexCData', app.ms.sIF.C);	% Set the face color
                 set(app.Pobj_d.pIFb, 'EdgeColor', 'none');        	% Set the edge color
             else
-                disp("pS loaded")
                 app.Pobj_d.pS = patch(app.UIAxes,'Faces', app.ms.sS.F, 'Vertices', app.ms.sS.V);
                 set(app.Pobj_d.pS, 'facec', 'flat');                % Set the face color flat
                 set(app.Pobj_d.pS, 'FaceColor', app.ms.sS.C);       % Set the color (from file)
                 set(app.Pobj_d.pS, 'EdgeColor', 'none');            % Set the edge color
             end
             if app.ee_att == 2
-                disp("pG loaded")
                 app.Pobj_d.pG = patch(app.UIAxes,'Faces', app.ms.sG.F, 'Vertices', app.ms.sG.V);
                 set(app.Pobj_d.pG, 'facec', 'flat');                % Set the face color flat
                 set(app.Pobj_d.pG, 'FaceColor', app.ms.sG.C);       % Set the color (from file)

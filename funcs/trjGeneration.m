@@ -1,14 +1,14 @@
 function [q_pos,q_vel,q_acc] = trjGeneration(app,k)
 
     t = k*app.tstp;
-    tf = app.tfin;
+    tf = app.tfin_trj;
     
     if t > tf
         t = tf;
     end
 
-    qi = app.q_posIni;
-    qf = app.q_posDes;
+    qi = app.ini.q_pos;
+    qf = app.fin.q_pos;
     
     if app.trj_profile ~= 0
         % With interpolation

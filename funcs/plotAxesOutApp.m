@@ -1,9 +1,17 @@
 function plotAxesOutApp(app)
-
+    
     hold(app.UIAxes,'on')
 
-    TactI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.q_posAct);
-    TdesI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.q_posDes);
+    if app.running_flag == 1
+        q_posAct = app.act.q_pos;
+        q_posDes = app.des.q_pos;
+    else
+        q_posAct = app.ini.q_pos;
+        q_posDes = app.fin.q_pos;
+    end
+
+    TactI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,q_posAct);
+    TdesI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,q_posDes);
 
     if app.ee_att == 1 && app.robot_model == 2
         Tn_sC   = [eye(3),[0;0;0.0085];zeros(1,3),1];
