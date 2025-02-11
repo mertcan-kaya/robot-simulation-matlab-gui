@@ -110,7 +110,7 @@ function dyn = stdInertialParameters(robot_model)
                                   ,0.00013626661215999998,0.0 ...
                                    ,0.0001792);
         
-    else % FER
+    elseif robot_model == 1 % FER
         % Not from here: https://github.com/frankaemika/franka_description/blob/main/robots/fer/inertials.yaml
         % From here: https://github.com/marcocognetti/FrankaEmikaPandaDynModel/tree/master/pdf
         m_j = [4.970684;0.646926;3.228604;3.587895;1.225946;1.666555;7.35522e-01];
@@ -144,7 +144,12 @@ function dyn = stdInertialParameters(robot_model)
         Ij_cj(:,:,7) = symmetrize(1.2516e-02 ,-4.2800e-04 ,-1.1960e-03 ...
                                              ,1.0027e-02  ,-7.4100e-04 ...
                                                           ,4.8150e-03);
-        
+    else
+        m_j = 0;
+    
+        rj_jcj = zeros(3,1);
+
+        Ij_cj = zeros(3,3);
     end
 
     n = length(m_j);

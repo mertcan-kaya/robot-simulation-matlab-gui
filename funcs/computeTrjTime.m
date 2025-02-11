@@ -1,4 +1,4 @@
-function tf = computeTrjTime(ip,fp,prcnt,trj_profile,velLim,accLim)
+function tf = computeTrjTime(qi,qf,prcnt,trj_profile,velLim,accLim)
     
     v_prcnt = prcnt(1);
     a_prcnt = prcnt(2);
@@ -6,8 +6,8 @@ function tf = computeTrjTime(ip,fp,prcnt,trj_profile,velLim,accLim)
     kv = v_prcnt*velLim(:,2);
     ka = a_prcnt*accLim(:,2);
 
-    qi = ip
-    qf = fp
+    % qi = ip;
+    % qf = fp;
 
     D = qf-qi;
 

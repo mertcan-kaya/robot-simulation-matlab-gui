@@ -71,7 +71,7 @@ function kin = kinematicParameters(robot_model,ee_att)
             end
 
             kin.j_type = [1;1;1;1;1;1];
-        otherwise % Franka Emika Robot
+        case 1 % Franka Emika Robot
             DH = [ 0       0     0.333 0
                    0       -pi/2 0     0
                    0       pi/2  0.316 0
@@ -88,6 +88,11 @@ function kin = kinematicParameters(robot_model,ee_att)
             end
 
             kin.j_type = [1;1;1;1;1;1;1];
+        otherwise % Custom Robot
+            DH = zeros(2,4);
+
+            kin.qELim = zeros(1,2);
+            kin.j_type = [1;1;1;1;1;1];
     end
 
     kin.a_j = DH(:,1);
