@@ -10,8 +10,8 @@ function plotAxesOutApp(app)
         q_posDes = app.fin.q_pos;
     end
 
-    TactI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,q_posAct);
-    TdesI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,q_posDes);
+    TactI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.kin.j_type,q_posAct);
+    TdesI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.kin.j_type,q_posDes);
 
     if app.ee_att == 1 && app.robot_model == 2
         Tn_sC   = [eye(3),[0;0;0.0085];zeros(1,3),1];
@@ -284,30 +284,41 @@ function plotAxesOutApp(app)
         else
             link_color = [204 204 204]./255;
         end
-        DH_vec_act = zeros(3,app.kin.n+1);
-        DH_vec_des = zeros(3,app.kin.n+1);
+        DH_vec_act = zeros(3,app.kin.n+2);
+        DH_vec_des = zeros(3,app.kin.n+2);
         for i = 1:app.kin.n+2
             DH_vec_act(:,i) = TactI_h(1:3,4,i);
             DH_vec_des(:,i) = TdesI_h(1:3,4,i);
         end
 
-        six_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,1,end)];
-        siy_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,2,end)];
-        siz_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,3,end)];
-        six_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,1,end)];
-        siy_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,2,end)];
-        siz_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,3,end)];
+        if app.coord_frame_on == 1
+            six_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,1,end)];
+            siy_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,2,end)];
+            siz_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,3,end)];
+            six_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,1,end)];
+            siy_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,2,end)];
+            siz_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,3,end)];
+        end
 
         cla(app.UIAxes)
-        plot3(app.UIAxes,DH_vec_act(1,:),DH_vec_act(2,:),DH_vec_act(3,:),'LineWidth',10,'Marker','.','MarkerSize',50,'Color',[link_color 1])
-        plot3(app.UIAxes,DH_vec_des(1,:),DH_vec_des(2,:),DH_vec_des(3,:),'LineWidth',10,'Color',[link_color 0.5])
-        scatter3(app.UIAxes,DH_vec_des(1,:),DH_vec_des(2,:),DH_vec_des(3,:),'LineWidth',10,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5)
-        quiver3(app.UIAxes,six_act(1,1),six_act(2,1),six_act(3,1),six_act(1,2),six_act(2,2),six_act(3,2),'-r','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-        quiver3(app.UIAxes,siy_act(1,1),siy_act(2,1),siy_act(3,1),siy_act(1,2),siy_act(2,2),siy_act(3,2),'-g','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-        quiver3(app.UIAxes,siz_act(1,1),siz_act(2,1),siz_act(3,1),siz_act(1,2),siz_act(2,2),siz_act(3,2),'-b','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-        quiver3(app.UIAxes,six_des(1,1),six_des(2,1),six_des(3,1),six_des(1,2),six_des(2,2),six_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[red 0.5]);
-        quiver3(app.UIAxes,siy_des(1,1),siy_des(2,1),siy_des(3,1),siy_des(1,2),siy_des(2,2),siy_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[green 0.5]);
-        quiver3(app.UIAxes,siz_des(1,1),siz_des(2,1),siz_des(3,1),siz_des(1,2),siz_des(2,2),siz_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[blue 0.5]);
+        plot3(app.UIAxes,DH_vec_act(1,1:app.kin.n+1),DH_vec_act(2,1:app.kin.n+1),DH_vec_act(3,1:app.kin.n+1),'LineWidth',10,'Color',[link_color 1])
+        plot3(app.UIAxes,DH_vec_act(1,app.kin.n+1:app.kin.n+2),DH_vec_act(2,app.kin.n+1:app.kin.n+2),DH_vec_act(3,app.kin.n+1:app.kin.n+2),'LineWidth',5,'Color',[link_color 1])
+        scatter3(app.UIAxes,DH_vec_act(1,2:app.kin.n+1),DH_vec_act(2,2:app.kin.n+1),DH_vec_act(3,2:app.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color)
+        scatter3(app.UIAxes,DH_vec_act(1,app.kin.n+2),DH_vec_act(2,app.kin.n+2),DH_vec_act(3,app.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color)
+        if app.ghost_on == 1
+            plot3(app.UIAxes,DH_vec_des(1,1:app.kin.n+1),DH_vec_des(2,1:app.kin.n+1),DH_vec_des(3,1:app.kin.n+1),'LineWidth',10,'Color',[link_color 0.5])
+            plot3(app.UIAxes,DH_vec_des(1,app.kin.n+1:app.kin.n+2),DH_vec_des(2,app.kin.n+1:app.kin.n+2),DH_vec_des(3,app.kin.n+1:app.kin.n+2),'LineWidth',5,'Color',[link_color 0.5])
+            scatter3(app.UIAxes,DH_vec_des(1,2:app.kin.n+1),DH_vec_des(2,2:app.kin.n+1),DH_vec_des(3,2:app.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5)
+            scatter3(app.UIAxes,DH_vec_des(1,app.kin.n+2),DH_vec_des(2,app.kin.n+2),DH_vec_des(3,app.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5)
+        end
+        if app.coord_frame_on == 1
+            quiver3(app.UIAxes,six_act(1,1),six_act(2,1),six_act(3,1),six_act(1,2),six_act(2,2),six_act(3,2),'-r','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
+            quiver3(app.UIAxes,siy_act(1,1),siy_act(2,1),siy_act(3,1),siy_act(1,2),siy_act(2,2),siy_act(3,2),'-g','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
+            quiver3(app.UIAxes,siz_act(1,1),siz_act(2,1),siz_act(3,1),siz_act(1,2),siz_act(2,2),siz_act(3,2),'-b','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
+            quiver3(app.UIAxes,six_des(1,1),six_des(2,1),six_des(3,1),six_des(1,2),six_des(2,2),six_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[red 0.5]);
+            quiver3(app.UIAxes,siy_des(1,1),siy_des(2,1),siy_des(3,1),siy_des(1,2),siy_des(2,2),siy_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[green 0.5]);
+            quiver3(app.UIAxes,siz_des(1,1),siz_des(2,1),siz_des(3,1),siz_des(1,2),siz_des(2,2),siz_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[blue 0.5]);
+        end
     end
 
     hold(app.UIAxes,'off')
@@ -362,7 +373,7 @@ function plotAxesOutApp(app)
                     0            0          0	1 ];
     end
     
-    function TI_i = getTransMatrix(TI_0,a_j,alpha_j,d_j,theta_j,q_j)
+    function TI_i = getTransMatrix(TI_0,a_j,alpha_j,d_j,theta_j,j_type,q_j)
         
         k = length(q_j);
     
@@ -373,8 +384,8 @@ function plotAxesOutApp(app)
         for j = 1:k
             Rot_x_i = Rot_x(alpha_j(j));
             Trn_x_i	= Trn_x(a_j(j));
-            Rot_z_j = Rot_z(theta_j(j)+q_j(j));
-            Trn_z_j = Trn_z(d_j(j));
+            Rot_z_j = Rot_z(theta_j(j)+j_type(j)*q_j(j));
+            Trn_z_j = Trn_z(d_j(j)+(1-j_type(j))*q_j(j));
     
             TI_i(:,:,j+1) = TI_i(:,:,j) * Rot_x_i * Trn_x_i * Rot_z_j * Trn_z_j;
         end

@@ -14,7 +14,7 @@ function q_acc = robotAlgo(robot_model,kin,dyn,tau,q_pos,q_vel)
         if robot_model == 1
             tau_frc = frictionFERModel(q_vel);
         else
-            tau_frc = frictionPWModel(q_vel);
+            tau_frc = frictionFERModelUni(q_vel);
         end
     else
         tau_frc = zeros(n,1);

@@ -89,10 +89,10 @@ function kin = kinematicParameters(robot_model,ee_att)
 
             kin.j_type = [1;1;1;1;1;1;1];
         otherwise % Custom Robot
-            DH = zeros(2,4);
+            DH = zeros(8,4);
 
             kin.qELim = zeros(1,2);
-            kin.j_type = [1;1;1;1;1;1];
+            kin.j_type = [1;1;1;1;1;1;1];
     end
 
     kin.a_j = DH(:,1);
@@ -100,6 +100,7 @@ function kin = kinematicParameters(robot_model,ee_att)
     kin.d_j = DH(:,3);
     kin.theta_O_j = DH(:,4);
     kin.n = size(DH,1)-1;
+    kin.np = 10;
 
     kin.r1 = 1; % first revolute joint
     kin.r2 = 2; % subsequent revolute joint whose axis is not parallel to the axis of joint r1

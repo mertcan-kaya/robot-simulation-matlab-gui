@@ -145,17 +145,19 @@ function dyn = stdInertialParameters(robot_model)
                                              ,1.0027e-02  ,-7.4100e-04 ...
                                                           ,4.8150e-03);
     else
-        m_j = 0;
+        m_j = zeros(7,1);
     
-        rj_jcj = zeros(3,1);
+        rj_jcj = zeros(3,1,7);
 
-        Ij_cj = zeros(3,3);
+        Ij_cj = zeros(3,3,7);
     end
 
     n = length(m_j);
     np = 10;
 
     dyn.m_j = m_j;
+    dyn.rj_jcj = rj_jcj;
+    dyn.Ij_cj = Ij_cj;
     dyn.Ij_j = zeros(3,3,n);
     dyn.dj_j = zeros(3,1,n);
     dyn.pj_j = zeros(np,1,n);

@@ -19,14 +19,15 @@ function tau = controlAlgo(ctr,kin,dyn,des,fbk)
     %     [tau_pass,pj_bar] = ANEA(ctr,kin,fbk.q_pos,fbk.q_vel,ref.q_vel,ref.q_acc,kin.g0,ctr.pj_bar,ctr.Pdiag);
     %     tau_ctrl = tau_pass + tau_pd;
     % elseif ctr.algo == 1
-    %     % CTM
-    %     a_ctrl = ctr.Kp_jnt_idc.*err_m + ctr.Ki_jnt_idc.*ctr.errsum + ctr.Kd_jnt_idc.*errdot_m;
-    %     qdd_ctrl = a_ctrl + des.q_acc;
-    %     tau_ctrl = ANEA(ctr,kin,fbk.q_pos,fbk.q_vel,fbk.q_vel,qdd_ctrl,kin.g0,ctr.pj_bar,zeros(kin.n*10,1));
-    % else
+    if ctr.algo == 1
+        % CTM
+        a_ctrl = ctr.Kp_jnt_idc.*err_m + ctr.Ki_jnt_idc.*ctr.errsum + ctr.Kd_jnt_idc.*errdot_m;
+        qdd_ctrl = a_ctrl + des.q_acc;
+        tau_ctrl = MNEA(kin,fbk.q_pos,fbk.q_vel,fbk.q_vel,qdd_ctrl,kin.g0,dyn.pj_j);
+    else
         % PID
         tau_ctrl = ctr.Kp_jnt_pid.*err_m + ctr.Ki_jnt_pid.*ctr.errsum + ctr.Kd_jnt_pid.*errdot_m;
-    % end
+    end
     
     % Compensation Torque
     tau_comp = zeros(kin.n,1);
