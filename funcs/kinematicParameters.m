@@ -106,6 +106,7 @@ function kin = kinematicParameters(robot_model,ee_att)
     kin.r2 = 2; % subsequent revolute joint whose axis is not parallel to the axis of joint r1
 
     [kin.q_posLim,kin.q_posSafeLim,kin.q_velLim,kin.q_velSafeLim,kin.q_accLim] = jointLimits(robot_model);
+    [kin.t_posLim,kin.t_posSafeLim,kin.t_velLim,kin.t_velSafeLim,kin.t_accLim] = taskLimits(robot_model,DH);
     kin.zj_j = [0;0;1];
 
 end

@@ -3,15 +3,17 @@ function plotAxesOutApp(app)
     hold(app.UIAxes,'on')
 
     if app.running_flag == 1
-        q_posAct = app.act.q_pos;
-        q_posDes = app.des.q_pos;
+        TactI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.kin.j_type,app.act.q_pos);
+        TdesI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.kin.j_type,app.des.q_pos);
     else
-        q_posAct = app.ini.q_pos;
-        q_posDes = app.fin.q_pos;
+        TactI_h = app.ini.Ti;
+        TdesI_h = app.fin.Ti;
     end
 
-    TactI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.kin.j_type,q_posAct);
-    TdesI_h = getTransMatrix(app.TI_0,app.kin.a_j,app.kin.alpha_j,app.kin.d_j,app.kin.theta_O_j,app.kin.j_type,q_posDes);
+    if app.task_mode > 0
+        Tref_ini = [app.ini.Re,app.ini.t_pos;zeros(1,3),1];
+        Tref_fin = [app.fin.Re,app.fin.t_pos;zeros(1,3),1];
+    end
 
     if app.ee_att == 1 && app.robot_model == 2
         Tn_sC   = [eye(3),[0;0;0.0085];zeros(1,3),1];
@@ -159,6 +161,11 @@ function plotAxesOutApp(app)
         if app.coord_frame_on == 1
             nvdF = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*TdesI_h(:,:,end)';
             nvaF = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*TactI_h(:,:,end)';
+            if app.task_mode == 1
+                nvaR = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*Tref_ini';
+            elseif app.task_mode == 2
+                nvdR = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*Tref_fin';
+            end
         end
     
         if app.ghost_on == 1
@@ -256,6 +263,11 @@ function plotAxesOutApp(app)
         if app.coord_frame_on == 1
             set(app.Pobj_d.pF,'Vertices',nvdF(:,1:3),'FaceAlpha',0.25)
             set(app.Pobj_f.pF,'Vertices',nvaF(:,1:3))
+            if app.task_mode == 1
+                set(app.Pobj_r.pF,'Vertices',nvaR(:,1:3))
+            elseif app.task_mode == 2
+                set(app.Pobj_r.pF,'Vertices',nvdR(:,1:3),'FaceAlpha',0.25)
+            end
         end
     else
         ee_axes_length = 0.1;

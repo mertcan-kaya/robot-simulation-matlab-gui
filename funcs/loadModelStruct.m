@@ -429,6 +429,12 @@ function loadModelStruct(app)
             set(app.Pobj_f.pF, 'FaceVertexCData', app.ms.sF.C); % Set the color (from file)
             set(app.Pobj_f.pF, 'EdgeColor', 'none');            % Set the edge color
         end
+        if app.coord_frame_on == 1 && app.task_mode > 0
+            app.Pobj_r.pF = patch(app.UIAxes,'Faces', app.ms.sF.F, 'Vertices', app.ms.sF.V);
+            set(app.Pobj_r.pF, 'facec', 'none');                % Set the face color flat
+            set(app.Pobj_r.pF, 'FaceVertexCData', app.ms.sF.C); % Set the color (from file)
+            set(app.Pobj_r.pF, 'EdgeColor', 'flat');            % Set the edge color
+        end
     end
     
 end
