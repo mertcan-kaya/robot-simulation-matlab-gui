@@ -11,8 +11,10 @@ function plotAxesOutApp(app)
     end
 
     if app.task_mode > 0
-        Tref_ini = [app.ini.Re,app.ini.t_pos;zeros(1,3),1];
-        Tref_fin = [app.fin.Re,app.fin.t_pos;zeros(1,3),1];
+        if app.running_flag == 0
+            Tref_ini = [app.ini.Re_ref,app.ini.t_pos_ref;zeros(1,3),1];
+        end
+        Tref_fin = [app.fin.Re_ref,app.fin.t_pos_ref;zeros(1,3),1];
     end
 
     if app.ee_att == 1 && app.robot_model == 2
@@ -161,9 +163,9 @@ function plotAxesOutApp(app)
         if app.coord_frame_on == 1
             nvdF = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*TdesI_h(:,:,end)';
             nvaF = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*TactI_h(:,:,end)';
-            if app.task_mode == 1
+            if app.task_mode == 1 && app.running_flag == 0
                 nvaR = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*Tref_ini';
-            elseif app.task_mode == 2
+            elseif app.task_mode == 2 && (app.running_flag == 0 || app.trj_profile == 0)
                 nvdR = [app.ms.sF.V,ones(size(app.ms.sF.V(:,1)))]*Tref_fin';
             end
         end
@@ -263,9 +265,9 @@ function plotAxesOutApp(app)
         if app.coord_frame_on == 1
             set(app.Pobj_d.pF,'Vertices',nvdF(:,1:3),'FaceAlpha',0.25)
             set(app.Pobj_f.pF,'Vertices',nvaF(:,1:3))
-            if app.task_mode == 1
+            if app.task_mode == 1 && app.running_flag == 0
                 set(app.Pobj_r.pF,'Vertices',nvaR(:,1:3))
-            elseif app.task_mode == 2
+            elseif app.task_mode == 2 && (app.running_flag == 0 || app.trj_profile == 0)
                 set(app.Pobj_r.pF,'Vertices',nvdR(:,1:3),'FaceAlpha',0.25)
             end
         end
@@ -350,13 +352,6 @@ function plotAxesOutApp(app)
                     -sin(input)	0	cos(input)];
     end
 
-    function output = Trn_x(input)
-        output = [  1 0 0 input
-                    0 1 0 0
-                    0 0 1 0
-                    0 0 0 1     ];
-    end
-    
     function output = Trn_y(input)
         output = [  1 0 0 0
                     0 1 0 input
@@ -385,82 +380,57 @@ function plotAxesOutApp(app)
                     0            0          0	1 ];
     end
     
-    function TI_i = getTransMatrix(TI_0,a_j,alpha_j,d_j,theta_j,j_type,q_j)
-        
-        k = length(q_j);
-    
-        TI_i = zeros(4,4,k+1);
-    
-        TI_i(:,:,1) = TI_0;
-    
-        for j = 1:k
-            Rot_x_i = Rot_x(alpha_j(j));
-            Trn_x_i	= Trn_x(a_j(j));
-            Rot_z_j = Rot_z(theta_j(j)+j_type(j)*q_j(j));
-            Trn_z_j = Trn_z(d_j(j)+(1-j_type(j))*q_j(j));
-    
-            TI_i(:,:,j+1) = TI_i(:,:,j) * Rot_x_i * Trn_x_i * Rot_z_j * Trn_z_j;
-        end
-        Rot_x_i = Rot_x(alpha_j(k+1));
-        Trn_x_i	= Trn_x(a_j(k+1));
-        Rot_z_j = Rot_z(theta_j(k+1));
-        Trn_z_j = Trn_z(d_j(k+1));
-
-        TI_i(:,:,k+2) = TI_i(:,:,k+1) * Rot_x_i * Trn_x_i * Rot_z_j * Trn_z_j;
-        
-    end
-
-    function [d,d_plus,theta,theta_plus,a,alpha] = robotLinks(v,q)
-
-        switch (v)
-            case 0
-                % Stäubli RX90
-                theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
-                a           = zeros(8,1);
-                d           = zeros(8,1);
-                alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
-                d_plus    	= [0.478;0.05;0.196;0.425;-0.146;0.425;0;0.100];
-                theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
-            case 1
-                % Stäubli RX160
-                theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
-                a           = zeros(8,1);
-                d           = zeros(8,1);
-                alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
-                d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.625;0;0.110];
-                theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
-            case 2
-                % Stäubli RX160L
-                theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
-                a           = zeros(8,1);
-                d           = zeros(8,1);
-                alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
-                d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.925;0;0.110];
-                theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
-            case 3
-                % Stäubli RX160+sl
-                theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
-                a           = zeros(8,1);
-                d           = zeros(8,1);
-                alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
-                d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.625;0;0.110+0.033];
-                theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
-            case 4
-                % Stäubli RX160+sl+gl
-                theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
-                a           = zeros(8,1);
-                d           = zeros(8,1);
-                alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
-                d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.625;0;0.110+0.033+0.144];
-                theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
-            otherwise
-                theta       = zeros(6,1);
-                a           = zeros(6,1);
-                d           = zeros(6,1);
-                alpha       = zeros(6,1);
-                d_plus    	= zeros(6,1);
-                theta_plus  = zeros(6,1);
-        end
-    end
+    % function [d,d_plus,theta,theta_plus,a,alpha] = robotLinks(v,q)
+    % 
+    %     switch (v)
+    %         case 0
+    %             % Stäubli RX90
+    %             theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
+    %             a           = zeros(8,1);
+    %             d           = zeros(8,1);
+    %             alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
+    %             d_plus    	= [0.478;0.05;0.196;0.425;-0.146;0.425;0;0.100];
+    %             theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
+    %         case 1
+    %             % Stäubli RX160
+    %             theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
+    %             a           = zeros(8,1);
+    %             d           = zeros(8,1);
+    %             alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
+    %             d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.625;0;0.110];
+    %             theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
+    %         case 2
+    %             % Stäubli RX160L
+    %             theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
+    %             a           = zeros(8,1);
+    %             d           = zeros(8,1);
+    %             alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
+    %             d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.925;0;0.110];
+    %             theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
+    %         case 3
+    %             % Stäubli RX160+sl
+    %             theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
+    %             a           = zeros(8,1);
+    %             d           = zeros(8,1);
+    %             alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
+    %             d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.625;0;0.110+0.033];
+    %             theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
+    %         case 4
+    %             % Stäubli RX160+sl+gl
+    %             theta       = [q(1);0;q(2);0;q(3);q(4);q(5);q(6)];
+    %             a           = zeros(8,1);
+    %             d           = zeros(8,1);
+    %             alpha       = [pi/2;pi/2;pi/2;pi/2;-pi/2;pi/2;pi/2;0];
+    %             d_plus    	= [0.55;0.15;0.257;0.825;-0.257;0.625;0;0.110+0.033+0.144];
+    %             theta_plus  = [pi/2;pi/2;pi/2;pi;0;0;pi;0];
+    %         otherwise
+    %             theta       = zeros(6,1);
+    %             a           = zeros(6,1);
+    %             d           = zeros(6,1);
+    %             alpha       = zeros(6,1);
+    %             d_plus    	= zeros(6,1);
+    %             theta_plus  = zeros(6,1);
+    %     end
+    % end
 
 end
