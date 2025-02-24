@@ -1,11 +1,17 @@
 # robot-simulation-matlab-gui
 Robot Simulation MATLAB GUI
 
-![image](https://github.com/user-attachments/assets/57f93ffa-0583-4ba6-8a47-5c85d2dea4b9)
+Kinematics
+![image](https://github.com/user-attachments/assets/4888eb6b-43e1-4714-b677-ca2f5cb90f73)
 
-![image](https://github.com/user-attachments/assets/0b5c6560-c443-4b6b-bc7f-ddb19b7962a9)
+Joint Limits
+![image](https://github.com/user-attachments/assets/bb2669dd-995a-442d-814d-b5f3cd92bff0)
 
-Old version
-![image](https://github.com/user-attachments/assets/b30defce-6846-4943-a9c9-ec1dfcff4753)
+Inertial Parameters
+![image](https://github.com/user-attachments/assets/aa8cbdc7-0cb6-4bb9-a6f2-ba1c320ec579)
 
-![image](https://github.com/user-attachments/assets/826f94be-f02a-4857-8d8d-60f1e426874c)
+Control Parameters
+![image](https://github.com/user-attachments/assets/2ab55a2d-55fd-4231-8d1b-16ea74390250)
+
+Custom Robot Modeling
+![image](https://github.com/user-attachments/assets/a5001fe7-1e59-40e9-bf32-823c705d6a15)
