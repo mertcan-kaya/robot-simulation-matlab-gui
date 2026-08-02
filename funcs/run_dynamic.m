@@ -7,6 +7,10 @@ function run_dynamic(app)
     app.act.q_pos = app.ini.q_pos;
     app.act.q_vel = zeros(app.kin.n,1);
     app.act.q_acc = zeros(app.kin.n,1);
+    
+    trjConfig.tstp = app.tstp;
+    trjConfig.tfin_trj = app.tfin_trj;
+    trjConfig.trj_profile = app.trj_profile;
 
     sim_time = 0;
     tic
@@ -22,7 +26,7 @@ function run_dynamic(app)
             app.fbk.q_pos = app.act.q_pos;
 
             % Trajectory generation
-            [app.des.q_pos,app.des.q_vel,app.des.q_acc] = trjGeneration(app,k);
+            [app.des.q_pos,app.des.q_vel,app.des.q_acc] = trjGeneration(trjConfig, app.kin, app.ini.q_pos, app.fin.q_pos, k);
             
             % Control algorithm
             tau = controlAlgo(app.ctr,app.kin,app.dyn,app.des,app.fbk);

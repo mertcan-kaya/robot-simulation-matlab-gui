@@ -1,22 +1,22 @@
-function [q_pos,q_vel,q_acc] = trjGeneration(app,k)
+function [q_pos,q_vel,q_acc] = trjGeneration(trjConfig, kin, ini_q, fin_q, k)
 
-    t = k*app.tstp;
-    tf = app.tfin_trj;
+    t = k*trjConfig.tstp;
+    tf = trjConfig.tfin_trj;
     
     if t > tf
         t = tf;
     end
 
-    qi = app.ini.q_pos;
-    qf = app.fin.q_pos;
+    qi = ini_q;
+    qf = fin_q;
     
-    if app.trj_profile ~= 0
+    if trjConfig.trj_profile ~= 0
         % With interpolation
         
         % Joint space trajectory
         D = qf - qi;
         
-        [s_pos,s_vel,s_acc] = p2pTrj(t,tf,app.trj_profile);
+        [s_pos,s_vel,s_acc] = p2pTrj(t,tf,trjConfig.trj_profile);
         
         q_pos = qi + s_pos*D;
         q_vel = s_vel*D;
@@ -24,8 +24,8 @@ function [q_pos,q_vel,q_acc] = trjGeneration(app,k)
     else
         % Without interpolation
         q_pos = qf;
-        q_vel = zeros(app.kin.n,1);
-        q_acc = zeros(app.kin.n,1);
+        q_vel = zeros(kin.n,1);
+        q_acc = zeros(kin.n,1);
     end
             
     function [s_pos,s_vel,s_acc] = p2pTrj(t,tf,trj_profile)

@@ -2,6 +2,10 @@ function run_kinematic(app)
 
     app.des.q_pos = app.fin.q_pos;
 
+    trjConfig.tstp = app.tstp;
+    trjConfig.tfin_trj = app.tfin_trj;
+    trjConfig.trj_profile = app.trj_profile;
+
     sim_time = 0;
     tic
     for k = 0:app.tfin_trj/app.tstp
@@ -11,7 +15,7 @@ function run_kinematic(app)
         end
 
         % Trajectory generation
-        [app.act.q_pos,app.act.q_vel,app.act.q_acc] = trjGeneration(app,k);
+        [app.act.q_pos,app.act.q_vel,app.act.q_acc] = trjGeneration(trjConfig, app.kin, app.ini.q_pos, app.fin.q_pos, k);
 
         sim_time = sim_time + app.tstp;
         real_time = toc;
