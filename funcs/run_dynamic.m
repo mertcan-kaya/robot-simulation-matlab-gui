@@ -1,5 +1,7 @@
 function run_dynamic(app)
 
+    robot = RobotFactory.create(app.robot_model);
+
     d = round(app.ctr.tcyc/app.tstp);
 
     app.ctr.errsum = zeros(app.kin.n,1);
@@ -33,7 +35,7 @@ function run_dynamic(app)
         end
 
         % Computation of robot motion
-        app.act.q_acc = robotAlgo(app.robot_model,app.kin,app.dyn,tau,app.act.q_pos,app.act.q_vel);
+        app.act.q_acc = robotAlgo(robot,app.kin,app.dyn,tau,app.act.q_pos,app.act.q_vel);
         app.act.q_vel = app.act.q_vel + app.act.q_acc*app.tstp;
         app.act.q_pos = app.act.q_pos + app.act.q_vel*app.tstp;
         for i = 1:app.kin.n

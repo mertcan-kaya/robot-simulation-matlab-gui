@@ -1,21 +1,17 @@
-function q_acc = robotAlgo(robot_model,kin,dyn,tau,q_pos,q_vel)
+function q_acc = robotAlgo(robot,kin,dyn,tau,q_pos,q_vel)
 
     n = kin.n;
     
     Phij_j = [zeros(3,1);kin.zj_j];
 
-    if dyn.spring_on == 1 && (robot_model == 4 || robot_model == 5)
-        tau_spr = springModel(q_pos);
+    if dyn.spring_on == 1
+        tau_spr = robot.getSpringTorque(q_pos);
     else
         tau_spr = zeros(n,1);
     end
 
     if dyn.friction_on == 1
-        if robot_model == 1
-            tau_frc = frictionFERModel(q_vel);
-        else
-            tau_frc = frictionFERModelUni(q_vel);
-        end
+        tau_frc = robot.getFrictionTorque(q_vel);
     else
         tau_frc = zeros(n,1);
     end

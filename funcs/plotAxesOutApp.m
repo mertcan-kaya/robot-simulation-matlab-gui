@@ -263,12 +263,20 @@ function plotAxesOutApp(app)
             end
         end
         if app.coord_frame_on == 1
-            set(app.Pobj_d.pF,'Vertices',nvdF(:,1:3),'FaceAlpha',0.25)
-            set(app.Pobj_f.pF,'Vertices',nvaF(:,1:3))
+            if isfield(app.Pobj_d, 'pF') && isvalid(app.Pobj_d.pF)
+                set(app.Pobj_d.pF,'Vertices',nvdF(:,1:3),'FaceAlpha',0.25)
+            end
+            if isfield(app.Pobj_f, 'pF') && isvalid(app.Pobj_f.pF)
+                set(app.Pobj_f.pF,'Vertices',nvaF(:,1:3))
+            end
             if app.task_mode == 1 && app.running_flag == 0
-                set(app.Pobj_r.pF,'Vertices',nvaR(:,1:3))
+                if isfield(app.Pobj_r, 'pF') && isvalid(app.Pobj_r.pF)
+                    set(app.Pobj_r.pF,'Vertices',nvaR(:,1:3))
+                end
             elseif app.task_mode == 2 && (app.running_flag == 0 || app.trj_profile == 0)
-                set(app.Pobj_r.pF,'Vertices',nvdR(:,1:3),'FaceAlpha',0.25)
+                if isfield(app.Pobj_r, 'pF') && isvalid(app.Pobj_r.pF)
+                    set(app.Pobj_r.pF,'Vertices',nvdR(:,1:3),'FaceAlpha',0.25)
+                end
             end
         end
     else
