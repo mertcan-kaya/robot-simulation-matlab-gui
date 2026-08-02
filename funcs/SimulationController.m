@@ -118,6 +118,42 @@ classdef SimulationController < handle
             end
         end
         
+        function runKinematics(obj)
+            % The kinematic simulation loop extracted from run_kinematic.m
+            obj.model.running_flag = 1;
+            obj.model.des.q_pos = obj.model.fin.q_pos;
+            
+            trjConfig.tstp = obj.model.tstp;
+            trjConfig.tfin_trj = obj.model.tfin_trj;
+            trjConfig.trj_profile = obj.model.trj_profile;
+            
+            sim_time = 0;
+            tic
+            
+            for k = 0:round(obj.model.tfin_trj/obj.model.tstp)
+                if obj.model.running_flag == 0
+                    break;
+                end
+                
+                % Trajectory generation updates actual state directly in kinematic mode
+                [obj.model.act.q_pos, obj.model.act.q_vel, obj.model.act.q_acc] = ...
+                    trjGeneration(trjConfig, obj.model.kin, obj.model.ini.q_pos, obj.model.fin.q_pos, k);
+                    
+                sim_time = sim_time + obj.model.tstp;
+                real_time = toc;
+                
+                % Graphics update loop
+                if sim_time > real_time*obj.model.time_const
+                    obj.renderer.updateView(obj.model);
+                    
+                    % UI callbacks (if registered by the View)
+                    if ~isempty(obj.onUpdateLabels)
+                        obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n);
+                    end
+                end
+            end
+        end
+        
         function stopSimulation(obj)
             % Halt the simulation gracefully
             obj.model.running_flag = 0;
