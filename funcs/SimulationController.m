@@ -24,6 +24,12 @@ classdef SimulationController < handle
             
             % Initialize kinematics and dynamics from the OOP robot
             obj.model.kin = obj.robot.getKinematicParameters(obj.model.ee_att);
+            
+            % Compute ri_j manually (previously done inside MainApp startupFcn)
+            obj.model.kin.ri_j = zeros(3,1,obj.model.kin.n+2);
+            for j = 1:obj.model.kin.n+1
+                obj.model.kin.ri_j(:,:,j) = getri_j_vec(obj.model.kin.alpha_j(j), obj.model.kin.a_j(j), obj.model.kin.d_j(j));
+            end
             if ismethod(obj.robot, 'getInertialParameters')
                 obj.model.dyn = obj.robot.getInertialParameters();
             end

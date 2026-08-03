@@ -37,6 +37,14 @@ classdef SimulationModel < handle
         % End Effector special properties
         qEIni;
         qEDes;
+        
+        % Inverse Kinematics Parameters
+        inv_geo_type = 2; % 0: alg, 1: num, 2: hybrid
+        inv_geo_trn = 0;
+        kp_inv = 0.23;
+        kr_inv = 0.015;
+        kp_trn = 0.003;
+        kr_trn = 0.0001;
     end
     
     methods
