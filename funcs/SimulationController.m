@@ -34,12 +34,26 @@ classdef SimulationController < handle
                 obj.model.dyn = obj.robot.getInertialParameters();
             end
             
-            % Ensure actual position matches the current robot DoF
-            if ~isempty(obj.model.ini) && isfield(obj.model.ini, 'q_pos') && length(obj.model.ini.q_pos) == obj.model.kin.n
-                obj.model.act.q_pos = obj.model.ini.q_pos;
-            else
-                obj.model.act.q_pos = zeros(obj.model.kin.n, 1);
+            % Ensure state vectors match the current robot DoF
+            n = obj.model.kin.n;
+            
+            if isempty(obj.model.ini) || ~isfield(obj.model.ini, 'q_pos') || length(obj.model.ini.q_pos) ~= n
+                obj.model.ini.q_pos = zeros(n, 1);
             end
+            if isempty(obj.model.fin) || ~isfield(obj.model.fin, 'q_pos') || length(obj.model.fin.q_pos) ~= n
+                obj.model.fin.q_pos = zeros(n, 1);
+            end
+            
+            obj.model.act.q_pos = obj.model.ini.q_pos;
+            obj.model.act.q_vel = zeros(n, 1);
+            obj.model.act.q_acc = zeros(n, 1);
+            
+            obj.model.des.q_pos = obj.model.ini.q_pos;
+            obj.model.des.q_vel = zeros(n, 1);
+            obj.model.des.q_acc = zeros(n, 1);
+            
+            obj.model.fbk.q_pos = obj.model.ini.q_pos;
+            obj.model.fbk.q_vel = zeros(n, 1);
             
             % Update default control parameters from the robot object
             if ~isfield(obj.model.ctr, 'algo')
