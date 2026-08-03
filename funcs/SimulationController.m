@@ -22,6 +22,19 @@ classdef SimulationController < handle
             % Instantiates the OOP Robot physics and loads the 3D meshes
             obj.robot = RobotFactory.create(obj.model.robot_model);
             
+            % Initialize kinematics and dynamics from the OOP robot
+            obj.model.kin = obj.robot.getKinematicParameters(obj.model.ee_att);
+            if ismethod(obj.robot, 'getInertialParameters')
+                obj.model.dyn = obj.robot.getInertialParameters();
+            end
+            
+            % Ensure actual position matches the current robot DoF
+            if ~isempty(obj.model.ini) && isfield(obj.model.ini, 'q_pos') && length(obj.model.ini.q_pos) == obj.model.kin.n
+                obj.model.act.q_pos = obj.model.ini.q_pos;
+            else
+                obj.model.act.q_pos = zeros(obj.model.kin.n, 1);
+            end
+            
             % Update default control parameters from the robot object
             if ~isfield(obj.model.ctr, 'algo')
                 obj.model.ctr.algo = 1;
