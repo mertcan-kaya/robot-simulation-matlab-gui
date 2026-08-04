@@ -23,7 +23,9 @@ classdef SimulationController < handle
             obj.robot = RobotFactory.create(obj.model.robot_model);
             
             % Initialize kinematics and dynamics from the OOP robot
-            obj.model.kin = obj.robot.getKinematicParameters(obj.model.ee_att);
+            if obj.model.robot_model ~= 0
+                obj.model.kin = obj.robot.getKinematicParameters(obj.model.ee_att);
+            end
             
             % Compute ri_j manually (previously done inside MainApp startupFcn)
             obj.model.kin.ri_j = zeros(3,1,obj.model.kin.n+2);
@@ -54,6 +56,13 @@ classdef SimulationController < handle
             
             obj.model.fbk.q_pos = obj.model.ini.q_pos;
             obj.model.fbk.q_vel = zeros(n, 1);
+            
+            % Initialize transformation matrices and orientations for ini and fin
+            obj.model.ini.Ti = getTransMatrix(obj.model.TI_0, obj.model.kin.a_j, obj.model.kin.alpha_j, obj.model.kin.d_j, obj.model.kin.theta_O_j, obj.model.kin.j_type, obj.model.ini.q_pos);
+            [obj.model.ini.Re, obj.model.ini.t_pos] = SE3_SO3R3(obj.model.ini.Ti(:,:,n+2));
+            
+            obj.model.fin.Ti = getTransMatrix(obj.model.TI_0, obj.model.kin.a_j, obj.model.kin.alpha_j, obj.model.kin.d_j, obj.model.kin.theta_O_j, obj.model.kin.j_type, obj.model.fin.q_pos);
+            [obj.model.fin.Re, obj.model.fin.t_pos] = SE3_SO3R3(obj.model.fin.Ti(:,:,n+2));
             
             % Update default control parameters from the robot object
             if ~isfield(obj.model.ctr, 'algo')
