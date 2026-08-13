@@ -471,9 +471,9 @@ function updateView(obj, state)
 
     if state.task_mode > 0
         if state.running_flag == 0
-            Tref_ini = [state.ini.Re_ref,state.ini.t_pos_ref;zeros(1,3),1];
+            Tref_ini = [state.ini.Re,state.ini.t_pos;zeros(1,3),1];
         end
-        Tref_fin = [state.fin.Re_ref,state.fin.t_pos_ref;zeros(1,3),1];
+        Tref_fin = [state.fin.Re,state.fin.t_pos;zeros(1,3),1];
     end
 
     if state.ee_att == 1 && state.robot_model == 2

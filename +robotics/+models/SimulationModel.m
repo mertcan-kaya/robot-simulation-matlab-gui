@@ -48,7 +48,9 @@ classdef SimulationModel < handle
         kr_trn = 0.0001;
     end
     events
-        ModelUpdated
+        RobotChanged
+        TargetUpdated
+        ControlParamsUpdated
     end
     
     methods
@@ -70,9 +72,16 @@ classdef SimulationModel < handle
             obj.ref = struct();
         end
         
-        function notifyUpdate(obj)
-            % Helper to trigger the UI update event
-            notify(obj, 'ModelUpdated');
+        function notifyRobotChanged(obj)
+            notify(obj, 'RobotChanged');
+        end
+        
+        function notifyTargetUpdated(obj)
+            notify(obj, 'TargetUpdated');
+        end
+        
+        function notifyControlParamsUpdated(obj)
+            notify(obj, 'ControlParamsUpdated');
         end
     end
 end
