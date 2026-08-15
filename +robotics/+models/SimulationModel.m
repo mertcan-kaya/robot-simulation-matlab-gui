@@ -46,8 +46,12 @@ classdef SimulationModel < handle
         kr_inv = 0.015;
         kp_trn = 0.003;
         kr_trn = 0.0001;
+        
+        % Custom robot parameters
+        customParams = [];
     end
     events
+        ModelUpdated
         RobotChanged
         TargetUpdated
         ControlParamsUpdated
@@ -72,8 +76,13 @@ classdef SimulationModel < handle
             obj.ref = struct();
         end
         
+        function notifyModelUpdated(obj)
+            notify(obj, 'ModelUpdated');
+        end
+
         function notifyRobotChanged(obj)
             notify(obj, 'RobotChanged');
+            notify(obj, 'ModelUpdated');
         end
         
         function notifyTargetUpdated(obj)

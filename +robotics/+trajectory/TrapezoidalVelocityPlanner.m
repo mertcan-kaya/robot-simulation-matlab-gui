@@ -22,4 +22,3 @@ classdef TrapezoidalVelocityPlanner < robotics.trajectory.TrajectoryPlanner
         end
     end
 end
-

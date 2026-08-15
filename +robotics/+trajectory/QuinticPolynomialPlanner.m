@@ -16,4 +16,3 @@ classdef QuinticPolynomialPlanner < robotics.trajectory.TrajectoryPlanner
         end
     end
 end
-

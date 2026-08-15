@@ -26,10 +26,7 @@ classdef SimulationController < handle
             
             % If it's a custom robot, apply its manual properties
             if robotId == 0 && nargin > 3
-                obj.model.kin = customParams.kin;
-                obj.model.dyn.m_j = customParams.m_j;
-                obj.model.dyn.rj_jcj = customParams.rj_jcj;
-                obj.model.dyn.Ij_cj = customParams.Ij_cj;
+                obj.model.customParams = customParams;
             end
             
             obj.initRobot();
@@ -122,18 +119,20 @@ classdef SimulationController < handle
         
         function initRobot(obj)
             % Instantiates the OOP Robot physics and loads the 3D meshes
-            obj.robot = robotics.models.RobotFactory.create(obj.model.robot_model);
+            if obj.model.robot_model == 0 && ~isempty(obj.model.customParams)
+                obj.robot = robotics.models.RobotFactory.create(obj.model.robot_model, obj.model.customParams);
+            else
+                obj.robot = robotics.models.RobotFactory.create(obj.model.robot_model);
+            end
             
             % Initialize kinematics and dynamics from the OOP robot
-            if obj.model.robot_model ~= 0
-                new_kin = obj.robot.getKinematicParameters(obj.model.ee_att);
-                fields = fieldnames(new_kin);
-                if ~isfield(obj.model, 'kin')
-                    obj.model.kin = struct();
-                end
-                for i = 1:length(fields)
-                    obj.model.kin.(fields{i}) = new_kin.(fields{i});
-                end
+            new_kin = obj.robot.getKinematicParameters(obj.model.ee_att);
+            fields = fieldnames(new_kin);
+            if isempty(obj.model.kin)
+                obj.model.kin = struct();
+            end
+            for i = 1:length(fields)
+                obj.model.kin.(fields{i}) = new_kin.(fields{i});
             end
             
             if ~isfield(obj.model.kin, 'g0')
@@ -177,7 +176,7 @@ classdef SimulationController < handle
             if ismethod(obj.robot, 'getInertialParameters')
                 new_dyn = obj.robot.getInertialParameters();
                 fields = fieldnames(new_dyn);
-                if ~isfield(obj.model, 'dyn')
+                if isempty(obj.model.dyn)
                     obj.model.dyn = struct();
                 end
                 for i = 1:length(fields)

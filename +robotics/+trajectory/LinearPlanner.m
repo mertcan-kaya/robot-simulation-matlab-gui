@@ -14,4 +14,3 @@ classdef LinearPlanner < robotics.trajectory.TrajectoryPlanner
         end
     end
 end
-

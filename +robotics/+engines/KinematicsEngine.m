@@ -8,6 +8,30 @@ classdef KinematicsEngine
             [qDes, ~] = robot.computeInverseKinematics(invGeoConfig, kin, RGoal, tGoal, q0);
         end
         
+                function TR_i = getRelativeTransMatrix(TI_0, a_j, alpha_j, d_j, theta_j, j_type, q_j)
+            % Compute the relative transformation matrices for each joint and the flange
+            k = length(q_j);
+        
+            TR_i = zeros(4, 4, k+2);
+            TR_i(:,:,1) = TI_0;
+        
+            for j = 1:k
+                Rot_x_i = robotics.engines.KinematicsEngine.Rot_x(alpha_j(j));
+                Trn_x_i	= robotics.engines.KinematicsEngine.Trn_x(a_j(j));
+                Rot_z_j = robotics.engines.KinematicsEngine.Rot_z(theta_j(j) + j_type(j)*q_j(j));
+                Trn_z_j = robotics.engines.KinematicsEngine.Trn_z(d_j(j) + (1-j_type(j))*q_j(j));
+        
+                TR_i(:,:,j+1) = Rot_x_i * Trn_x_i * Rot_z_j * Trn_z_j;
+            end
+            
+            Rot_x_i = robotics.engines.KinematicsEngine.Rot_x(alpha_j(k+1));
+            Trn_x_i	= robotics.engines.KinematicsEngine.Trn_x(a_j(k+1));
+            Rot_z_j = robotics.engines.KinematicsEngine.Rot_z(theta_j(k+1));
+            Trn_z_j = robotics.engines.KinematicsEngine.Trn_z(d_j(k+1));
+        
+            TR_i(:,:,k+2) = Rot_x_i * Trn_x_i * Rot_z_j * Trn_z_j;
+        end
+
         function TI_i = getTransMatrix(TI_0, a_j, alpha_j, d_j, theta_j, j_type, q_j)
             % Compute the transformation matrices for each joint and the flange
             k = length(q_j);

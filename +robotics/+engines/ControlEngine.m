@@ -27,7 +27,7 @@ classdef ControlEngine
             tau_comp = zeros(kin.n, 1);
             if ctr.algo == 0
                 if ctr.comp_grv == 1
-                    tau_comp = robotics.engines.getTauG(kin, fbk.q_pos, kin.g0, dyn.m_j, dyn.dj_j);
+                    tau_comp = robotics.engines.DynamicsEngine.getTauG(kin, fbk.q_pos, kin.g0, dyn.m_j, dyn.dj_j);
                 end
             end
             

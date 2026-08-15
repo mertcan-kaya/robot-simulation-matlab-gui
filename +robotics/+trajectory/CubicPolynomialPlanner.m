@@ -16,4 +16,3 @@ classdef CubicPolynomialPlanner < robotics.trajectory.TrajectoryPlanner
         end
     end
 end
-

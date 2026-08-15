@@ -14,8 +14,8 @@ classdef TrajectoryEngine
                 t = tf;
             end
         
-            qi = ini_q;
-            qf = fin_q;
+            qi = ini_q(:);
+            qf = fin_q(:);
             
             if trjConfig.trj_profile ~= 0
                 % With interpolation

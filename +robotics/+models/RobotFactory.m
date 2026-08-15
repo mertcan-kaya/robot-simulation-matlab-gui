@@ -1,6 +1,6 @@
 classdef RobotFactory
     methods (Static)
-        function robot = create(robot_model_id)
+        function robot = create(robot_model_id, customParams)
             switch robot_model_id
                 case 1
                     robot = robotics.models.FrankaEmika();
@@ -13,7 +13,11 @@ classdef RobotFactory
                 case 5
                     robot = robotics.models.StaubliRX160L();
                 otherwise
-                    robot = robotics.models.CustomRobot();
+                    if nargin > 1
+                        robot = robotics.models.CustomRobot(customParams);
+                    else
+                        robot = robotics.models.CustomRobot();
+                    end
             end
         end
     end

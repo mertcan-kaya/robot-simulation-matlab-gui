@@ -1,0 +1,39 @@
+name: Release Toolbox
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Package MATLAB Toolbox
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+
+      - name: Run Automated Test Suite
+        uses: matlab-actions/run-command@v2
+        with:
+          command: runAllTests
+
+      - name: Package MATLAB Toolbox (.mltbx)
+        uses: matlab-actions/run-command@v2
+        with:
+          command: package_toolbox
+
+      - name: Create GitHub Release & Attach Artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: releases/Robot_Simulation_GUI.mltbx
+          generate_release_notes: true
+          prerelease: auto
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
