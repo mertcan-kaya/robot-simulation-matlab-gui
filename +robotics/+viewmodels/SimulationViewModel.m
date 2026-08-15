@@ -78,5 +78,37 @@ classdef SimulationViewModel < handle
         function text = get.Joint6LimitText(obj); text = obj.getJointLimitText(6); end
         function text = get.Joint7LimitText(obj); text = obj.getJointLimitText(7); end
         
+        function data = getGainTableData(obj)
+            n = obj.model.kin.n;
+            data = cell(n, 3);
+            if isfield(obj.model.ctr, 'algo') && obj.model.ctr.algo == 1
+                % Computed Torque Control (IDC)
+                if isfield(obj.model.ctr, 'Kp_jnt_idc')
+                    for i = 1:n
+                        data{i, 1} = obj.model.ctr.Kp_jnt_idc(i);
+                        data{i, 2} = obj.model.ctr.Ki_jnt_idc(i);
+                        data{i, 3} = obj.model.ctr.Kd_jnt_idc(i);
+                    end
+                end
+            else
+                % PID Control
+                if isfield(obj.model.ctr, 'Kp_jnt_pid')
+                    for i = 1:n
+                        data{i, 1} = obj.model.ctr.Kp_jnt_pid(i);
+                        data{i, 2} = obj.model.ctr.Ki_jnt_pid(i);
+                        data{i, 3} = obj.model.ctr.Kd_jnt_pid(i);
+                    end
+                end
+            end
+        end
+        
+        function rowNames = getGainTableRowNames(obj)
+            n = obj.model.kin.n;
+            rowNames = cell(n, 1);
+            for i = 1:n
+                rowNames{i} = num2str(i);
+            end
+        end
+        
     end
 end

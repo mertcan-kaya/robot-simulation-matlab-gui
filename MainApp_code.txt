@@ -249,56 +249,17 @@ classdef MainApp < matlab.apps.AppBase
     properties (Access = public)
         
         robot_name = [
-        "Franka Emika Robot"
-        "Universal Robots UR3"
-        "Unitree Z1"
-        "Stäubli RX160"
-        "Stäubli RX160L"
-        "Custom Robot"];
+            "Franka Emika Robot"
+            "Universal Robots UR3"
+            "Unitree Z1"
+            "Stäubli RX160"
+            "Stäubli RX160L"
+            "Custom Robot"];
 
-        ms;
-        Pobj_f;
-        Pobj_d;
-        Pobj_r;
-
-        high_quality;
-        coord_frame_on;
-        ghost_on = 1;
-        line_on = 0;
-
-        running_flag = 0;
-
-        trj_profile = 3;
-
-        robot_model = 1;
-        ee_att = 1;
-
-        ctr;
-        kin;
-        dyn;
-
-        ini;
-        fin;
-        des;
-        act;
-        fbk;
-        ref;
-        
-        TI_0 = eye(4);
-
-        qEIni;
-        qEDes;
-
-        tstp = 0.001; % Time step
-        tfin = 0; % Final simulation time
-
-        tfin_trj = 0; % Final trajectory time
-        time_const = 0.1;
-        
-        exceeding = 0;
+        eulerSet = 1;
+        sim_mode = 0;
         grip = 0;
-
-        sim_mode;
+        exceeding = 0;
 
         DH_custom;
         n_custom;
@@ -307,19 +268,9 @@ classdef MainApp < matlab.apps.AppBase
         Ij_cj_custom;
         j_type_custom;
 
-        task_mode = 0;
-        eulerSet = 1;
-        
-        inv_geo_type = 2; % 0: alg, 1: num, 2: hybrid
-        inv_geo_trn = 0;
-        
-        kp_inv = 0.23;
-        kr_inv = 0.015;
-        kp_trn = 0.003;
-        kr_trn = 0.0001;
-        
         controller;
         viewModel;
+        JointUI = struct();
 
     end
     
@@ -358,464 +309,119 @@ classdef MainApp < matlab.apps.AppBase
         end
 
         function refreshUI(app)
-            pMax = zeros(app.controller.model.kin.n,1);
-            pMin = zeros(app.controller.model.kin.n,1);
-            vMag = zeros(app.controller.model.kin.n,1);
-            aMag = zeros(app.controller.model.kin.n,1);
-            for j = 1:app.controller.model.kin.n
+            n = app.controller.model.kin.n;
+            pMax = zeros(n, 1);
+            pMin = zeros(n, 1);
+            vMag = zeros(n, 1);
+            aMag = zeros(n, 1);
+            for j = 1:n
                 if app.controller.model.kin.j_type(j,1) == 1
-                    pMax(j,1) = round(rad2deg(app.controller.model.kin.q_posLim(j,2)),2);
-                    pMin(j,1) = round(rad2deg(app.controller.model.kin.q_posLim(j,1)),2);
-                    vMag(j,1) = round(rad2deg(app.controller.model.kin.q_velLim(j,2)),2);
-                    aMag(j,1) = round(rad2deg(app.controller.model.kin.q_accLim(j,2)),2);
+                    pMax(j,1) = round(rad2deg(app.controller.model.kin.q_posLim(j,2)), 2);
+                    pMin(j,1) = round(rad2deg(app.controller.model.kin.q_posLim(j,1)), 2);
+                    vMag(j,1) = round(rad2deg(app.controller.model.kin.q_velLim(j,2)), 2);
+                    aMag(j,1) = round(rad2deg(app.controller.model.kin.q_accLim(j,2)), 2);
                 else
-                    pMax(j,1) = round(1e3*app.controller.model.kin.q_posLim(j,2),2);
-                    pMin(j,1) = round(1e3*app.controller.model.kin.q_posLim(j,1),2);
-                    vMag(j,1) = round(1e3*app.controller.model.kin.q_velLim(j,2),2);
-                    aMag(j,1) = round(1e3*app.controller.model.kin.q_accLim(j,2),2);
+                    pMax(j,1) = round(1e3*app.controller.model.kin.q_posLim(j,2), 2);
+                    pMin(j,1) = round(1e3*app.controller.model.kin.q_posLim(j,1), 2);
+                    vMag(j,1) = round(1e3*app.controller.model.kin.q_velLim(j,2), 2);
+                    aMag(j,1) = round(1e3*app.controller.model.kin.q_accLim(j,2), 2);
                 end
             end
 
-            app.controller.model.kin.r_posLim = [-pi pi
-                                -pi pi
-                                -pi pi];
+            app.controller.model.kin.r_posLim = [-pi pi; -pi pi; -pi pi];
             app.controller.model.kin.r_velLim = [-pi/4 pi/4];
             app.controller.model.kin.r_accLim = [-pi/8 pi/8];
 
-            app.DoFSpinner.Value = app.controller.model.kin.n;
-            if app.controller.model.kin.n == 7
-                TableData = {num2str(app.controller.model.kin.a_j(1)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(1))) num2str(app.controller.model.kin.d_j(1)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(1)))); ...
-                             num2str(app.controller.model.kin.a_j(2)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(2))) num2str(app.controller.model.kin.d_j(2)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(2)))); ...
-                             num2str(app.controller.model.kin.a_j(3)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(3))) num2str(app.controller.model.kin.d_j(3)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(3)))); ...
-                             num2str(app.controller.model.kin.a_j(4)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(4))) num2str(app.controller.model.kin.d_j(4)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(4)))); ...
-                             num2str(app.controller.model.kin.a_j(5)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(5))) num2str(app.controller.model.kin.d_j(5)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(5)))); ...
-                             num2str(app.controller.model.kin.a_j(6)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(6))) num2str(app.controller.model.kin.d_j(6)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(6)))); ...
-                             num2str(app.controller.model.kin.a_j(7)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(7))) num2str(app.controller.model.kin.d_j(7)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(7)))); ...
-                             num2str(app.controller.model.kin.a_j(8)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(8))) num2str(app.controller.model.kin.d_j(8)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(8))))};
+            app.DoFSpinner.Value = n;
 
-                LinkNames = {'1'; '2'; '3'; '4'; '5'; '6'; '7'; 'E'};
-                
-                app.JointPosMaxTable.Data = {num2str(round(pMax(1,1),1)) num2str(round(pMax(2,1),1)) num2str(round(pMax(3,1),1)) num2str(round(pMax(4,1),1)) num2str(round(pMax(5,1),1)) num2str(round(pMax(6,1),1)) num2str(round(pMax(7,1),1))};
-                app.JointPosMinTable.Data = {num2str(round(pMin(1,1),1)) num2str(round(pMin(2,1),1)) num2str(round(pMin(3,1),1)) num2str(round(pMin(4,1),1)) num2str(round(pMin(5,1),1)) num2str(round(pMin(6,1),1)) num2str(round(pMin(7,1),1))};
-                app.JointVelMagTable.Data = {num2str(round(vMag(1,1),1)) num2str(round(vMag(2,1),1)) num2str(round(vMag(3,1),1)) num2str(round(vMag(4,1),1)) num2str(round(vMag(5,1),1)) num2str(round(vMag(6,1),1)) num2str(round(vMag(7,1),1))};
-                app.JointAccMagTable.Data = {num2str(round(aMag(1,1),1)) num2str(round(aMag(2,1),1)) num2str(round(aMag(3,1),1)) num2str(round(aMag(4,1),1)) num2str(round(aMag(5,1),1)) num2str(round(aMag(6,1),1)) num2str(round(aMag(7,1),1))};
+            % 1. Build DH Table Data dynamically for any n
+            TableData = cell(n + 1, 4);
+            for j = 1:n
+                TableData{j, 1} = num2str(app.controller.model.kin.a_j(j)*1e3);
+                TableData{j, 2} = num2str(rad2deg(app.controller.model.kin.alpha_j(j)));
+                TableData{j, 3} = num2str(app.controller.model.kin.d_j(j)*1e3);
+                TableData{j, 4} = num2str(round(rad2deg(app.controller.model.kin.theta_O_j(j))));
+            end
+            TableData{n+1, 1} = num2str(app.controller.model.kin.a_j(n+1)*1e3);
+            TableData{n+1, 2} = num2str(rad2deg(app.controller.model.kin.alpha_j(n+1)));
+            TableData{n+1, 3} = num2str(app.controller.model.kin.d_j(n+1)*1e3);
+            TableData{n+1, 4} = num2str(round(rad2deg(app.controller.model.kin.theta_O_j(n+1))));
 
-                app.JointPosMaxTable.ColumnWidth = {40,40,40,40,40,40,40};
-                app.JointPosMinTable.ColumnWidth = {40,40,40,40,40,40,40};
-                app.JointVelMagTable.ColumnWidth = {40,40,40,40,40,40,40};
-                app.JointAccMagTable.ColumnWidth = {40,40,40,40,40,40,40};
+            LinkNames = cell(n + 1, 1);
+            for j = 1:n
+                LinkNames{j} = num2str(j);
+            end
+            LinkNames{n+1} = 'E';
 
-                app.MasskgLabel.Position = [7,294,254,22];
-                app.MassTable.ColumnWidth = {36,36,36,36,36,36,36};
-                app.MassTable.Position = [7,270,271,25];
-                app.MassTable.Data = {num2str(round(app.controller.model.dyn.m_j(1),2)) num2str(round(app.controller.model.dyn.m_j(2),2)) num2str(round(app.controller.model.dyn.m_j(3),2)) num2str(round(app.controller.model.dyn.m_j(4),2)) ...
-                                        num2str(round(app.controller.model.dyn.m_j(5),2)) num2str(round(app.controller.model.dyn.m_j(6),2)) num2str(round(app.controller.model.dyn.m_j(7),2))};
+            % 2. Build Joint Limit Tables Data
+            posMaxRow = cell(1, n);
+            posMinRow = cell(1, n);
+            velMagRow = cell(1, n);
+            accMagRow = cell(1, n);
+            for j = 1:n
+                posMaxRow{j} = num2str(round(pMax(j,1), 1));
+                posMinRow{j} = num2str(round(pMin(j,1), 1));
+                velMagRow{j} = num2str(round(vMag(j,1), 1));
+                accMagRow{j} = num2str(round(aMag(j,1), 1));
+            end
+            app.JointPosMaxTable.Data = posMaxRow;
+            app.JointPosMinTable.Data = posMinRow;
+            app.JointVelMagTable.Data = velMagRow;
+            app.JointAccMagTable.Data = accMagRow;
+            app.JointPosMaxTable.ColumnWidth = repmat({40}, 1, n);
+            app.JointPosMinTable.ColumnWidth = repmat({40}, 1, n);
+            app.JointVelMagTable.ColumnWidth = repmat({40}, 1, n);
+            app.JointAccMagTable.ColumnWidth = repmat({40}, 1, n);
 
-                app.CenterofMassmLabel.Position = [7,244,254,22];
-                app.CenterofMassTable.ColumnWidth = {36,36,36,36,36,36,36};
-                app.CenterofMassTable.Position = [7,173,271,72];
-                app.CenterofMassTable.Data = {num2str(round(app.controller.model.dyn.rj_jcj(1,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(1,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,5),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,6),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,7),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,5),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,6),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,7),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,5),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,6),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,7),2))};
+            % 3. Dynamics Tables Data (Mass, CoM, Inertia)
+            colWidthsDyn = repmat({36}, 1, n);
+            massRow = cell(1, n);
+            comTable = cell(3, n);
+            inertiaTable = cell(6, n);
+            for j = 1:n
+                massRow{j} = num2str(round(app.controller.model.dyn.m_j(j), 2));
+                for r = 1:3
+                    comTable{r, j} = num2str(round(app.controller.model.dyn.rj_jcj(r, 1, j), 2));
+                end
+                inertiaTable{1, j} = num2str(round(app.controller.model.dyn.Ij_cj(1,1,j), 2));
+                inertiaTable{2, j} = num2str(round(app.controller.model.dyn.Ij_cj(1,2,j), 2));
+                inertiaTable{3, j} = num2str(round(app.controller.model.dyn.Ij_cj(1,3,j), 2));
+                inertiaTable{4, j} = num2str(round(app.controller.model.dyn.Ij_cj(2,2,j), 2));
+                inertiaTable{5, j} = num2str(round(app.controller.model.dyn.Ij_cj(2,3,j), 2));
+                inertiaTable{6, j} = num2str(round(app.controller.model.dyn.Ij_cj(3,3,j), 2));
+            end
+            app.MassTable.Data = massRow;
+            app.MassTable.ColumnWidth = colWidthsDyn;
+            app.CenterofMassTable.Data = comTable;
+            app.CenterofMassTable.ColumnWidth = colWidthsDyn;
+            app.CenterofMassTable_2.Data = inertiaTable;
+            app.CenterofMassTable_2.ColumnWidth = colWidthsDyn;
 
-                app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [7,147,254,22];
-                app.CenterofMassTable_2.ColumnWidth = {36,36,36,36,36,36,36};
-                app.CenterofMassTable_2.Position = [7,6,271,142];
-                app.CenterofMassTable_2.Data = {num2str(round(app.controller.model.dyn.Ij_cj(1,1,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,1,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,6),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,7),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,6),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,7),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,6),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,7),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,6),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,7),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,6),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,7),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,6),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,7),2))};
-
-                app.Button.Value = app.controller.model.kin.j_type(1,1);
-                app.Button_2.Value = app.controller.model.kin.j_type(2,1);
-                app.Button_3.Value = app.controller.model.kin.j_type(3,1);
-                app.Button_4.Value = app.controller.model.kin.j_type(4,1);
-                app.Button_5.Value = app.controller.model.kin.j_type(5,1);
-                app.Button_6.Value = app.controller.model.kin.j_type(6,1);
-                app.Button_7.Value = app.controller.model.kin.j_type(7,1);
-
-                app.q_1ButtonGroup.Visible = "on";
-                app.q_2ButtonGroup.Visible = "on";
-                app.q_3ButtonGroup.Visible = "on";
-                app.q_4ButtonGroup.Visible = "on";
-                app.q_5ButtonGroup.Visible = "on";
-                app.q_6ButtonGroup.Visible = "on";
-                app.q_7ButtonGroup.Visible = "on";
-
-            elseif app.controller.model.kin.n == 6
-
-                TableData = {num2str(app.controller.model.kin.a_j(1)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(1))) num2str(app.controller.model.kin.d_j(1)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(1)))); ...
-                             num2str(app.controller.model.kin.a_j(2)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(2))) num2str(app.controller.model.kin.d_j(2)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(2)))); ...
-                             num2str(app.controller.model.kin.a_j(3)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(3))) num2str(app.controller.model.kin.d_j(3)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(3)))); ...
-                             num2str(app.controller.model.kin.a_j(4)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(4))) num2str(app.controller.model.kin.d_j(4)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(4)))); ...
-                             num2str(app.controller.model.kin.a_j(5)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(5))) num2str(app.controller.model.kin.d_j(5)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(5)))); ...
-                             num2str(app.controller.model.kin.a_j(6)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(6))) num2str(app.controller.model.kin.d_j(6)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(6)))); ...
-                             num2str(app.controller.model.kin.a_j(7)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(7))) num2str(app.controller.model.kin.d_j(7)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(7))))};
-
-                LinkNames = {'1'; '2'; '3'; '4'; '5'; '6'; 'E'};
-
-                app.JointPosMaxTable.Data = {num2str(pMax(1,1)) num2str(pMax(2,1)) num2str(pMax(3,1)) num2str(pMax(4,1)) num2str(pMax(5,1)) num2str(pMax(6,1))};
-                app.JointPosMinTable.Data = {num2str(pMin(1,1)) num2str(pMin(2,1)) num2str(pMin(3,1)) num2str(pMin(4,1)) num2str(pMin(5,1)) num2str(pMin(6,1))};
-                app.JointVelMagTable.Data = {num2str(vMag(1,1)) num2str(vMag(2,1)) num2str(vMag(3,1)) num2str(vMag(4,1)) num2str(vMag(5,1)) num2str(vMag(6,1))};
-                app.JointAccMagTable.Data = {num2str(aMag(1,1)) num2str(aMag(2,1)) num2str(aMag(3,1)) num2str(aMag(4,1)) num2str(aMag(5,1)) num2str(aMag(6,1))};
-
-                app.JointPosMaxTable.ColumnWidth = {40,40,40,40,40,40};
-                app.JointPosMinTable.ColumnWidth = {40,40,40,40,40,40};
-                app.JointVelMagTable.ColumnWidth = {40,40,40,40,40,40};
-                app.JointAccMagTable.ColumnWidth = {40,40,40,40,40,40};
-
-                app.MasskgLabel.Position = [7,294,254,22];
-                app.MassTable.ColumnWidth = {36,36,36,36,36,36};
-                app.MassTable.Position = [7,270,271,25];
-                app.MassTable.Data = {num2str(round(app.controller.model.dyn.m_j(1),2)) num2str(round(app.controller.model.dyn.m_j(2),2)) num2str(round(app.controller.model.dyn.m_j(3),2)) num2str(round(app.controller.model.dyn.m_j(4),2)) ...
-                                        num2str(round(app.controller.model.dyn.m_j(5),2)) num2str(round(app.controller.model.dyn.m_j(6),2))};
-
-                app.CenterofMassmLabel.Position = [7,244,254,22];
-                app.CenterofMassTable.ColumnWidth = {36,36,36,36,36,36};
-                app.CenterofMassTable.Position = [7,173,271,72];
-                app.CenterofMassTable.Data = {num2str(round(app.controller.model.dyn.rj_jcj(1,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(1,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,5),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,6),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,5),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,6),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,5),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,6),2))};
-
-                app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [7,147,254,22];
-                app.CenterofMassTable_2.ColumnWidth = {36,36,36,36,36,36};
-                app.CenterofMassTable_2.Position = [7,6,271,142];
-                app.CenterofMassTable_2.Data = {num2str(round(app.controller.model.dyn.Ij_cj(1,1,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,1,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,6),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,6),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,6),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,6),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,6),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,5),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,6),2))};
-
-                app.Button.Value = app.controller.model.kin.j_type(1,1);
-                app.Button_2.Value = app.controller.model.kin.j_type(2,1);
-                app.Button_3.Value = app.controller.model.kin.j_type(3,1);
-                app.Button_4.Value = app.controller.model.kin.j_type(4,1);
-                app.Button_5.Value = app.controller.model.kin.j_type(5,1);
-                app.Button_6.Value = app.controller.model.kin.j_type(6,1);
-
-                app.q_1ButtonGroup.Visible = "on";
-                app.q_2ButtonGroup.Visible = "on";
-                app.q_3ButtonGroup.Visible = "on";
-                app.q_4ButtonGroup.Visible = "on";
-                app.q_5ButtonGroup.Visible = "on";
-                app.q_6ButtonGroup.Visible = "on";
-                app.q_7ButtonGroup.Visible = "off";
-
-            elseif app.controller.model.kin.n == 5
-
-                TableData = {num2str(app.controller.model.kin.a_j(1)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(1))) num2str(app.controller.model.kin.d_j(1)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(1)))); ...
-                             num2str(app.controller.model.kin.a_j(2)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(2))) num2str(app.controller.model.kin.d_j(2)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(2)))); ...
-                             num2str(app.controller.model.kin.a_j(3)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(3))) num2str(app.controller.model.kin.d_j(3)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(3)))); ...
-                             num2str(app.controller.model.kin.a_j(4)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(4))) num2str(app.controller.model.kin.d_j(4)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(4)))); ...
-                             num2str(app.controller.model.kin.a_j(5)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(5))) num2str(app.controller.model.kin.d_j(5)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(5)))); ...
-                             num2str(app.controller.model.kin.a_j(6)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(6))) num2str(app.controller.model.kin.d_j(6)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(6))))};
-
-                LinkNames = {'1'; '2'; '3'; '4'; '5'; 'E'};
-
-                app.JointPosMaxTable.Data = {num2str(pMax(1,1)) num2str(pMax(2,1)) num2str(pMax(3,1)) num2str(pMax(4,1)) num2str(pMax(5,1))};
-                app.JointPosMinTable.Data = {num2str(pMin(1,1)) num2str(pMin(2,1)) num2str(pMin(3,1)) num2str(pMin(4,1)) num2str(pMin(5,1))};
-                app.JointVelMagTable.Data = {num2str(vMag(1,1)) num2str(vMag(2,1)) num2str(vMag(3,1)) num2str(vMag(4,1)) num2str(vMag(5,1))};
-                app.JointAccMagTable.Data = {num2str(aMag(1,1)) num2str(aMag(2,1)) num2str(aMag(3,1)) num2str(aMag(4,1)) num2str(aMag(5,1))};
-
-                app.JointPosMaxTable.ColumnWidth = {40,40,40,40,40};
-                app.JointPosMinTable.ColumnWidth = {40,40,40,40,40};
-                app.JointVelMagTable.ColumnWidth = {40,40,40,40,40};
-                app.JointAccMagTable.ColumnWidth = {40,40,40,40,40};
-
-                app.MasskgLabel.Position = [7,294,254,22];
-                app.MassTable.ColumnWidth = {36,36,36,36,36};
-                app.MassTable.Position = [7,270,271,25];
-                app.MassTable.Data = {num2str(round(app.controller.model.dyn.m_j(1),2)) num2str(round(app.controller.model.dyn.m_j(2),2)) num2str(round(app.controller.model.dyn.m_j(3),2)) num2str(round(app.controller.model.dyn.m_j(4),2)) ...
-                                        num2str(round(app.controller.model.dyn.m_j(5),2))};
-
-                app.CenterofMassmLabel.Position = [7,244,254,22];
-                app.CenterofMassTable.ColumnWidth = {36,36,36,36,36};
-                app.CenterofMassTable.Position = [7,173,271,72];
-                app.CenterofMassTable.Data = {num2str(round(app.controller.model.dyn.rj_jcj(1,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(1,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,5),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,5),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,4),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,5),2))};
-
-                app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [7,147,254,22];
-                app.CenterofMassTable_2.ColumnWidth = {36,36,36,36,36};
-                app.CenterofMassTable_2.Position = [7,6,271,142];
-                app.CenterofMassTable_2.Data = {num2str(round(app.controller.model.dyn.Ij_cj(1,1,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,1,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,5),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,5),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,5),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,5),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,5),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,4),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,5),2))};
-
-                app.Button.Value = app.controller.model.kin.j_type(1,1);
-                app.Button_2.Value = app.controller.model.kin.j_type(2,1);
-                app.Button_3.Value = app.controller.model.kin.j_type(3,1);
-                app.Button_4.Value = app.controller.model.kin.j_type(4,1);
-                app.Button_5.Value = app.controller.model.kin.j_type(5,1);
-
-                app.q_1ButtonGroup.Visible = "on";
-                app.q_2ButtonGroup.Visible = "on";
-                app.q_3ButtonGroup.Visible = "on";
-                app.q_4ButtonGroup.Visible = "on";
-                app.q_5ButtonGroup.Visible = "on";
-                app.q_6ButtonGroup.Visible = "off";
-                app.q_7ButtonGroup.Visible = "off";
-
-            elseif app.controller.model.kin.n == 4
-
-                TableData = {num2str(app.controller.model.kin.a_j(1)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(1))) num2str(app.controller.model.kin.d_j(1)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(1)))); ...
-                             num2str(app.controller.model.kin.a_j(2)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(2))) num2str(app.controller.model.kin.d_j(2)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(2)))); ...
-                             num2str(app.controller.model.kin.a_j(3)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(3))) num2str(app.controller.model.kin.d_j(3)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(3)))); ...
-                             num2str(app.controller.model.kin.a_j(4)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(4))) num2str(app.controller.model.kin.d_j(4)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(4)))); ...
-                             num2str(app.controller.model.kin.a_j(5)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(5))) num2str(app.controller.model.kin.d_j(5)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(5))))};
-
-                LinkNames = {'1'; '2'; '3'; '4'; 'E'};
-
-                app.JointPosMaxTable.Data = {num2str(pMax(1,1)) num2str(pMax(2,1)) num2str(pMax(3,1)) num2str(pMax(4,1))};
-                app.JointPosMinTable.Data = {num2str(pMin(1,1)) num2str(pMin(2,1)) num2str(pMin(3,1)) num2str(pMin(4,1))};
-                app.JointVelMagTable.Data = {num2str(vMag(1,1)) num2str(vMag(2,1)) num2str(vMag(3,1)) num2str(vMag(4,1))};
-                app.JointAccMagTable.Data = {num2str(aMag(1,1)) num2str(aMag(2,1)) num2str(aMag(3,1)) num2str(aMag(4,1))};
-
-                app.JointPosMaxTable.ColumnWidth = {40,40,40,40};
-                app.JointPosMinTable.ColumnWidth = {40,40,40,40};
-                app.JointVelMagTable.ColumnWidth = {40,40,40,40};
-                app.JointAccMagTable.ColumnWidth = {40,40,40,40};
-
-                app.MasskgLabel.Position = [7,294,254,22];
-                app.MassTable.ColumnWidth = {36,36,36,36};
-                app.MassTable.Position = [7,270,271,25];
-                app.MassTable.Data = {num2str(round(app.controller.model.dyn.m_j(1),2)) num2str(round(app.controller.model.dyn.m_j(2),2)) num2str(round(app.controller.model.dyn.m_j(3),2)) num2str(round(app.controller.model.dyn.m_j(4),2))};
-
-                app.CenterofMassmLabel.Position = [7,244,254,22];
-                app.CenterofMassTable.ColumnWidth = {36,36,36,36};
-                app.CenterofMassTable.Position = [7,173,271,72];
-                app.CenterofMassTable.Data = {num2str(round(app.controller.model.dyn.rj_jcj(1,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(1,1,4),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,4),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,3),2)) ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,4),2))};
-
-                app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [7,147,254,22];
-                app.CenterofMassTable_2.ColumnWidth = {36,36,36,36};
-                app.CenterofMassTable_2.Position = [7,6,271,142];
-                app.CenterofMassTable_2.Data = {num2str(round(app.controller.model.dyn.Ij_cj(1,1,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,1,4),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,4),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,4),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,4),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,4),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,3),2)) ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,4),2))};
-
-                app.Button.Value = app.controller.model.kin.j_type(1,1);
-                app.Button_2.Value = app.controller.model.kin.j_type(2,1);
-                app.Button_3.Value = app.controller.model.kin.j_type(3,1);
-                app.Button_4.Value = app.controller.model.kin.j_type(4,1);
-
-                app.q_1ButtonGroup.Visible = "on";
-                app.q_2ButtonGroup.Visible = "on";
-                app.q_3ButtonGroup.Visible = "on";
-                app.q_4ButtonGroup.Visible = "on";
-                app.q_5ButtonGroup.Visible = "off";
-                app.q_6ButtonGroup.Visible = "off";
-                app.q_7ButtonGroup.Visible = "off";
-
-            elseif app.controller.model.kin.n == 3
-
-                TableData = {num2str(app.controller.model.kin.a_j(1)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(1))) num2str(app.controller.model.kin.d_j(1)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(1)))); ...
-                             num2str(app.controller.model.kin.a_j(2)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(2))) num2str(app.controller.model.kin.d_j(2)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(2)))); ...
-                             num2str(app.controller.model.kin.a_j(3)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(3))) num2str(app.controller.model.kin.d_j(3)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(3)))); ...
-                             num2str(app.controller.model.kin.a_j(4)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(4))) num2str(app.controller.model.kin.d_j(4)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(4))))};
-
-                LinkNames = {'1'; '2'; '3'; 'E'};
-
-                app.JointPosMaxTable.Data = {num2str(pMax(1,1)) num2str(pMax(2,1)) num2str(pMax(3,1))};
-                app.JointPosMinTable.Data = {num2str(pMin(1,1)) num2str(pMin(2,1)) num2str(pMin(3,1))};
-                app.JointVelMagTable.Data = {num2str(vMag(1,1)) num2str(vMag(2,1)) num2str(vMag(3,1))};
-                app.JointAccMagTable.Data = {num2str(aMag(1,1)) num2str(aMag(2,1)) num2str(aMag(3,1))};
-
-                app.JointPosMaxTable.ColumnWidth = {40,40,40};
-                app.JointPosMinTable.ColumnWidth = {40,40,40};
-                app.JointVelMagTable.ColumnWidth = {40,40,40};
-                app.JointAccMagTable.ColumnWidth = {40,40,40};
-
-                app.MasskgLabel.Position = [7,294,254,22];
-                app.MassTable.ColumnWidth = {36,36,36};
-                app.MassTable.Position = [7,270,271,25];
-                app.MassTable.Data = {num2str(round(app.controller.model.dyn.m_j(1),2)) num2str(round(app.controller.model.dyn.m_j(2),2)) num2str(round(app.controller.model.dyn.m_j(3),2))};
-
-                app.CenterofMassmLabel.Position = [7,244,254,22];
-                app.CenterofMassTable.ColumnWidth = {36,36,36};
-                app.CenterofMassTable.Position = [7,173,271,72];
-                app.CenterofMassTable.Data = {num2str(round(app.controller.model.dyn.rj_jcj(1,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,3),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,3),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,2),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,3),2))};
-
-                app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [7,147,254,22];
-                app.CenterofMassTable_2.ColumnWidth = {36,36,36};
-                app.CenterofMassTable_2.Position = [7,6,271,142];
-                app.CenterofMassTable_2.Data = {num2str(round(app.controller.model.dyn.Ij_cj(1,1,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,3),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,3),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,3),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,3),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,3),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,2),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,3),2))};
-
-                app.Button.Value = app.controller.model.kin.j_type(1,1);
-                app.Button_2.Value = app.controller.model.kin.j_type(2,1);
-                app.Button_3.Value = app.controller.model.kin.j_type(3,1);
-
-                app.q_1ButtonGroup.Visible = "on";
-                app.q_2ButtonGroup.Visible = "on";
-                app.q_3ButtonGroup.Visible = "on";
-                app.q_4ButtonGroup.Visible = "off";
-                app.q_5ButtonGroup.Visible = "off";
-                app.q_6ButtonGroup.Visible = "off";
-                app.q_7ButtonGroup.Visible = "off";
-            elseif app.controller.model.kin.n == 2
-                TableData = {num2str(app.controller.model.kin.a_j(1)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(1))) num2str(app.controller.model.kin.d_j(1)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(1)))); ...
-                             num2str(app.controller.model.kin.a_j(2)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(2))) num2str(app.controller.model.kin.d_j(2)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(2)))); ...
-                             num2str(app.controller.model.kin.a_j(3)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(3))) num2str(app.controller.model.kin.d_j(3)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(3))))};
-
-                LinkNames = {'1'; '2'; 'E'};
-
-                app.JointPosMaxTable.Data = {num2str(pMax(1,1)) num2str(pMax(2,1))};
-                app.JointPosMinTable.Data = {num2str(pMin(1,1)) num2str(pMin(2,1))};
-                app.JointVelMagTable.Data = {num2str(vMag(1,1)) num2str(vMag(2,1))};
-                app.JointAccMagTable.Data = {num2str(aMag(1,1)) num2str(aMag(2,1))};
-
-                app.JointPosMaxTable.ColumnWidth = {40,40};
-                app.JointPosMinTable.ColumnWidth = {40,40};
-                app.JointVelMagTable.ColumnWidth = {40,40};
-                app.JointAccMagTable.ColumnWidth = {40,40};
-
-                app.MasskgLabel.Position = [7,294,254,22];
-                app.MassTable.ColumnWidth = {36,36};
-                app.MassTable.Position = [7,270,271,25];
-                app.MassTable.Data = {num2str(round(app.controller.model.dyn.m_j(1),2)) num2str(round(app.controller.model.dyn.m_j(2),2))};
-
-                app.CenterofMassmLabel.Position = [7,244,254,22];
-                app.CenterofMassTable.ColumnWidth = {36,36};
-                app.CenterofMassTable.Position = [7,173,271,72];
-                app.CenterofMassTable.Data = {num2str(round(app.controller.model.dyn.rj_jcj(1,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(1,1,2),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(2,1,2),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,1),2)) num2str(round(app.controller.model.dyn.rj_jcj(3,1,2),2))};
-
-                app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [7,147,254,22];
-                app.CenterofMassTable_2.ColumnWidth = {36,36};
-                app.CenterofMassTable_2.Position = [7,6,271,142];
-                app.CenterofMassTable_2.Data = {num2str(round(app.controller.model.dyn.Ij_cj(1,1,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,1,2),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,2,2),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(1,3,2),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,2,2),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(2,3,2),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,1),2)) num2str(round(app.controller.model.dyn.Ij_cj(3,3,2),2))};
-
-                app.Button.Value = app.controller.model.kin.j_type(1,1);
-                app.Button_2.Value = app.controller.model.kin.j_type(2,1);
-
-                app.q_1ButtonGroup.Visible = "on";
-                app.q_2ButtonGroup.Visible = "on";
-                app.q_3ButtonGroup.Visible = "off";
-                app.q_4ButtonGroup.Visible = "off";
-                app.q_5ButtonGroup.Visible = "off";
-                app.q_6ButtonGroup.Visible = "off";
-                app.q_7ButtonGroup.Visible = "off";
-            else
-                TableData = {num2str(app.controller.model.kin.a_j(1)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(1))) num2str(app.controller.model.kin.d_j(1)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(1)))); ...
-                             num2str(app.controller.model.kin.a_j(2)*1e3) num2str(rad2deg(app.controller.model.kin.alpha_j(2))) num2str(app.controller.model.kin.d_j(2)*1e3) num2str(round(rad2deg(app.controller.model.kin.theta_O_j(2))))};
-
-                LinkNames = {'1'; 'E'};
-
-                app.JointPosMaxTable.Data = {num2str(pMax(1,1))};
-                app.JointPosMinTable.Data = {num2str(pMin(1,1))};
-                app.JointVelMagTable.Data = {num2str(vMag(1,1))};
-                app.JointAccMagTable.Data = {num2str(aMag(1,1))};
-
-                app.JointPosMaxTable.ColumnWidth = {40};
-                app.JointPosMinTable.ColumnWidth = {40};
-                app.JointVelMagTable.ColumnWidth = {40};
-                app.JointAccMagTable.ColumnWidth = {40};
-
-                app.MasskgLabel.Position = [7,294,254,22];
-                app.MassTable.ColumnWidth = {36};
-                app.MassTable.Position = [7,270,271,25];
-                app.MassTable.Data = {num2str(round(app.controller.model.dyn.m_j(1),2))};
-
-                app.CenterofMassmLabel.Position = [7,244,254,22];
-                app.CenterofMassTable.ColumnWidth = {36};
-                app.CenterofMassTable.Position = [7,173,271,72];
-                app.CenterofMassTable.Data = {num2str(round(app.controller.model.dyn.rj_jcj(1,1,1),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(2,1,1),2)); ...
-                                        num2str(round(app.controller.model.dyn.rj_jcj(3,1,1),2))};
-
-                app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [7,147,254,22];
-                app.CenterofMassTable_2.ColumnWidth = {36};
-                app.CenterofMassTable_2.Position = [7,6,271,142];
-                app.CenterofMassTable_2.Data = {num2str(round(app.controller.model.dyn.Ij_cj(1,1,1),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,2,1),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(1,3,1),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,2,1),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(2,3,1),2)); ...
-                                                num2str(round(app.controller.model.dyn.Ij_cj(3,3,1),2))};
-
-                app.Button.Value = app.controller.model.kin.j_type(1,1);
-
-                app.q_1ButtonGroup.Visible = "on";
-                app.q_2ButtonGroup.Visible = "off";
-                app.q_3ButtonGroup.Visible = "off";
-                app.q_4ButtonGroup.Visible = "off";
-                app.q_5ButtonGroup.Visible = "off";
-                app.q_6ButtonGroup.Visible = "off";
-                app.q_7ButtonGroup.Visible = "off";
+            % 4. Joint Type Radio Buttons (Button 1..7) and ButtonGroups (q_1..7)
+            buttons = {app.Button, app.Button_2, app.Button_3, app.Button_4, app.Button_5, app.Button_6, app.Button_7};
+            buttonGroups = {app.q_1ButtonGroup, app.q_2ButtonGroup, app.q_3ButtonGroup, app.q_4ButtonGroup, ...
+                            app.q_5ButtonGroup, app.q_6ButtonGroup, app.q_7ButtonGroup};
+            for j = 1:7
+                if j <= n
+                    buttons{j}.Value = app.controller.model.kin.j_type(j, 1);
+                    buttonGroups{j}.Visible = "on";
+                else
+                    buttonGroups{j}.Visible = "off";
+                end
             end
 
-            T = table(TableData,'RowNames',LinkNames);
+            T = table(TableData, 'RowNames', LinkNames);
             C1 = table2cell(T);
             C = [T.Properties.RowNames, vertcat(C1{:})];
             app.DHTable.Data = C;
-            app.DHTable.ColumnName = {''; 'a_j'; ' _j'; 'd_j'; '_j'};
+            app.DHTable.ColumnName = {''; 'a_j'; 'alpha_j'; 'd_j'; 'theta_O_j'};
             app.DHTable.RowName = [];
-            app.DHTable.ColumnWidth = {15,55,55,55,55};
-            colStyle = uistyle('BackgroundColor',app.DHTable.BackgroundColor(2,:),'FontWeight','bold'); 
-            addStyle(app.DHTable,colStyle,'column',1)
+            app.DHTable.ColumnWidth = {15, 55, 55, 55, 55};
+            colStyle = uistyle('BackgroundColor', app.DHTable.BackgroundColor(2,:), 'FontWeight', 'bold'); 
+            addStyle(app.DHTable, colStyle, 'column', 1);
+            addStyle(app.DHTable, uistyle('HorizontalAlignment', 'right'), 'table', '');
 
-            addStyle(app.DHTable,uistyle('HorizontalAlignment','right'),'table','');
-
-            updateControlParams(app)
+            updateControlParams(app);
         end
 
         function updateEndEffectorModel(app)
@@ -828,7 +434,6 @@ classdef MainApp < matlab.apps.AppBase
                         app.EndEffectorDropDown.Value = 'F/T Sensor + Gripper';
                         app.controller.model.ee_att = 2;
                         app.grip = 0;
-    
                         updateRobotModel(app)
                     end
                 else
@@ -837,7 +442,6 @@ classdef MainApp < matlab.apps.AppBase
                         app.EndEffectorDropDown.Value = 'Gripper';
                         app.controller.model.ee_att = 1;
                         app.exceeding = 0;
-    
                         updateRobotModel(app)
                     end
                 end
@@ -850,128 +454,17 @@ classdef MainApp < matlab.apps.AppBase
                         app.controller.model.qEIni = app.controller.model.kin.qELim(2);
                         app.controller.model.qEDes = app.controller.model.kin.qELim(2);
                     end
-                    if (app.controller.model.robot_model ~= 4 && app.controller.model.robot_model ~= 5)
-                        app.GripperInitialLabel.Visible = 'on';
-                        app.GripperInitialSlider.Visible = 'on';
-                        app.GripperInitialSpinner.Visible = 'on';
-                        app.GripperFinalLabel.Visible = 'on';
-                        app.GripperFinalSlider.Visible = 'on';
-                        app.GripperFinalSpinner.Visible = 'on';
-                        app.GripperTaskInitialLabel.Visible = 'on';
-                        app.GripperTaskInitialSlider.Visible = 'on';
-                        app.GripperTaskInitialSpinner.Visible = 'on';
-                        app.GripperTaskFinalLabel.Visible = 'on';
-                        app.GripperTaskFinalSlider.Visible = 'on';
-                        app.GripperTaskFinalSpinner.Visible = 'on';
-                    else
-                        app.GripperInitialLabel.Visible = 'off';
-                        app.GripperInitialSlider.Visible = 'off';
-                        app.GripperInitialSpinner.Visible = 'off';
-                        app.GripperFinalLabel.Visible = 'off';
-                        app.GripperFinalSlider.Visible = 'off';
-                        app.GripperFinalSpinner.Visible = 'off';
-                        app.GripperTaskInitialLabel.Visible = 'off';
-                        app.GripperTaskInitialSlider.Visible = 'off';
-                        app.GripperTaskInitialSpinner.Visible = 'off';
-                        app.GripperTaskFinalLabel.Visible = 'off';
-                        app.GripperTaskFinalSlider.Visible = 'off';
-                        app.GripperTaskFinalSpinner.Visible = 'off';
-                    end
-                    if (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 3)
-                        app.GripperInitialLabel.Enable = 'on';
-                        app.GripperInitialSlider.Enable = 'on';
-                        app.GripperInitialSpinner.Enable = 'on';
-                        app.GripperFinalLabel.Enable = 'on';
-                        app.GripperFinalSlider.Enable = 'on';
-                        app.GripperFinalSpinner.Enable = 'on';
-                        app.GripperTaskInitialLabel.Enable = 'on';
-                        app.GripperTaskInitialSlider.Enable = 'on';
-                        app.GripperTaskInitialSpinner.Enable = 'on';
-                        app.GripperTaskFinalLabel.Enable = 'on';
-                        app.GripperTaskFinalSlider.Enable = 'on';
-                        app.GripperTaskFinalSpinner.Enable = 'on';
-                    else
-                        app.GripperInitialLabel.Enable = 'off';
-                        app.GripperInitialSlider.Enable = 'off';
-                        app.GripperInitialSpinner.Enable = 'off';
-                        app.GripperFinalLabel.Enable = 'off';
-                        app.GripperFinalSlider.Enable = 'off';
-                        app.GripperFinalSpinner.Enable = 'off';
-                        app.GripperTaskInitialLabel.Enable = 'off';
-                        app.GripperTaskInitialSlider.Enable = 'off';
-                        app.GripperTaskInitialSpinner.Enable = 'off';
-                        app.GripperTaskFinalLabel.Enable = 'off';
-                        app.GripperTaskFinalSlider.Enable = 'off';
-                        app.GripperTaskFinalSpinner.Enable = 'off';
-                    end
+                    isVis = (app.controller.model.robot_model ~= 4 && app.controller.model.robot_model ~= 5);
+                    isEn  = (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 3);
+                    setGripperControlsState(app, char(matlab.lang.OnOffSwitchState(isVis)), char(matlab.lang.OnOffSwitchState(isEn)));
                 elseif app.controller.model.ee_att == 2
-                    app.GripperInitialLabel.Visible = 'on';
-                    app.GripperInitialSlider.Visible = 'on';
-                    app.GripperInitialSpinner.Visible = 'on';
-                    app.GripperFinalLabel.Visible = 'on';
-                    app.GripperFinalSlider.Visible = 'on';
-                    app.GripperFinalSpinner.Visible = 'on';
-                    app.GripperInitialLabel.Enable = 'off';
-                    app.GripperInitialSlider.Enable = 'off';
-                    app.GripperInitialSpinner.Enable = 'off';
-                    app.GripperFinalLabel.Enable = 'off';
-                    app.GripperFinalSlider.Enable = 'off';
-                    app.GripperFinalSpinner.Visible = 'off';
-                    app.GripperTaskInitialLabel.Visible = 'on';
-                    app.GripperTaskInitialSlider.Visible = 'on';
-                    app.GripperTaskInitialSpinner.Visible = 'on';
-                    app.GripperTaskFinalLabel.Visible = 'on';
-                    app.GripperTaskFinalSlider.Visible = 'on';
-                    app.GripperTaskFinalSpinner.Visible = 'on';
-                    app.GripperTaskInitialLabel.Enable = 'off';
-                    app.GripperTaskInitialSlider.Enable = 'off';
-                    app.GripperTaskInitialSpinner.Enable = 'off';
-                    app.GripperTaskFinalLabel.Enable = 'off';
-                    app.GripperTaskFinalSlider.Enable = 'off';
-                    app.GripperTaskFinalSpinner.Visible = 'off';
+                    setGripperControlsState(app, 'on', 'off');
                 else
-                    app.GripperInitialLabel.Visible = 'off';
-                    app.GripperInitialSlider.Visible = 'off';
-                    app.GripperInitialSpinner.Visible = 'off';
-                    app.GripperFinalLabel.Visible = 'off';
-                    app.GripperFinalSlider.Visible = 'off';
-                    app.GripperFinalSpinner.Visible = 'off';
-                    app.GripperInitialLabel.Enable = 'off';
-                    app.GripperInitialSlider.Enable = 'off';
-                    app.GripperInitialSpinner.Enable = 'off';
-                    app.GripperFinalLabel.Enable = 'off';
-                    app.GripperFinalSlider.Enable = 'off';
-                    app.GripperFinalSpinner.Enable = 'off';
-                    app.GripperTaskInitialLabel.Visible = 'off';
-                    app.GripperTaskInitialSlider.Visible = 'off';
-                    app.GripperTaskInitialSpinner.Visible = 'off';
-                    app.GripperTaskFinalLabel.Visible = 'off';
-                    app.GripperTaskFinalSlider.Visible = 'off';
-                    app.GripperTaskFinalSpinner.Visible = 'off';
-                    app.GripperTaskInitialLabel.Enable = 'off';
-                    app.GripperTaskInitialSlider.Enable = 'off';
-                    app.GripperTaskInitialSpinner.Enable = 'off';
-                    app.GripperTaskFinalLabel.Enable = 'off';
-                    app.GripperTaskFinalSlider.Enable = 'off';
-                    app.GripperTaskFinalSpinner.Enable = 'off';
+                    setGripperControlsState(app, 'off', 'off');
                 end
             else
-                app.GripperInitialSpinner.Visible = 'off';
-                app.GripperInitialSlider.Visible = 'off';
-                app.GripperInitialLabel.Visible = 'off';
-                app.GripperInitialSpinner.Visible = 'off';
-                app.GripperFinalSlider.Visible = 'off';
-                app.GripperFinalLabel.Visible = 'off';
-                app.GripperFinalSpinner.Visible = 'off';
-                app.GripperTaskInitialSpinner.Visible = 'off';
-                app.GripperTaskInitialSlider.Visible = 'off';
-                app.GripperTaskInitialLabel.Visible = 'off';
-                app.GripperTaskInitialSpinner.Visible = 'off';
-                app.GripperTaskFinalSlider.Visible = 'off';
-                app.GripperTaskFinalLabel.Visible = 'off';
-                app.GripperTaskFinalSpinner.Visible = 'off';
+                setGripperControlsState(app, 'off', 'off');
             end
-
         end
 
         function resetJointValues(app)
@@ -988,257 +481,49 @@ classdef MainApp < matlab.apps.AppBase
         end
 
         function updateSliderSpinnerValues(app)
+            n = app.controller.model.kin.n;
+            for j = 1:7
+                if j <= n
+                    if app.controller.model.kin.j_type(j,1) == 1
+                        unitStr = ' [deg]  ';
+                        lims = rad2deg(app.controller.model.kin.q_posLim(j,:));
+                        valIni = rad2deg(app.controller.model.ini.q_pos(j));
+                        valFin = rad2deg(app.controller.model.fin.q_pos(j));
+                    else
+                        unitStr = ' [mm]  ';
+                        lims = 1e3 * app.controller.model.kin.q_posLim(j,:);
+                        valIni = 1e3 * app.controller.model.ini.q_pos(j);
+                        valFin = 1e3 * app.controller.model.fin.q_pos(j);
+                    end
 
-            if app.controller.model.kin.j_type(1,1) == 1
-                app.Axis1InitialLabel.Text      = "Joint 1 [deg]  ";
-                app.Axis1InitialSlider.Limits   = rad2deg(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1InitialSpinner.Limits  = rad2deg(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1InitialSlider.Value    = rad2deg(app.controller.model.ini.q_pos(1));
-                app.Axis1InitialSpinner.Value   = rad2deg(app.controller.model.ini.q_pos(1));
-                app.Axis1FinalLabel.Text        = "Joint 1 [deg]  ";
-                app.Axis1FinalSlider.Limits     = rad2deg(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1FinalSpinner.Limits    = rad2deg(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1FinalSlider.Value      = rad2deg(app.controller.model.fin.q_pos(1));
-                app.Axis1FinalSpinner.Value     = rad2deg(app.controller.model.fin.q_pos(1));
-            else
-                app.Axis1InitialLabel.Text      = "Joint 1 [mm]  ";
-                app.Axis1InitialSlider.Limits   = 1e3*(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1InitialSpinner.Limits  = 1e3*(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1InitialSlider.Value    = 1e3*(app.controller.model.ini.q_pos(1));
-                app.Axis1InitialSpinner.Value   = 1e3*(app.controller.model.ini.q_pos(1));
-                app.Axis1FinalLabel.Text        = "Joint 1 [mm]  ";
-                app.Axis1FinalSlider.Limits     = 1e3*(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1FinalSpinner.Limits    = 1e3*(app.controller.model.kin.q_posLim(1,:));
-                app.Axis1FinalSlider.Value      = 1e3*(app.controller.model.fin.q_pos(1));
-                app.Axis1FinalSpinner.Value     = 1e3*(app.controller.model.fin.q_pos(1));
-            end
-            if app.controller.model.kin.n > 1
-                if app.controller.model.kin.j_type(2,1) == 1
-                    app.Axis2InitialLabel.Text      = "Joint 2 [deg]  ";
-                    app.Axis2InitialSlider.Limits   = rad2deg(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2InitialSpinner.Limits  = rad2deg(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2InitialSlider.Value    = rad2deg(app.controller.model.ini.q_pos(2));
-                    app.Axis2InitialSpinner.Value   = rad2deg(app.controller.model.ini.q_pos(2));
-                    app.Axis2FinalLabel.Text        = "Joint 2 [deg]  ";
-                    app.Axis2FinalSlider.Limits     = rad2deg(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2FinalSpinner.Limits    = rad2deg(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2FinalSlider.Value      = rad2deg(app.controller.model.fin.q_pos(2));
-                    app.Axis2FinalSpinner.Value     = rad2deg(app.controller.model.fin.q_pos(2));
+                    app.JointUI.ini.labels(j).Text = sprintf('Joint %d%s', j, unitStr);
+                    app.JointUI.ini.sliders(j).Limits = lims;
+                    app.JointUI.ini.spinners(j).Limits = lims;
+                    app.JointUI.ini.sliders(j).Value = valIni;
+                    app.JointUI.ini.spinners(j).Value = valIni;
+
+                    app.JointUI.fin.labels(j).Text = sprintf('Joint %d%s', j, unitStr);
+                    app.JointUI.fin.sliders(j).Limits = lims;
+                    app.JointUI.fin.spinners(j).Limits = lims;
+                    app.JointUI.fin.sliders(j).Value = valFin;
+                    app.JointUI.fin.spinners(j).Value = valFin;
+
+                    if j > 1
+                        app.JointUI.ini.labels(j).Visible = 'on';
+                        app.JointUI.ini.sliders(j).Visible = 'on';
+                        app.JointUI.ini.spinners(j).Visible = 'on';
+                        app.JointUI.fin.labels(j).Visible = 'on';
+                        app.JointUI.fin.sliders(j).Visible = 'on';
+                        app.JointUI.fin.spinners(j).Visible = 'on';
+                    end
                 else
-                    app.Axis2InitialLabel.Text      = "Joint 2 [mm]  ";
-                    app.Axis2InitialSlider.Limits   = 1e3*(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2InitialSpinner.Limits  = 1e3*(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2InitialSlider.Value    = 1e3*(app.controller.model.ini.q_pos(2));
-                    app.Axis2InitialSpinner.Value   = 1e3*(app.controller.model.ini.q_pos(2));
-                    app.Axis2FinalLabel.Text        = "Joint 2 [mm]  ";
-                    app.Axis2FinalSlider.Limits     = 1e3*(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2FinalSpinner.Limits    = 1e3*(app.controller.model.kin.q_posLim(2,:));
-                    app.Axis2FinalSlider.Value      = 1e3*(app.controller.model.fin.q_pos(2));
-                    app.Axis2FinalSpinner.Value     = 1e3*(app.controller.model.fin.q_pos(2));
+                    app.JointUI.ini.labels(j).Visible = 'off';
+                    app.JointUI.ini.sliders(j).Visible = 'off';
+                    app.JointUI.ini.spinners(j).Visible = 'off';
+                    app.JointUI.fin.labels(j).Visible = 'off';
+                    app.JointUI.fin.sliders(j).Visible = 'off';
+                    app.JointUI.fin.spinners(j).Visible = 'off';
                 end
-                app.Axis2InitialLabel.Visible = 'on';
-                app.Axis2InitialSlider.Visible = 'on';
-                app.Axis2InitialSpinner.Visible = 'on';
-                app.Axis2FinalLabel.Visible = 'on';
-                app.Axis2FinalSlider.Visible = 'on';
-                app.Axis2FinalSpinner.Visible = 'on';
-            else
-                app.Axis2InitialLabel.Visible = 'off';
-                app.Axis2InitialSlider.Visible = 'off';
-                app.Axis2InitialSpinner.Visible = 'off';
-                app.Axis2FinalLabel.Visible = 'off';
-                app.Axis2FinalSlider.Visible = 'off';
-                app.Axis2FinalSpinner.Visible = 'off';
-            end
-            if app.controller.model.kin.n > 2
-                if app.controller.model.kin.j_type(3,1) == 1
-                    app.Axis3InitialLabel.Text      = "Joint 3 [deg]  ";
-                    app.Axis3InitialSlider.Limits   = rad2deg(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3InitialSpinner.Limits  = rad2deg(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3InitialSlider.Value    = rad2deg(app.controller.model.ini.q_pos(3));
-                    app.Axis3InitialSpinner.Value   = rad2deg(app.controller.model.ini.q_pos(3));
-                    app.Axis3FinalLabel.Text        = "Joint 3 [deg]  ";
-                    app.Axis3FinalSlider.Limits     = rad2deg(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3FinalSpinner.Limits    = rad2deg(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3FinalSlider.Value      = rad2deg(app.controller.model.fin.q_pos(3));
-                    app.Axis3FinalSpinner.Value     = rad2deg(app.controller.model.fin.q_pos(3));
-                else
-                    app.Axis3InitialLabel.Text      = "Joint 3 [mm]  ";
-                    app.Axis3InitialSlider.Limits   = 1e3*(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3InitialSpinner.Limits  = 1e3*(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3InitialSlider.Value    = 1e3*(app.controller.model.ini.q_pos(3));
-                    app.Axis3InitialSpinner.Value   = 1e3*(app.controller.model.ini.q_pos(3));
-                    app.Axis3FinalLabel.Text        = "Joint 3 [mm]  ";
-                    app.Axis3FinalSlider.Limits     = 1e3*(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3FinalSpinner.Limits    = 1e3*(app.controller.model.kin.q_posLim(3,:));
-                    app.Axis3FinalSlider.Value      = 1e3*(app.controller.model.fin.q_pos(3));
-                    app.Axis3FinalSpinner.Value     = 1e3*(app.controller.model.fin.q_pos(3));
-                end
-                app.Axis3InitialLabel.Visible = 'on';
-                app.Axis3InitialSlider.Visible = 'on';
-                app.Axis3InitialSpinner.Visible = 'on';
-                app.Axis3FinalLabel.Visible = 'on';
-                app.Axis3FinalSlider.Visible = 'on';
-                app.Axis3FinalSpinner.Visible = 'on';
-            else
-                app.Axis3InitialLabel.Visible = 'off';
-                app.Axis3InitialSlider.Visible = 'off';
-                app.Axis3InitialSpinner.Visible = 'off';
-                app.Axis3FinalLabel.Visible = 'off';
-                app.Axis3FinalSlider.Visible = 'off';
-                app.Axis3FinalSpinner.Visible = 'off';
-            end
-            if app.controller.model.kin.n > 3
-                if app.controller.model.kin.j_type(4,1) == 1
-                    app.Axis4InitialLabel.Text      = "Joint 4 [deg]  ";
-                    app.Axis4InitialSlider.Limits   = rad2deg(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4InitialSpinner.Limits  = rad2deg(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4InitialSlider.Value    = rad2deg(app.controller.model.ini.q_pos(4));
-                    app.Axis4InitialSpinner.Value   = rad2deg(app.controller.model.ini.q_pos(4));
-                    app.Axis4FinalLabel.Text        = "Joint 4 [deg]  ";
-                    app.Axis4FinalSlider.Limits     = rad2deg(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4FinalSpinner.Limits    = rad2deg(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4FinalSlider.Value      = rad2deg(app.controller.model.fin.q_pos(4));
-                    app.Axis4FinalSpinner.Value     = rad2deg(app.controller.model.fin.q_pos(4));
-                else
-                    app.Axis4InitialLabel.Text      = "Joint 4 [mm]  ";
-                    app.Axis4InitialSlider.Limits   = 1e3*(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4InitialSpinner.Limits  = 1e3*(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4InitialSlider.Value    = 1e3*(app.controller.model.ini.q_pos(4));
-                    app.Axis4InitialSpinner.Value   = 1e3*(app.controller.model.ini.q_pos(4));
-                    app.Axis4FinalLabel.Text        = "Joint 4 [mm]  ";
-                    app.Axis4FinalSlider.Limits     = 1e3*(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4FinalSpinner.Limits    = 1e3*(app.controller.model.kin.q_posLim(4,:));
-                    app.Axis4FinalSlider.Value      = 1e3*(app.controller.model.fin.q_pos(4));
-                    app.Axis4FinalSpinner.Value     = 1e3*(app.controller.model.fin.q_pos(4));
-                end
-                app.Axis4InitialLabel.Visible = 'on';
-                app.Axis4InitialSlider.Visible = 'on';
-                app.Axis4InitialSpinner.Visible = 'on';
-                app.Axis4FinalLabel.Visible = 'on';
-                app.Axis4FinalSlider.Visible = 'on';
-                app.Axis4FinalSpinner.Visible = 'on';
-            else
-                app.Axis4InitialLabel.Visible = 'off';
-                app.Axis4InitialSlider.Visible = 'off';
-                app.Axis4InitialSpinner.Visible = 'off';
-                app.Axis4FinalLabel.Visible = 'off';
-                app.Axis4FinalSlider.Visible = 'off';
-                app.Axis4FinalSpinner.Visible = 'off';
-            end
-            if app.controller.model.kin.n > 4
-                if app.controller.model.kin.j_type(5,1) == 1
-                    app.Axis5InitialLabel.Text      = "Joint 5 [deg]  ";
-                    app.Axis5InitialSlider.Limits   = rad2deg(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5InitialSpinner.Limits  = rad2deg(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5InitialSlider.Value    = rad2deg(app.controller.model.ini.q_pos(5));
-                    app.Axis5InitialSpinner.Value   = rad2deg(app.controller.model.ini.q_pos(5));
-                    app.Axis5FinalLabel.Text        = "Joint 5 [deg]  ";
-                    app.Axis5FinalSlider.Limits     = rad2deg(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5FinalSpinner.Limits    = rad2deg(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5FinalSlider.Value      = rad2deg(app.controller.model.fin.q_pos(5));
-                    app.Axis5FinalSpinner.Value     = rad2deg(app.controller.model.fin.q_pos(5));
-                else
-                    app.Axis5InitialLabel.Text      = "Joint 5 [mm]  ";
-                    app.Axis5InitialSlider.Limits   = 1e3*(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5InitialSpinner.Limits  = 1e3*(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5InitialSlider.Value    = 1e3*(app.controller.model.ini.q_pos(5));
-                    app.Axis5InitialSpinner.Value   = 1e3*(app.controller.model.ini.q_pos(5));
-                    app.Axis5FinalLabel.Text        = "Joint 5 [mm]  ";
-                    app.Axis5FinalSlider.Limits     = 1e3*(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5FinalSpinner.Limits    = 1e3*(app.controller.model.kin.q_posLim(5,:));
-                    app.Axis5FinalSlider.Value      = 1e3*(app.controller.model.fin.q_pos(5));
-                    app.Axis5FinalSpinner.Value     = 1e3*(app.controller.model.fin.q_pos(5));
-                end
-                app.Axis5InitialLabel.Visible = 'on';
-                app.Axis5InitialSlider.Visible = 'on';
-                app.Axis5InitialSpinner.Visible = 'on';
-                app.Axis5FinalLabel.Visible = 'on';
-                app.Axis5FinalSlider.Visible = 'on';
-                app.Axis5FinalSpinner.Visible = 'on';
-            else
-                app.Axis5InitialLabel.Visible = 'off';
-                app.Axis5InitialSlider.Visible = 'off';
-                app.Axis5InitialSpinner.Visible = 'off';
-                app.Axis5FinalLabel.Visible = 'off';
-                app.Axis5FinalSlider.Visible = 'off';
-                app.Axis5FinalSpinner.Visible = 'off';
-            end
-            if app.controller.model.kin.n > 5
-                if app.controller.model.kin.j_type(6,1) == 1
-                    app.Axis6InitialLabel.Text      = "Joint 6 [deg]  ";
-                    app.Axis6InitialSlider.Limits   = rad2deg(app.controller.model.kin.q_posLim(6 ,:));
-                    app.Axis6InitialSpinner.Limits  = rad2deg(app.controller.model.kin.q_posLim(6 ,:));
-                    app.Axis6InitialSlider.Value    = rad2deg(app.controller.model.ini.q_pos(6));
-                    app.Axis6InitialSpinner.Value   = rad2deg(app.controller.model.ini.q_pos(6));
-                    app.Axis6FinalLabel.Text        = "Joint 6 [deg]  ";
-                    app.Axis6FinalSlider.Limits     = rad2deg(app.controller.model.kin.q_posLim(6 ,:));
-                    app.Axis6FinalSpinner.Limits    = rad2deg(app.controller.model.kin.q_posLim(6 ,:));
-                    app.Axis6FinalSlider.Value      = rad2deg(app.controller.model.fin.q_pos(6));
-                    app.Axis6FinalSpinner.Value     = rad2deg(app.controller.model.fin.q_pos(6));
-                else
-                    app.Axis6InitialLabel.Text      = "Joint 6 [mm]  ";
-                    app.Axis6InitialSlider.Limits   = 1e3*(app.controller.model.kin.q_posLim(6,:));
-                    app.Axis6InitialSpinner.Limits  = 1e3*(app.controller.model.kin.q_posLim(6,:));
-                    app.Axis6InitialSlider.Value    = 1e3*(app.controller.model.ini.q_pos(6));
-                    app.Axis6InitialSpinner.Value   = 1e3*(app.controller.model.ini.q_pos(6));
-                    app.Axis6FinalLabel.Text        = "Joint 6 [mm]  ";
-                    app.Axis6FinalSlider.Limits     = 1e3*(app.controller.model.kin.q_posLim(6,:));
-                    app.Axis6FinalSpinner.Limits    = 1e3*(app.controller.model.kin.q_posLim(6,:));
-                    app.Axis6FinalSlider.Value      = 1e3*(app.controller.model.fin.q_pos(6));
-                    app.Axis6FinalSpinner.Value     = 1e3*(app.controller.model.fin.q_pos(6));
-                end
-                app.Axis6InitialLabel.Visible = 'on';
-                app.Axis6InitialSlider.Visible = 'on';
-                app.Axis6InitialSpinner.Visible = 'on';
-                app.Axis6FinalLabel.Visible = 'on';
-                app.Axis6FinalSlider.Visible = 'on';
-                app.Axis6FinalSpinner.Visible = 'on';
-            else
-                app.Axis6InitialLabel.Visible = 'off';
-                app.Axis6InitialSlider.Visible = 'off';
-                app.Axis6InitialSpinner.Visible = 'off';
-                app.Axis6FinalLabel.Visible = 'off';
-                app.Axis6FinalSlider.Visible = 'off';
-                app.Axis6FinalSpinner.Visible = 'off';
-            end
-            if app.controller.model.kin.n > 6
-                if app.controller.model.kin.j_type(7,1) == 1
-                    app.Axis7InitialLabel.Text      = "Joint 7 [deg]  ";
-                    app.Axis7InitialSlider.Limits   = rad2deg(app.controller.model.kin.q_posLim(7 ,:));
-                    app.Axis7InitialSpinner.Limits  = rad2deg(app.controller.model.kin.q_posLim(7 ,:));
-                    app.Axis7InitialSlider.Value    = rad2deg(app.controller.model.ini.q_pos(7));
-                    app.Axis7InitialSpinner.Value   = rad2deg(app.controller.model.ini.q_pos(7));
-                    app.Axis7FinalLabel.Text        = "Joint 7 [deg]  ";
-                    app.Axis7FinalSlider.Limits     = rad2deg(app.controller.model.kin.q_posLim(7 ,:));
-                    app.Axis7FinalSpinner.Limits    = rad2deg(app.controller.model.kin.q_posLim(7 ,:));
-                    app.Axis7FinalSlider.Value      = rad2deg(app.controller.model.fin.q_pos(7));
-                    app.Axis7FinalSpinner.Value     = rad2deg(app.controller.model.fin.q_pos(7));
-                else
-                    app.Axis7InitialLabel.Text      = "Joint 7 [mm]  ";
-                    app.Axis7InitialSlider.Limits   = 1e3*(app.controller.model.kin.q_posLim(7,:));
-                    app.Axis7InitialSpinner.Limits  = 1e3*(app.controller.model.kin.q_posLim(7,:));
-                    app.Axis7InitialSlider.Value    = 1e3*(app.controller.model.ini.q_pos(7));
-                    app.Axis7InitialSpinner.Value   = 1e3*(app.controller.model.ini.q_pos(7));
-                    app.Axis7FinalLabel.Text        = "Joint 7 [mm]  ";
-                    app.Axis7FinalSlider.Limits     = 1e3*(app.controller.model.kin.q_posLim(7,:));
-                    app.Axis7FinalSpinner.Limits    = 1e3*(app.controller.model.kin.q_posLim(7,:));
-                    app.Axis7FinalSlider.Value      = 1e3*(app.controller.model.fin.q_pos(7));
-                    app.Axis7FinalSpinner.Value     = 1e3*(app.controller.model.fin.q_pos(7));
-                end
-                app.Axis7InitialLabel.Visible = 'on';
-                app.Axis7InitialSlider.Visible = 'on';
-                app.Axis7InitialSpinner.Visible = 'on';
-                app.Axis7FinalLabel.Visible = 'on';
-                app.Axis7FinalSlider.Visible = 'on';
-                app.Axis7FinalSpinner.Visible = 'on';
-            else
-                app.Axis7InitialLabel.Visible = 'off';
-                app.Axis7InitialSlider.Visible = 'off';
-                app.Axis7InitialSpinner.Visible = 'off';
-                app.Axis7FinalLabel.Visible = 'off';
-                app.Axis7FinalSlider.Visible = 'off';
-                app.Axis7FinalSpinner.Visible = 'off';
             end
 
             if app.controller.model.ee_att == 1
@@ -1362,244 +647,93 @@ classdef MainApp < matlab.apps.AppBase
         end
         
         function updateEnableState(app)
-            
             if app.controller.model.running_flag == 1
+                running = true;
+                en = 'off';
                 app.RunButton.Enable = "off";
                 app.StopButton.Enable = "on";
-                app.SimModeSwitchLabel.Enable = "off";
-                app.SimModeSwitch.Enable = "off";
-                app.StepsEditFieldLabel.Enable = "off";
-                app.StepsEditField.Enable = "off";
-                if app.sim_mode == 1
-                    app.FinalsEditFieldLabel.Enable = "off";
-                    app.FinalsEditField.Enable = "off";
+            else
+                running = false;
+                en = 'on';
+                app.RunButton.Enable = "on";
+                app.StopButton.Enable = "off";
+            end
+
+            app.SimModeSwitchLabel.Enable = en;
+            app.SimModeSwitch.Enable = en;
+            app.StepsEditFieldLabel.Enable = en;
+            app.StepsEditField.Enable = en;
+            if app.sim_mode == 1
+                app.FinalsEditFieldLabel.Enable = en;
+                app.FinalsEditField.Enable = en;
+            end
+
+            % Joint controls
+            n = app.controller.model.kin.n;
+            for j = 1:7
+                if ~running && j <= n
+                    s = 'on';
+                else
+                    s = 'off';
                 end
-                
-                app.Axis1InitialLabel.Enable = 'off';
-                app.Axis1InitialSlider.Enable = 'off';
-                app.Axis1InitialSpinner.Enable = 'off';
-                app.Axis2InitialLabel.Enable = 'off';
-                app.Axis2InitialSlider.Enable = 'off';
-                app.Axis2InitialSpinner.Enable = 'off';
-                app.Axis3InitialLabel.Enable = 'off';
-                app.Axis3InitialSlider.Enable = 'off';
-                app.Axis3InitialSpinner.Enable = 'off';
-                app.Axis4InitialLabel.Enable = 'off';
-                app.Axis4InitialSlider.Enable = 'off';
-                app.Axis4InitialSpinner.Enable = 'off';
-                app.Axis5InitialLabel.Enable = 'off';
-                app.Axis5InitialSlider.Enable = 'off';
-                app.Axis5InitialSpinner.Enable = 'off';
-                app.Axis6InitialLabel.Enable = 'off';
-                app.Axis6InitialSlider.Enable = 'off';
-                app.Axis6InitialSpinner.Enable = 'off';
-                app.Axis7InitialLabel.Enable = 'off';
-                app.Axis7InitialSlider.Enable = 'off';
-                app.Axis7InitialSpinner.Enable = 'off';
+                app.JointUI.ini.sliders(j).Enable  = s;
+                app.JointUI.ini.spinners(j).Enable = s;
+                app.JointUI.ini.labels(j).Enable   = s;
+                app.JointUI.fin.sliders(j).Enable  = s;
+                app.JointUI.fin.spinners(j).Enable = s;
+                app.JointUI.fin.labels(j).Enable   = s;
+            end
+
+            % Task space controls
+            taskControls = [app.XAxisInitialLabel, app.XAxisInitialSlider, app.XAxisInitialSpinner, ...
+                            app.YAxisInitialLabel, app.YAxisInitialSlider, app.YAxisInitialSpinner, ...
+                            app.ZAxisInitialLabel, app.ZAxisInitialSlider, app.ZAxisInitialSpinner, ...
+                            app.PhiInitialLabel, app.PhiInitialSlider, app.PhiInitialSpinner, ...
+                            app.ThetaInitialLabel, app.ThetaInitialSlider, app.ThetaInitialSpinner, ...
+                            app.PsiInitialLabel, app.PsiInitialSlider, app.PsiInitialSpinner, ...
+                            app.GripperTaskInitialLabel, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner];
+            if ~running || app.controller.model.trj_profile ~= 0
+                taskControlsFin = [app.XAxisFinalLabel, app.XAxisFinalSlider, app.XAxisFinalSpinner, ...
+                                   app.YAxisFinalLabel, app.YAxisFinalSlider, app.YAxisFinalSpinner, ...
+                                   app.ZAxisFinalLabel, app.ZAxisFinalSlider, app.ZAxisFinalSpinner, ...
+                                   app.PhiFinalLabel, app.PhiFinalSlider, app.PhiFinalSpinner, ...
+                                   app.ThetaFinalLabel, app.ThetaFinalSlider, app.ThetaFinalSpinner, ...
+                                   app.PsiFinalLabel, app.PsiFinalSlider, app.PsiFinalSpinner, ...
+                                   app.GripperTaskFinalLabel, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner];
+                taskControls = [taskControls, taskControlsFin];
+            end
+            for k = 1:numel(taskControls)
+                taskControls(k).Enable = en;
+            end
+
+            if ~running && app.controller.model.ee_att == 1 && (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 3)
+                app.GripperInitialLabel.Enable = 'on';
+                app.GripperInitialSlider.Enable = 'on';
+                app.GripperInitialSpinner.Enable = 'on';
+                app.GripperFinalLabel.Enable = 'on';
+                app.GripperFinalSlider.Enable = 'on';
+                app.GripperFinalSpinner.Enable = 'on';
+            else
                 app.GripperInitialLabel.Enable = 'off';
                 app.GripperInitialSlider.Enable = 'off';
                 app.GripperInitialSpinner.Enable = 'off';
-                    
-                app.XAxisInitialLabel.Enable = 'off';
-                app.XAxisInitialSlider.Enable = 'off';
-                app.XAxisInitialSpinner.Enable = 'off';
-                app.YAxisInitialLabel.Enable = 'off';
-                app.YAxisInitialSlider.Enable = 'off';
-                app.YAxisInitialSpinner.Enable = 'off';
-                app.ZAxisInitialLabel.Enable = 'off';
-                app.ZAxisInitialSlider.Enable = 'off';
-                app.ZAxisInitialSpinner.Enable = 'off';
-                app.PhiInitialLabel.Enable = 'off';
-                app.PhiInitialSlider.Enable = 'off';
-                app.PhiInitialSpinner.Enable = 'off';
-                app.ThetaInitialLabel.Enable = 'off';
-                app.ThetaInitialSlider.Enable = 'off';
-                app.ThetaInitialSpinner.Enable = 'off';
-                app.PsiInitialLabel.Enable = 'off';
-                app.PsiInitialSlider.Enable = 'off';
-                app.PsiInitialSpinner.Enable = 'off';
-                app.GripperTaskInitialLabel.Enable = 'off';
-                app.GripperTaskInitialSlider.Enable = 'off';
-                app.GripperTaskInitialSpinner.Enable = 'off';
-                    
-                if app.controller.model.trj_profile ~= 0
-                    app.Axis1FinalLabel.Enable = 'off';
-                    app.Axis1FinalSlider.Enable = 'off';
-                    app.Axis1FinalSpinner.Enable = 'off';
-                    app.Axis2FinalLabel.Enable = 'off';
-                    app.Axis2FinalSlider.Enable = 'off';
-                    app.Axis2FinalSpinner.Enable = 'off';
-                    app.Axis3FinalLabel.Enable = 'off';
-                    app.Axis3FinalSlider.Enable = 'off';
-                    app.Axis3FinalSpinner.Enable = 'off';
-                    app.Axis4FinalLabel.Enable = 'off';
-                    app.Axis4FinalSlider.Enable = 'off';
-                    app.Axis4FinalSpinner.Enable = 'off';
-                    app.Axis5FinalLabel.Enable = 'off';
-                    app.Axis5FinalSlider.Enable = 'off';
-                    app.Axis5FinalSpinner.Enable = 'off';
-                    app.Axis6FinalLabel.Enable = 'off';
-                    app.Axis6FinalSlider.Enable = 'off';
-                    app.Axis6FinalSpinner.Enable = 'off';
-                    app.Axis7FinalLabel.Enable = 'off';
-                    app.Axis7FinalSlider.Enable = 'off';
-                    app.Axis7FinalSpinner.Enable = 'off';
+                if running
                     app.GripperFinalLabel.Enable = 'off';
                     app.GripperFinalSlider.Enable = 'off';
                     app.GripperFinalSpinner.Enable = 'off';
+                end
+            end
 
-                    app.XAxisFinalLabel.Enable = 'off';
-                    app.XAxisFinalSlider.Enable = 'off';
-                    app.XAxisFinalSpinner.Enable = 'off';
-                    app.YAxisFinalLabel.Enable = 'off';
-                    app.YAxisFinalSlider.Enable = 'off';
-                    app.YAxisFinalSpinner.Enable = 'off';
-                    app.ZAxisFinalLabel.Enable = 'off';
-                    app.ZAxisFinalSlider.Enable = 'off';
-                    app.ZAxisFinalSpinner.Enable = 'off';
-                    app.PhiFinalLabel.Enable = 'off';
-                    app.PhiFinalSlider.Enable = 'off';
-                    app.PhiFinalSpinner.Enable = 'off';
-                    app.ThetaFinalLabel.Enable = 'off';
-                    app.ThetaFinalSlider.Enable = 'off';
-                    app.ThetaFinalSpinner.Enable = 'off';
-                    app.PsiFinalLabel.Enable = 'off';
-                    app.PsiFinalSlider.Enable = 'off';
-                    app.PsiFinalSpinner.Enable = 'off';
-                    app.GripperTaskFinalLabel.Enable = 'off';
-                    app.GripperTaskFinalSlider.Enable = 'off';
-                    app.GripperTaskFinalSpinner.Enable = 'off';
-                end
-                
-                app.InterpolationLabel.Enable = "off";
-                app.InterpolationDropDown.Enable = "off";
-                app.LimitsLabel.Enable = "off";
-                app.VelEditFieldLabel.Enable = 'off';
-                app.VelEditField.Enable = 'off';
-                app.VelPrcLabel.Enable = "off";
-                if app.controller.model.trj_profile ~= 1
-                    app.AccEditFieldLabel.Enable = 'off';
-                    app.AccEditField.Enable = 'off';
-                    app.AccPrcLabel.Enable = "off";
-                end
-            else
-                app.RunButton.Enable = "on";
-                app.StopButton.Enable = "off";
-                app.SimModeSwitchLabel.Enable = "on";
-                app.SimModeSwitch.Enable = "on";
-                app.StepsEditFieldLabel.Enable = "on";
-                app.StepsEditField.Enable = "on";
-                if app.sim_mode == 1
-                    app.FinalsEditFieldLabel.Enable = "on";
-                    app.FinalsEditField.Enable = "on";
-                end
-                
-                app.Axis1InitialLabel.Enable = 'on';
-                app.Axis1InitialSlider.Enable = 'on';
-                app.Axis1InitialSpinner.Enable = 'on';
-                app.Axis2InitialLabel.Enable = 'on';
-                app.Axis2InitialSlider.Enable = 'on';
-                app.Axis2InitialSpinner.Enable = 'on';
-                app.Axis3InitialLabel.Enable = 'on';
-                app.Axis3InitialSlider.Enable = 'on';
-                app.Axis3InitialSpinner.Enable = 'on';
-                app.Axis4InitialLabel.Enable = 'on';
-                app.Axis4InitialSlider.Enable = 'on';
-                app.Axis4InitialSpinner.Enable = 'on';
-                app.Axis5InitialLabel.Enable = 'on';
-                app.Axis5InitialSlider.Enable = 'on';
-                app.Axis5InitialSpinner.Enable = 'on';
-                app.Axis6InitialLabel.Enable = 'on';
-                app.Axis6InitialSlider.Enable = 'on';
-                app.Axis6InitialSpinner.Enable = 'on';
-                app.Axis7InitialLabel.Enable = 'on';
-                app.Axis7InitialSlider.Enable = 'on';
-                app.Axis7InitialSpinner.Enable = 'on';
-                app.Axis1FinalLabel.Enable = 'on';
-                app.Axis1FinalSlider.Enable = 'on';
-                app.Axis1FinalSpinner.Enable = 'on';
-                app.Axis2FinalLabel.Enable = 'on';
-                app.Axis2FinalSlider.Enable = 'on';
-                app.Axis2FinalSpinner.Enable = 'on';
-                app.Axis3FinalLabel.Enable = 'on';
-                app.Axis3FinalSlider.Enable = 'on';
-                app.Axis3FinalSpinner.Enable = 'on';
-                app.Axis4FinalLabel.Enable = 'on';
-                app.Axis4FinalSlider.Enable = 'on';
-                app.Axis4FinalSpinner.Enable = 'on';
-                app.Axis5FinalLabel.Enable = 'on';
-                app.Axis5FinalSlider.Enable = 'on';
-                app.Axis5FinalSpinner.Enable = 'on';
-                app.Axis6FinalLabel.Enable = 'on';
-                app.Axis6FinalSlider.Enable = 'on';
-                app.Axis6FinalSpinner.Enable = 'on';
-                app.Axis7FinalLabel.Enable = 'on';
-                app.Axis7FinalSlider.Enable = 'on';
-                app.Axis7FinalSpinner.Enable = 'on';
-                
-                app.XAxisInitialLabel.Enable = 'on';
-                app.XAxisInitialSlider.Enable = 'on';
-                app.XAxisInitialSpinner.Enable = 'on';
-                app.YAxisInitialLabel.Enable = 'on';
-                app.YAxisInitialSlider.Enable = 'on';
-                app.YAxisInitialSpinner.Enable = 'on';
-                app.ZAxisInitialLabel.Enable = 'on';
-                app.ZAxisInitialSlider.Enable = 'on';
-                app.ZAxisInitialSpinner.Enable = 'on';
-                app.PhiInitialLabel.Enable = 'on';
-                app.PhiInitialSlider.Enable = 'on';
-                app.PhiInitialSpinner.Enable = 'on';
-                app.ThetaInitialLabel.Enable = 'on';
-                app.ThetaInitialSlider.Enable = 'on';
-                app.ThetaInitialSpinner.Enable = 'on';
-                app.PsiInitialLabel.Enable = 'on';
-                app.PsiInitialSlider.Enable = 'on';
-                app.PsiInitialSpinner.Enable = 'on';
-                app.GripperTaskInitialLabel.Enable = 'on';
-                app.GripperTaskInitialSlider.Enable = 'on';
-                app.GripperTaskInitialSpinner.Enable = 'on';
-                app.XAxisFinalLabel.Enable = 'on';
-                app.XAxisFinalSlider.Enable = 'on';
-                app.XAxisFinalSpinner.Enable = 'on';
-                app.YAxisFinalLabel.Enable = 'on';
-                app.YAxisFinalSlider.Enable = 'on';
-                app.YAxisFinalSpinner.Enable = 'on';
-                app.ZAxisFinalLabel.Enable = 'on';
-                app.ZAxisFinalSlider.Enable = 'on';
-                app.ZAxisFinalSpinner.Enable = 'on';
-                app.PhiFinalLabel.Enable = 'on';
-                app.PhiFinalSlider.Enable = 'on';
-                app.PhiFinalSpinner.Enable = 'on';
-                app.ThetaFinalLabel.Enable = 'on';
-                app.ThetaFinalSlider.Enable = 'on';
-                app.ThetaFinalSpinner.Enable = 'on';
-                app.PsiFinalLabel.Enable = 'on';
-                app.PsiFinalSlider.Enable = 'on';
-                app.PsiFinalSpinner.Enable = 'on';
-                app.GripperTaskFinalLabel.Enable = 'on';
-                app.GripperTaskFinalSlider.Enable = 'on';
-                app.GripperTaskFinalSpinner.Enable = 'on';
-                    
-                if app.controller.model.ee_att == 1 && (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 3)
-                    app.GripperInitialLabel.Enable = 'on';
-                    app.GripperInitialSlider.Enable = 'on';
-                    app.GripperInitialSpinner.Enable = 'on';
-                    app.GripperFinalLabel.Enable = 'on';
-                    app.GripperFinalSlider.Enable = 'on';
-                    app.GripperFinalSpinner.Enable = 'on';
-                end
-                
-                app.InterpolationLabel.Enable = "on";
-                app.InterpolationDropDown.Enable = "on";
-                app.LimitsLabel.Enable = "on";
-                app.VelEditFieldLabel.Enable = "on";
-                app.VelEditField.Enable = "on";
-                app.VelPrcLabel.Enable = "on";
-                if app.controller.model.trj_profile ~= 1
-                    app.AccEditFieldLabel.Enable = "on";
-                    app.AccEditField.Enable = "on";
-                    app.AccPrcLabel.Enable = "on";
-                end
+            app.InterpolationLabel.Enable = en;
+            app.InterpolationDropDown.Enable = en;
+            app.LimitsLabel.Enable = en;
+            app.VelEditFieldLabel.Enable = en;
+            app.VelEditField.Enable = en;
+            app.VelPrcLabel.Enable = en;
+            if app.controller.model.trj_profile ~= 1
+                app.AccEditFieldLabel.Enable = en;
+                app.AccEditField.Enable = en;
+                app.AccPrcLabel.Enable = en;
             end
             
             if (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 4 || app.controller.model.robot_model == 5) && app.controller.model.line_on == 0
@@ -1661,101 +795,61 @@ classdef MainApp < matlab.apps.AppBase
             app.controller.updateFinTimeTrj(app.prcnt);
         end
 
-        function getFwdGeoIni(app)
-            app.controller.updateForwardKinematics('ini', app.eulerSet);
-        end
 
-        function getFwdGeoFin(app)
-            app.controller.updateForwardKinematics('fin', app.eulerSet);
-        end
         
     end
     
     methods (Access = private)
 
-                function updateJointSpaceUI(app, targetType)
+        function updateJointSpaceUI(app, targetType)
             n = app.controller.model.kin.n;
-            if strcmp(targetType, 'ini')
-                q = app.controller.model.ini.q_pos;
-                for i = 1:n
-                    if app.controller.model.kin.j_type(i) == 1
-                        val = rad2deg(q(i));
-                    else
-                        val = 1e3*q(i);
-                    end
-                    sliderName = sprintf('Axis%dInitialSlider', i);
-                    spinnerName = sprintf('Axis%dInitialSpinner', i);
-                    lims = app.(sliderName).Limits;
-                    val = min(max(val, lims(1)), lims(2));
-                    app.(sliderName).Value = val;
-                    app.(spinnerName).Value = val;
+            q = app.controller.model.(targetType).q_pos;
+            for i = 1:n
+                if app.controller.model.kin.j_type(i) == 1
+                    val = rad2deg(q(i));
+                else
+                    val = 1e3 * q(i);
                 end
-            else
-                q = app.controller.model.fin.q_pos;
-                for i = 1:n
-                    if app.controller.model.kin.j_type(i) == 1
-                        val = rad2deg(q(i));
-                    else
-                        val = 1e3*q(i);
-                    end
-                    sliderName = sprintf('Axis%dFinalSlider', i);
-                    spinnerName = sprintf('Axis%dFinalSpinner', i);
-                    lims = app.(sliderName).Limits;
-                    val = min(max(val, lims(1)), lims(2));
-                    app.(sliderName).Value = val;
-                    app.(spinnerName).Value = val;
-                end
+                lims = app.JointUI.(targetType).sliders(i).Limits;
+                val = min(max(val, lims(1)), lims(2));
+                app.JointUI.(targetType).sliders(i).Value  = val;
+                app.JointUI.(targetType).spinners(i).Value = val;
             end
         end
 
         function updateTaskSpaceUI(app, targetType)
+            t = app.controller.model.(targetType).t_pos * 1e3;
+            r = rad2deg(app.controller.model.(targetType).r_pos);
+
             if strcmp(targetType, 'ini')
-                t = app.controller.model.ini.t_pos * 1e3;
-                r = rad2deg(app.controller.model.ini.r_pos);
-                
-                t(1) = min(max(t(1), app.XAxisInitialSlider.Limits(1)), app.XAxisInitialSlider.Limits(2));
-                t(2) = min(max(t(2), app.YAxisInitialSlider.Limits(1)), app.YAxisInitialSlider.Limits(2));
-                t(3) = min(max(t(3), app.ZAxisInitialSlider.Limits(1)), app.ZAxisInitialSlider.Limits(2));
-                r(1) = min(max(r(1), app.PhiInitialSlider.Limits(1)), app.PhiInitialSlider.Limits(2));
-                r(2) = min(max(r(2), app.ThetaInitialSlider.Limits(1)), app.ThetaInitialSlider.Limits(2));
-                r(3) = min(max(r(3), app.PsiInitialSlider.Limits(1)), app.PsiInitialSlider.Limits(2));
-
-                app.XAxisInitialSlider.Value = t(1);
-                app.XAxisInitialSpinner.Value = t(1);
-                app.YAxisInitialSlider.Value = t(2);
-                app.YAxisInitialSpinner.Value = t(2);
-                app.ZAxisInitialSlider.Value = t(3);
-                app.ZAxisInitialSpinner.Value = t(3);
-                app.PhiInitialSlider.Value = r(1);
-                app.PhiInitialSpinner.Value = r(1);
-                app.ThetaInitialSlider.Value = r(2);
-                app.ThetaInitialSpinner.Value = r(2);
-                app.PsiInitialSlider.Value = r(3);
-                app.PsiInitialSpinner.Value = r(3);
+                sX = app.XAxisInitialSlider; spX = app.XAxisInitialSpinner;
+                sY = app.YAxisInitialSlider; spY = app.YAxisInitialSpinner;
+                sZ = app.ZAxisInitialSlider; spZ = app.ZAxisInitialSpinner;
+                sPhi = app.PhiInitialSlider; spPhi = app.PhiInitialSpinner;
+                sTh = app.ThetaInitialSlider; spTh = app.ThetaInitialSpinner;
+                sPsi = app.PsiInitialSlider; spPsi = app.PsiInitialSpinner;
             else
-                t = app.controller.model.fin.t_pos * 1e3;
-                r = rad2deg(app.controller.model.fin.r_pos);
-
-                t(1) = min(max(t(1), app.XAxisFinalSlider.Limits(1)), app.XAxisFinalSlider.Limits(2));
-                t(2) = min(max(t(2), app.YAxisFinalSlider.Limits(1)), app.YAxisFinalSlider.Limits(2));
-                t(3) = min(max(t(3), app.ZAxisFinalSlider.Limits(1)), app.ZAxisFinalSlider.Limits(2));
-                r(1) = min(max(r(1), app.PhiFinalSlider.Limits(1)), app.PhiFinalSlider.Limits(2));
-                r(2) = min(max(r(2), app.ThetaFinalSlider.Limits(1)), app.ThetaFinalSlider.Limits(2));
-                r(3) = min(max(r(3), app.PsiFinalSlider.Limits(1)), app.PsiFinalSlider.Limits(2));
-
-                app.XAxisFinalSlider.Value = t(1);
-                app.XAxisFinalSpinner.Value = t(1);
-                app.YAxisFinalSlider.Value = t(2);
-                app.YAxisFinalSpinner.Value = t(2);
-                app.ZAxisFinalSlider.Value = t(3);
-                app.ZAxisFinalSpinner.Value = t(3);
-                app.PhiFinalSlider.Value = r(1);
-                app.PhiFinalSpinner.Value = r(1);
-                app.ThetaFinalSlider.Value = r(2);
-                app.ThetaFinalSpinner.Value = r(2);
-                app.PsiFinalSlider.Value = r(3);
-                app.PsiFinalSpinner.Value = r(3);
+                sX = app.XAxisFinalSlider; spX = app.XAxisFinalSpinner;
+                sY = app.YAxisFinalSlider; spY = app.YAxisFinalSpinner;
+                sZ = app.ZAxisFinalSlider; spZ = app.ZAxisFinalSpinner;
+                sPhi = app.PhiFinalSlider; spPhi = app.PhiFinalSpinner;
+                sTh = app.ThetaFinalSlider; spTh = app.ThetaFinalSpinner;
+                sPsi = app.PsiFinalSlider; spPsi = app.PsiFinalSpinner;
             end
+
+            t(1) = min(max(t(1), sX.Limits(1)), sX.Limits(2));
+            t(2) = min(max(t(2), sY.Limits(1)), sY.Limits(2));
+            t(3) = min(max(t(3), sZ.Limits(1)), sZ.Limits(2));
+            r(1) = min(max(r(1), sPhi.Limits(1)), sPhi.Limits(2));
+            r(2) = min(max(r(2), sTh.Limits(1)), sTh.Limits(2));
+            r(3) = min(max(r(3), sPsi.Limits(1)), sPsi.Limits(2));
+
+            sX.Value = t(1); spX.Value = t(1);
+            sY.Value = t(2); spY.Value = t(2);
+            sZ.Value = t(3); spZ.Value = t(3);
+            sPhi.Value = r(1); spPhi.Value = r(1);
+            sTh.Value = r(2); spTh.Value = r(2);
+            sPsi.Value = r(3); spPsi.Value = r(3);
         end
 
         function updateSimulationLabels(app, time, q_pos, n)
@@ -1774,62 +868,147 @@ classdef MainApp < matlab.apps.AppBase
             drawnow limitrate;
         end
 
-        function qDes = solveInverseKinematics(app, RGoal, tGoal, q0)
-            % Pack the configuration required by Inverse Kinematics
-            invGeoConfig.inv_geo_type = app.controller.model.inv_geo_type;
-            invGeoConfig.robot_model = app.controller.model.robot_model;
-            invGeoConfig.TI_0 = app.controller.model.TI_0;
-            invGeoConfig.inv_geo_trn = app.controller.model.inv_geo_trn;
-            invGeoConfig.kp_inv = app.controller.model.kp_inv;
-            invGeoConfig.kr_inv = app.controller.model.kr_inv;
-            invGeoConfig.kp_trn = app.controller.model.kp_trn;
-            invGeoConfig.kr_trn = app.controller.model.kr_trn;
 
-            qDes = robotics.engines.KinematicsEngine.inverseKinematics(...
-                app.controller.robot, invGeoConfig, app.controller.model.kin, RGoal, tGoal, q0);
-        end
 
         function updateControlParams(app)
             % Updates the GUI Table and edit fields from the Model's control state
-            % (The default parameters were already merged by SimulationController.initRobot)
-            algo = app.controller.model.ctr.algo;
-            n = app.controller.model.kin.n;
-            tableData = cell(n, 3);
-
-            if algo == 1
-                % Computed Torque Control (IDC)
-                if isfield(app.controller.model.ctr, 'Kp_jnt_idc')
-                    for i = 1:n
-                        tableData{i, 1} = app.controller.model.ctr.Kp_jnt_idc(i);
-                        tableData{i, 2} = app.controller.model.ctr.Ki_jnt_idc(i);
-                        tableData{i, 3} = app.controller.model.ctr.Kd_jnt_idc(i);
-                    end
-                    app.GainTable.Data = tableData;
-                end
-            else
-                % PID Control
-                for i = 1:n
-                    tableData{i, 1} = app.controller.model.ctr.Kp_jnt_pid(i);
-                    tableData{i, 2} = app.controller.model.ctr.Ki_jnt_pid(i);
-                    tableData{i, 3} = app.controller.model.ctr.Kd_jnt_pid(i);
-                end
-                app.GainTable.Data = tableData;
-            end
-
+            app.GainTable.Data = app.viewModel.getGainTableData();
+            app.GainTable.RowName = app.viewModel.getGainTableRowNames();
+            app.GainTable.ColumnEditable = logical([1 1 1]);
+            app.GainTable.ColumnWidth = {65, 65, 65};
             app.CycleEditField.Value = app.controller.model.ctr.tcyc;
-
             if isfield(app.controller.model.ctr, 'comp_grv')
                 app.CompGravityCheckBox.Value = app.controller.model.ctr.comp_grv;
             end
+        end
 
-            % Update table row names based on joints
-            rowNames = cell(n, 1);
-            for i = 1:n
-                rowNames{i} = num2str(i);
+        function initUIComponentMaps(app)
+            % Initialize UI component arrays for fast iteration and clean synchronization
+            app.JointUI.ini.sliders  = [app.Axis1InitialSlider, app.Axis2InitialSlider, app.Axis3InitialSlider, ...
+                app.Axis4InitialSlider, app.Axis5InitialSlider, app.Axis6InitialSlider, app.Axis7InitialSlider];
+            app.JointUI.ini.spinners = [app.Axis1InitialSpinner, app.Axis2InitialSpinner, app.Axis3InitialSpinner, ...
+                app.Axis4InitialSpinner, app.Axis5InitialSpinner, app.Axis6InitialSpinner, app.Axis7InitialSpinner];
+            app.JointUI.ini.labels   = [app.Axis1InitialLabel, app.Axis2InitialLabel, app.Axis3InitialLabel, ...
+                app.Axis4InitialLabel, app.Axis5InitialLabel, app.Axis6InitialLabel, app.Axis7InitialLabel];
+
+            app.JointUI.fin.sliders  = [app.Axis1FinalSlider, app.Axis2FinalSlider, app.Axis3FinalSlider, ...
+                app.Axis4FinalSlider, app.Axis5FinalSlider, app.Axis6FinalSlider, app.Axis7FinalSlider];
+            app.JointUI.fin.spinners = [app.Axis1FinalSpinner, app.Axis2FinalSpinner, app.Axis3FinalSpinner, ...
+                app.Axis4FinalSpinner, app.Axis5FinalSpinner, app.Axis6FinalSpinner, app.Axis7FinalSpinner];
+            app.JointUI.fin.labels   = [app.Axis1FinalLabel, app.Axis2FinalLabel, app.Axis3FinalLabel, ...
+                app.Axis4FinalLabel, app.Axis5FinalLabel, app.Axis6FinalLabel, app.Axis7FinalLabel];
+        end
+
+        function handleJointInput(app, target, jointIdx, val, peerControl)
+            peerControl.Value = val;
+            if app.controller.model.kin.j_type(jointIdx)
+                pos = deg2rad(val);
+            else
+                pos = 1e-3 * val;
             end
-            app.GainTable.RowName = rowNames;
-            app.GainTable.ColumnEditable = logical([1 1 1]);
-            app.GainTable.ColumnWidth = {65,65,65};
+            app.controller.setJointPosition(target, jointIdx, pos, app.eulerSet);
+            app.updateTaskSpaceUI(target);
+            app.controller.updateFinTimeTrj(app.prcnt);
+            updateRunButtonState(app);
+            app.controller.updateView();
+        end
+
+        function handleTaskPosInput(app, target, axisIdx, val, peerControl)
+            peerControl.Value = val;
+            t_ref = app.controller.model.(target).t_pos;
+            r_ref = app.controller.model.(target).r_pos;
+            t_ref(axisIdx) = 1e-3 * val;
+            app.controller.setTargetPosition(target, t_ref, r_ref, app.eulerSet);
+            app.updateJointSpaceUI(target);
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+            app.controller.updateView();
+        end
+
+        function handleTaskEulerInput(app, target, eulerIdx, val, peerControl)
+            peerControl.Value = val;
+            t_ref = app.controller.model.(target).t_pos;
+            r_ref = app.controller.model.(target).r_pos;
+            r_ref(eulerIdx) = deg2rad(val);
+            app.controller.setTargetPosition(target, t_ref, r_ref, app.eulerSet);
+            app.updateJointSpaceUI(target);
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+            app.controller.updateView();
+        end
+
+        function handleGripperInput(app, target, val, peerControls)
+            for i = 1:numel(peerControls)
+                peerControls(i).Value = val;
+            end
+            if app.controller.model.robot_model == 3
+                qE = deg2rad(val);
+            else
+                qE = val * 1e-3;
+            end
+            if strcmp(target, 'ini')
+                app.controller.model.qEIni = qE;
+            else
+                app.controller.model.qEDes = qE;
+            end
+            app.controller.updateView();
+        end
+
+        function setGripperControlsState(app, isVisible, isEnabled)
+            controls = [app.GripperInitialLabel, app.GripperInitialSlider, app.GripperInitialSpinner, ...
+                app.GripperFinalLabel, app.GripperFinalSlider, app.GripperFinalSpinner, ...
+                app.GripperTaskInitialLabel, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner, ...
+                app.GripperTaskFinalLabel, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner];
+            for k = 1:numel(controls)
+                controls(k).Visible = isVisible;
+                controls(k).Enable = isEnabled;
+            end
+        end
+
+        function handleTabSelection(app, targetMode)
+            app.controller.model.task_mode = targetMode;
+            if targetMode == 1
+                app.controller.model.ini.r_pos = robotics.math.getEulerPosVec(app.controller.model.ini.Re, app.eulerSet);
+            elseif targetMode == 2
+                app.controller.model.fin.r_pos = robotics.math.getEulerPosVec(app.controller.model.fin.Re, app.eulerSet);
+            end
+            app.controller.initRobot();
+            app.controller.updateView();
+        end
+
+        function handleCustomDHTableEdit(app, row, col, val)
+            if col == 2 || col == 4
+                valScaled = val * 1e-3;
+            else
+                valScaled = deg2rad(val);
+            end
+            app.DH_custom(row, col-1) = valScaled;
+            updateRobotModel(app);
+            app.controller.updateView();
+        end
+
+        function handleJointTypeChanged(app, jointIdx, val)
+            app.j_type_custom(jointIdx,:) = val;
+            updateRobotModel(app);
+            resetJointValues(app);
+            updateSliderSpinnerValues(app);
+            app.controller.updateView();
+        end
+
+        function setJointControlsEnabled(app, n)
+            for j = 1:7
+                if j <= n
+                    s = 'on';
+                else
+                    s = 'off';
+                end
+                app.JointUI.ini.sliders(j).Enable  = s;
+                app.JointUI.ini.spinners(j).Enable = s;
+                app.JointUI.ini.labels(j).Enable   = s;
+                app.JointUI.fin.sliders(j).Enable  = s;
+                app.JointUI.fin.spinners(j).Enable = s;
+                app.JointUI.fin.labels(j).Enable   = s;
+            end
         end
 
     end
@@ -1841,6 +1020,9 @@ classdef MainApp < matlab.apps.AppBase
         % Code that executes after component creation
         function startupFcn(app)
             
+            % Initialize UI Component Arrays
+            app.initUIComponentMaps();
+
             % Initialize the Simulation Controller
             app.controller = robotics.engines.SimulationController(app.UIAxes);
             addlistener(app.controller.model, 'ModelUpdated', @(src, event) app.refreshUI());
@@ -2055,47 +1237,30 @@ classdef MainApp < matlab.apps.AppBase
         % Value changed function: InterpolationDropDown
         function InterpolationDropDownValueChanged(app, event)
             app.trj_profile_text = app.InterpolationDropDown.Value;
-
             switch app.trj_profile_text
                 case 'Linear'
                     app.controller.model.trj_profile = 1;
-                    app.LimitsLabel.Visible = 'on';
-                    app.VelEditField.Visible = 'on';
-                    app.VelEditFieldLabel.Visible = 'on';
-                    app.VelPrcLabel.Visible = 'on';
-                    app.AccEditField.Visible = 'off';
-                    app.AccEditFieldLabel.Visible = 'off';
-                    app.AccPrcLabel.Visible = 'off';
                 case 'Cubic'
                     app.controller.model.trj_profile = 2;
-                    app.LimitsLabel.Visible = 'on';
-                    app.VelEditField.Visible = 'on';
-                    app.VelEditFieldLabel.Visible = 'on';
-                    app.VelPrcLabel.Visible = 'on';
-                    app.AccEditField.Visible = 'on';
-                    app.AccEditFieldLabel.Visible = 'on';
-                    app.AccPrcLabel.Visible = 'on';
                 case 'Quintic'
                     app.controller.model.trj_profile = 3;
-                    app.LimitsLabel.Visible = 'on';
-                    app.VelEditField.Visible = 'on';
-                    app.VelEditFieldLabel.Visible = 'on';
-                    app.VelPrcLabel.Visible = 'on';
-                    app.AccEditField.Visible = 'on';
-                    app.AccEditFieldLabel.Visible = 'on';
-                    app.AccPrcLabel.Visible = 'on';
                 otherwise
                     app.controller.model.trj_profile = 0;
-                    app.LimitsLabel.Visible = 'off';
-                    app.VelEditField.Visible = 'off';
-                    app.VelEditFieldLabel.Visible = 'off';
-                    app.VelPrcLabel.Visible = 'off';
-                    app.AccEditField.Visible = 'off';
-                    app.AccEditFieldLabel.Visible = 'off';
-                    app.AccPrcLabel.Visible = 'off';
             end
-            
-            updateFinTimeTrj(app)
+
+            p = app.controller.model.trj_profile;
+            showLimits = char(matlab.lang.OnOffSwitchState(p > 0));
+            showAcc    = char(matlab.lang.OnOffSwitchState(p >= 2));
+
+            app.LimitsLabel.Visible         = showLimits;
+            app.VelEditField.Visible        = showLimits;
+            app.VelEditFieldLabel.Visible   = showLimits;
+            app.VelPrcLabel.Visible         = showLimits;
+            app.AccEditField.Visible        = showAcc;
+            app.AccEditFieldLabel.Visible   = showAcc;
+            app.AccPrcLabel.Visible         = showAcc;
+
+            updateFinTimeTrj(app);
             app.FinalsEditField.Value = app.controller.model.tfin_trj;
         end
 
@@ -2128,8 +1293,8 @@ classdef MainApp < matlab.apps.AppBase
             app.secLabel.Visible = "off";
             app.x1RealtimeLabel.Visible = "off";
             app.q_actq1q2q3q4q5q6q7degLabel.Visible = "off";
-            getFwdGeoIni(app) % Update fwd geo ini to the position before run again
-            getFwdGeoFin(app) % Update fwd geo fin to the position before run again
+            app.controller.updateForwardKinematics('ini', app.eulerSet); % Update fwd geo ini
+            app.controller.updateForwardKinematics('fin', app.eulerSet); % Update fwd geo fin
             app.controller.updateView()
 
         end
@@ -2270,91 +1435,42 @@ classdef MainApp < matlab.apps.AppBase
 
         % Cell edit callback: DHTable
         function DHTableCellEdit(app, event)
-            indices = event.Indices;
-            newData = str2double(event.NewData);
-
-            if indices(2) == 2
-                app.DH_custom(indices(1),1) = newData*1e-3;
-            elseif indices(2) == 3
-                app.DH_custom(indices(1),2) = deg2rad(newData);
-            elseif indices(2) == 4
-                app.DH_custom(indices(1),3) = newData*1e-3;
-            else
-                app.DH_custom(indices(1),4) = deg2rad(newData);
-            end
-
-            updateRobotModel(app)
-            app.controller.updateView()
+            app.handleCustomDHTableEdit(event.Indices(1), event.Indices(2), str2double(event.NewData));
         end
 
         % Selection changed function: q_1ButtonGroup
         function q_1ButtonGroupSelectionChanged(app, event)
-            app.j_type_custom(1,:) = app.Button.Value;
-
-            updateRobotModel(app)
-            resetJointValues(app)
-            updateSliderSpinnerValues(app)
-            app.controller.updateView()
+            app.handleJointTypeChanged(1, app.Button.Value);
         end
 
         % Selection changed function: q_2ButtonGroup
         function q_2ButtonGroupSelectionChanged(app, event)
-            app.j_type_custom(2,:) = app.Button_2.Value;
-
-            updateRobotModel(app)
-            resetJointValues(app)
-            updateSliderSpinnerValues(app)
-            app.controller.updateView()
+            app.handleJointTypeChanged(2, app.Button_2.Value);
         end
 
         % Selection changed function: q_3ButtonGroup
         function q_3ButtonGroupSelectionChanged(app, event)
-            app.j_type_custom(3,:) = app.Button_3.Value;
-
-            updateRobotModel(app)
-            resetJointValues(app)
-            updateSliderSpinnerValues(app)
-            app.controller.updateView()
+            app.handleJointTypeChanged(3, app.Button_3.Value);
         end
 
         % Selection changed function: q_4ButtonGroup
         function q_4ButtonGroupSelectionChanged(app, event)
-            app.j_type_custom(4,:) = app.Button_4.Value;
-
-            updateRobotModel(app)
-            resetJointValues(app)
-            updateSliderSpinnerValues(app)
-            app.controller.updateView()
+            app.handleJointTypeChanged(4, app.Button_4.Value);
         end
 
         % Selection changed function: q_5ButtonGroup
         function q_5ButtonGroupSelectionChanged(app, event)
-            app.j_type_custom(5,:) = app.Button_5.Value;
-
-            updateRobotModel(app)
-            resetJointValues(app)
-            updateSliderSpinnerValues(app)
-            app.controller.updateView()
+            app.handleJointTypeChanged(5, app.Button_5.Value);
         end
 
         % Selection changed function: q_6ButtonGroup
         function q_6ButtonGroupSelectionChanged(app, event)
-            app.j_type_custom(6,:) = app.Button_6.Value;
-
-            updateRobotModel(app)
-            resetJointValues(app)
-            updateSliderSpinnerValues(app)
-            app.controller.updateView()
+            app.handleJointTypeChanged(6, app.Button_6.Value);
         end
 
         % Selection changed function: q_7ButtonGroup
         function q_7ButtonGroupSelectionChanged(app, event)
-            app.j_type_custom(7,:) = app.Button_7.Value;
-
-            updateRobotModel(app)
-            resetJointValues(app)
-            updateSliderSpinnerValues(app)
-            app.controller.updateView()
+            app.handleJointTypeChanged(7, app.Button_7.Value);
         end
 
         % Value changed function: ControlTypeDropDown
@@ -2371,912 +1487,322 @@ classdef MainApp < matlab.apps.AppBase
 
         % Button down function: InitialJointTab
         function InitialJointTabButtonDown(app, event)
-            app.controller.model.task_mode = 0;
-
-            app.controller.initRobot()
-            app.controller.updateView()
+            app.handleTabSelection(0);
         end
 
         % Button down function: FinalJointTab
         function FinalJointTabButtonDown(app, event)
-            app.controller.model.task_mode = 0;
-            
-            app.controller.initRobot()
-            app.controller.updateView()
+            app.handleTabSelection(0);
         end
 
         % Button down function: InitialTaskTab
         function InitialTaskTabButtonDown(app, event)
-            app.controller.model.task_mode = 1;
-            
-            % getFwdGeoIni(app)
-            app.controller.model.ini.r_pos = robotics.math.getEulerPosVec(app.controller.model.ini.Re,app.eulerSet);
-
-            app.controller.initRobot()
-            app.controller.updateView()
+            app.handleTabSelection(1);
         end
 
         % Button down function: FinalTaskTab
         function FinalTaskTabButtonDown(app, event)
-            app.controller.model.task_mode = 2;
-            
-            % getFwdGeoFin(app)
-            app.controller.model.fin.r_pos = robotics.math.getEulerPosVec(app.controller.model.fin.Re,app.eulerSet);
-            
-            app.controller.initRobot()
-            app.controller.updateView()
+            app.handleTabSelection(2);
         end
 
         % Value changing function: Axis1InitialSlider
         function Axis1InitialSliderValueChanging(app, event)
-            app.Axis1InitialSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(1)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 1, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 1, event.Value, app.Axis1InitialSpinner);
         end
 
         % Value changing function: Axis1InitialSpinner
         function Axis1InitialSpinnerValueChanging(app, event)
-            app.Axis1InitialSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(1)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 1, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 1, event.Value, app.Axis1InitialSlider);
         end
 
         % Value changing function: Axis2InitialSlider
         function Axis2InitialSliderValueChanging(app, event)
-            app.Axis2InitialSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(2)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 2, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 2, event.Value, app.Axis2InitialSpinner);
         end
 
         % Value changing function: Axis2InitialSpinner
         function Axis2InitialSpinnerValueChanging(app, event)
-            app.Axis2InitialSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(2)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 2, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 2, event.Value, app.Axis2InitialSlider);
         end
 
         % Value changing function: Axis3InitialSlider
         function Axis3InitialSliderValueChanging(app, event)
-            app.Axis3InitialSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(3)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 3, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 3, event.Value, app.Axis3InitialSpinner);
         end
 
         % Value changing function: Axis3InitialSpinner
         function Axis3InitialSpinnerValueChanging(app, event)
-            app.Axis3InitialSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(3)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 3, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 3, event.Value, app.Axis3InitialSlider);
         end
 
         % Value changing function: Axis4InitialSlider
         function Axis4InitialSliderValueChanging(app, event)
-            app.Axis4InitialSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(4)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 4, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 4, event.Value, app.Axis4InitialSpinner);
         end
 
         % Value changing function: Axis4InitialSpinner
         function Axis4InitialSpinnerValueChanging(app, event)
-            app.Axis4InitialSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(4)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 4, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 4, event.Value, app.Axis4InitialSlider);
         end
 
         % Value changing function: Axis5InitialSlider
         function Axis5InitialSliderValueChanging(app, event)
-            app.Axis5InitialSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(5)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 5, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 5, event.Value, app.Axis5InitialSpinner);
         end
 
         % Value changing function: Axis5InitialSpinner
         function Axis5InitialSpinnerValueChanging(app, event)
-            app.Axis5InitialSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(5)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 5, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 5, event.Value, app.Axis5InitialSlider);
         end
 
         % Value changing function: Axis6InitialSlider
         function Axis6InitialSliderValueChanging(app, event)
-            app.Axis6InitialSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(6)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 6, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 6, event.Value, app.Axis6InitialSpinner);
         end
 
         % Value changing function: Axis6InitialSpinner
         function Axis6InitialSpinnerValueChanging(app, event)
-            app.Axis6InitialSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(6)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 6, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 6, event.Value, app.Axis6InitialSlider);
         end
 
         % Value changing function: Axis7InitialSlider
         function Axis7InitialSliderValueChanging(app, event)
-            app.Axis7InitialSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(7)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 7, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 7, event.Value, app.Axis7InitialSpinner);
         end
 
         % Value changing function: Axis7InitialSpinner
         function Axis7InitialSpinnerValueChanging(app, event)
-            app.Axis7InitialSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(7)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('ini', 7, val, app.eulerSet);
-            app.updateTaskSpaceUI('ini');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('ini', 7, event.Value, app.Axis7InitialSlider);
         end
 
         % Value changing function: GripperInitialSlider
         function GripperInitialSliderValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.controller.model.qEIni = deg2rad(event.Value);
-            else
-                app.controller.model.qEIni = event.Value*1e-3;
-            end
-            app.GripperInitialSpinner.Value = event.Value;
-            app.GripperTaskInitialSpinner.Value = event.Value;
-
-            app.controller.updateView()
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSpinner, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner]);
         end
 
         % Value changing function: GripperInitialSpinner
         function GripperInitialSpinnerValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.controller.model.qEIni = deg2rad(event.Value);
-            else
-                app.controller.model.qEIni = event.Value*1e-3;
-            end
-            app.GripperInitialSlider.Value = event.Value;
-            app.GripperTaskInitialSlider.Value = event.Value;
-
-            app.controller.updateView()
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSlider, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner]);
         end
 
         % Value changing function: Axis1FinalSlider
         function Axis1FinalSliderValueChanging(app, event)
-            app.Axis1FinalSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(1)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 1, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 1, event.Value, app.Axis1FinalSpinner);
         end
 
         % Value changing function: Axis1FinalSpinner
         function Axis1FinalSpinnerValueChanging(app, event)
-            app.Axis1FinalSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(1)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 1, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 1, event.Value, app.Axis1FinalSlider);
         end
 
         % Value changing function: Axis2FinalSlider
         function Axis2FinalSliderValueChanging(app, event)
-            app.Axis2FinalSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(2)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 2, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 2, event.Value, app.Axis2FinalSpinner);
         end
 
         % Value changing function: Axis2FinalSpinner
         function Axis2FinalSpinnerValueChanging(app, event)
-            app.Axis2FinalSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(2)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 2, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 2, event.Value, app.Axis2FinalSlider);
         end
 
         % Value changing function: Axis3FinalSlider
         function Axis3FinalSliderValueChanging(app, event)
-            app.Axis3FinalSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(3)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 3, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 3, event.Value, app.Axis3FinalSpinner);
         end
 
         % Value changing function: Axis3FinalSpinner
         function Axis3FinalSpinnerValueChanging(app, event)
-            app.Axis3FinalSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(3)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 3, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 3, event.Value, app.Axis3FinalSlider);
         end
 
         % Value changing function: Axis4FinalSlider
         function Axis4FinalSliderValueChanging(app, event)
-            app.Axis4FinalSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(4)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 4, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 4, event.Value, app.Axis4FinalSpinner);
         end
 
         % Value changing function: Axis4FinalSpinner
         function Axis4FinalSpinnerValueChanging(app, event)
-            app.Axis4FinalSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(4)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 4, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 4, event.Value, app.Axis4FinalSlider);
         end
 
         % Value changing function: Axis5FinalSlider
         function Axis5FinalSliderValueChanging(app, event)
-            app.Axis5FinalSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(5)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 5, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 5, event.Value, app.Axis5FinalSpinner);
         end
 
         % Value changing function: Axis5FinalSpinner
         function Axis5FinalSpinnerValueChanging(app, event)
-            app.Axis5FinalSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(5)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 5, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 5, event.Value, app.Axis5FinalSlider);
         end
 
         % Value changing function: Axis6FinalSlider
         function Axis6FinalSliderValueChanging(app, event)
-            app.Axis6FinalSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(6)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 6, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 6, event.Value, app.Axis6FinalSpinner);
         end
 
         % Value changing function: Axis6FinalSpinner
         function Axis6FinalSpinnerValueChanging(app, event)
-            app.Axis6FinalSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(6)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 6, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 6, event.Value, app.Axis6FinalSlider);
         end
 
         % Value changing function: Axis7FinalSlider
         function Axis7FinalSliderValueChanging(app, event)
-            app.Axis7FinalSpinner.Value = event.Value;
-            if app.controller.model.kin.j_type(7)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 7, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 7, event.Value, app.Axis7FinalSpinner);
         end
 
         % Value changing function: Axis7FinalSpinner
         function Axis7FinalSpinnerValueChanging(app, event)
-            app.Axis7FinalSlider.Value = event.Value;
-            if app.controller.model.kin.j_type(7)
-                val = deg2rad(event.Value);
-            else
-                val = 1e-3*event.Value;
-            end
-            app.controller.setJointPosition('fin', 7, val, app.eulerSet);
-            app.updateTaskSpaceUI('fin');
-            app.controller.updateFinTimeTrj(app.prcnt);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleJointInput('fin', 7, event.Value, app.Axis7FinalSlider);
         end
 
         % Value changing function: GripperFinalSlider
         function GripperFinalSliderValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.controller.model.qEDes = deg2rad(event.Value);
-            else
-                app.controller.model.qEDes = event.Value*1e-3;
-            end
-            app.GripperFinalSpinner.Value = event.Value;
-            app.GripperTaskFinalSpinner.Value = event.Value;
-
-            app.controller.updateView()
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSpinner, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner]);
         end
 
         % Value changing function: GripperFinalSpinner
         function GripperFinalSpinnerValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.controller.model.qEDes = deg2rad(event.Value);
-            else
-                app.controller.model.qEDes = event.Value*1e-3;
-            end
-            app.GripperFinalSlider.Value = event.Value;
-            app.GripperTaskFinalSlider.Value = event.Value;
-            
-            app.controller.updateView()
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSlider, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner]);
         end
 
         % Value changing function: XAxisInitialSlider
         function XAxisInitialSliderValueChanging(app, event)
-            app.controller.model.ini.t_pos(1) = 1e-3*event.Value;
-            app.XAxisInitialSpinner.Value = event.Value;
-
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            t_ref(1) = 1e-3*event.Value;
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('ini', 1, event.Value, app.XAxisInitialSpinner);
         end
 
         % Value changing function: XAxisInitialSpinner
         function XAxisInitialSpinnerValueChanging(app, event)
-            app.controller.model.ini.t_pos(1) = 1e-3*event.Value;
-            app.XAxisInitialSlider.Value = event.Value;
-
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            t_ref(1) = 1e-3*event.Value;
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('ini', 1, event.Value, app.XAxisInitialSlider);
         end
 
         % Value changing function: YAxisInitialSlider
         function YAxisInitialSliderValueChanging(app, event)
-            app.controller.model.ini.t_pos(2) = 1e-3*event.Value;
-            app.YAxisInitialSpinner.Value = event.Value;
-
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            t_ref(2) = 1e-3*event.Value;
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-	    updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('ini', 2, event.Value, app.YAxisInitialSpinner);
         end
 
         % Value changing function: YAxisInitialSpinner
         function YAxisInitialSpinnerValueChanging(app, event)
-            app.controller.model.ini.t_pos(2) = 1e-3*event.Value;
-            app.YAxisInitialSlider.Value = event.Value;
-
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            t_ref(2) = 1e-3*event.Value;
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('ini', 2, event.Value, app.YAxisInitialSlider);
         end
 
         % Value changing function: ZAxisInitialSlider
         function ZAxisInitialSliderValueChanging(app, event)
-            app.controller.model.ini.t_pos(3) = 1e-3*event.Value;
-            app.ZAxisInitialSpinner.Value = event.Value;
-
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            t_ref(3) = 1e-3*event.Value;
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('ini', 3, event.Value, app.ZAxisInitialSpinner);
         end
 
         % Value changing function: ZAxisInitialSpinner
         function ZAxisInitialSpinnerValueChanging(app, event)
-            app.controller.model.ini.t_pos(3) = 1e-3*event.Value;
-            app.ZAxisInitialSlider.Value = event.Value;
-
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            t_ref(3) = 1e-3*event.Value;
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('ini', 3, event.Value, app.ZAxisInitialSlider);
         end
 
         % Value changing function: PhiInitialSlider
         function PhiInitialSliderValueChanging(app, event)
-            app.controller.model.ini.r_pos(1) = deg2rad(event.Value);
-            app.PhiInitialSpinner.Value = event.Value;
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            r_ref(1) = deg2rad(event.Value);
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('ini', 1, event.Value, app.PhiInitialSpinner);
         end
 
         % Value changing function: PhiInitialSpinner
         function PhiInitialSpinnerValueChanging(app, event)
-            app.controller.model.ini.r_pos(1) = deg2rad(event.Value);
-            app.PhiInitialSlider.Value = event.Value;
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            r_ref(1) = deg2rad(event.Value);
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('ini', 1, event.Value, app.PhiInitialSlider);
         end
 
         % Value changing function: ThetaInitialSlider
         function ThetaInitialSliderValueChanging(app, event)
-            app.controller.model.ini.r_pos(2) = deg2rad(event.Value);
-            app.ThetaInitialSpinner.Value = event.Value;
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            r_ref(2) = deg2rad(event.Value);
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('ini', 2, event.Value, app.ThetaInitialSpinner);
         end
 
         % Value changing function: ThetaInitialSpinner
         function ThetaInitialSpinnerValueChanging(app, event)
-            app.controller.model.ini.r_pos(2) = deg2rad(event.Value);
-            app.ThetaInitialSlider.Value = event.Value;
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            r_ref(2) = deg2rad(event.Value);
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('ini', 2, event.Value, app.ThetaInitialSlider);
         end
 
         % Value changing function: PsiInitialSlider
         function PsiInitialSliderValueChanging(app, event)
-            app.controller.model.ini.r_pos(3) = deg2rad(event.Value);
-            app.PsiInitialSpinner.Value = event.Value;
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            r_ref(3) = deg2rad(event.Value);
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('ini', 3, event.Value, app.PsiInitialSpinner);
         end
 
         % Value changing function: PsiInitialSpinner
         function PsiInitialSpinnerValueChanging(app, event)
-            app.controller.model.ini.r_pos(3) = deg2rad(event.Value);
-            app.PsiInitialSlider.Value = event.Value;
-            t_ref = app.controller.model.ini.t_pos;
-            r_ref = app.controller.model.ini.r_pos;
-            r_ref(3) = deg2rad(event.Value);
-            app.controller.setTargetPosition('ini', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('ini');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('ini', 3, event.Value, app.PsiInitialSlider);
         end
 
         % Value changing function: GripperTaskInitialSlider
         function GripperTaskInitialSliderValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.controller.model.qEIni = deg2rad(event.Value);
-            else
-                app.controller.model.qEIni = event.Value*1e-3;
-            end
-            app.GripperInitialSpinner.Value = event.Value;
-            app.GripperTaskInitialSpinner.Value = event.Value;
-
-            app.controller.updateView()
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSlider, app.GripperInitialSpinner, app.GripperTaskInitialSpinner]);
         end
 
         % Value changing function: GripperTaskInitialSpinner
         function GripperTaskInitialSpinnerValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.controller.model.qEIni = deg2rad(event.Value);
-            else
-                app.controller.model.qEIni = event.Value*1e-3;
-            end
-            app.GripperInitialSlider.Value = event.Value;
-            app.GripperTaskInitialSlider.Value = event.Value;
-
-            app.controller.updateView()
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSlider, app.GripperInitialSpinner, app.GripperTaskInitialSlider]);
         end
 
         % Value changing function: XAxisFinalSlider
         function XAxisFinalSliderValueChanging(app, event)
-            app.controller.model.fin.t_pos(1) = 1e-3*event.Value;
-            app.XAxisFinalSpinner.Value = event.Value;
-
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            t_ref(1) = 1e-3*event.Value;
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('fin', 1, event.Value, app.XAxisFinalSpinner);
         end
 
         % Value changing function: XAxisFinalSpinner
         function XAxisFinalSpinnerValueChanging(app, event)
-            app.controller.model.fin.t_pos(1) = 1e-3*event.Value;
-            app.XAxisFinalSlider.Value = event.Value;
-
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            t_ref(1) = 1e-3*event.Value;
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('fin', 1, event.Value, app.XAxisFinalSlider);
         end
 
         % Value changing function: YAxisFinalSlider
         function YAxisFinalSliderValueChanging(app, event)
-            app.controller.model.fin.t_pos(2) = 1e-3*event.Value;
-            app.YAxisFinalSpinner.Value = event.Value;
-
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            t_ref(2) = 1e-3*event.Value;
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('fin', 2, event.Value, app.YAxisFinalSpinner);
         end
 
         % Value changing function: YAxisFinalSpinner
         function YAxisFinalSpinnerValueChanging(app, event)
-            app.controller.model.fin.t_pos(2) = 1e-3*event.Value;
-            app.YAxisFinalSlider.Value = event.Value;
-
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            t_ref(2) = 1e-3*event.Value;
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('fin', 2, event.Value, app.YAxisFinalSlider);
         end
 
         % Value changing function: ZAxisFinalSlider
         function ZAxisFinalSliderValueChanging(app, event)
-            app.controller.model.fin.t_pos(3) = 1e-3*event.Value;
-            app.ZAxisFinalSpinner.Value = event.Value;
-
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            t_ref(3) = 1e-3*event.Value;
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('fin', 3, event.Value, app.ZAxisFinalSpinner);
         end
 
         % Value changing function: ZAxisFinalSpinner
         function ZAxisFinalSpinnerValueChanging(app, event)
-            app.controller.model.fin.t_pos(3) = 1e-3*event.Value;
-            app.ZAxisFinalSlider.Value = event.Value;
-
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            t_ref(3) = 1e-3*event.Value;
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskPosInput('fin', 3, event.Value, app.ZAxisFinalSlider);
         end
 
         % Value changing function: PhiFinalSlider
         function PhiFinalSliderValueChanging(app, event)
-            app.controller.model.fin.r_pos(1) = deg2rad(event.Value);
-            app.PhiFinalSpinner.Value = event.Value;
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            r_ref(1) = deg2rad(event.Value);
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('fin', 1, event.Value, app.PhiFinalSpinner);
         end
 
         % Value changing function: PhiFinalSpinner
         function PhiFinalSpinnerValueChanging(app, event)
-            app.controller.model.fin.r_pos(1) = deg2rad(event.Value);
-            app.PhiFinalSlider.Value = event.Value;
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            r_ref(1) = deg2rad(event.Value);
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('fin', 1, event.Value, app.PhiFinalSlider);
         end
 
         % Value changing function: ThetaFinalSlider
         function ThetaFinalSliderValueChanging(app, event)
-            app.controller.model.fin.r_pos(2) = deg2rad(event.Value);
-            app.ThetaFinalSpinner.Value = event.Value;
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            r_ref(2) = deg2rad(event.Value);
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('fin', 2, event.Value, app.ThetaFinalSpinner);
         end
 
         % Value changing function: ThetaFinalSpinner
         function ThetaFinalSpinnerValueChanging(app, event)
-            app.controller.model.fin.r_pos(2) = deg2rad(event.Value);
-            app.ThetaFinalSlider.Value = event.Value;
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            r_ref(2) = deg2rad(event.Value);
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('fin', 2, event.Value, app.ThetaFinalSlider);
         end
 
         % Value changing function: PsiFinalSlider
         function PsiFinalSliderValueChanging(app, event)
-            app.controller.model.fin.r_pos(3) = deg2rad(event.Value);
-            app.PsiFinalSpinner.Value = event.Value;
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            r_ref(3) = deg2rad(event.Value);
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('fin', 3, event.Value, app.PsiFinalSpinner);
         end
 
         % Value changing function: PsiFinalSpinner
         function PsiFinalSpinnerValueChanging(app, event)
-            app.controller.model.fin.r_pos(3) = deg2rad(event.Value);
-            app.PsiFinalSlider.Value = event.Value;
-            t_ref = app.controller.model.fin.t_pos;
-            r_ref = app.controller.model.fin.r_pos;
-            r_ref(3) = deg2rad(event.Value);
-            app.controller.setTargetPosition('fin', t_ref, r_ref, app.eulerSet);
-	    app.updateJointSpaceUI('fin');
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
-            app.controller.updateView();
+            app.handleTaskEulerInput('fin', 3, event.Value, app.PsiFinalSlider);
         end
 
         % Value changing function: GripperTaskFinalSlider
         function GripperTaskFinalSliderValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.controller.model.qEDes = deg2rad(event.Value);
-            else
-                app.controller.model.qEDes = event.Value*1e-3;
-            end
-            app.GripperFinalSpinner.Value = event.Value;
-            app.GripperTaskFinalSpinner.Value = event.Value;
-
-            app.controller.updateView()
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSlider, app.GripperFinalSpinner, app.GripperTaskFinalSpinner]);
         end
 
         % Value changing function: GripperTaskFinalSpinner
         function GripperTaskFinalSpinnerValueChanging(app, event)
-            if app.controller.model.robot_model == 3
-                app.qEFin = deg2rad(event.Value);
-            else
-                app.qEFin = event.Value*1e-3;
-            end
-            app.GripperFinalSlider.Value = event.Value;
-            app.GripperTaskFinalSlider.Value = event.Value;
-
-            app.controller.updateView()
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSlider, app.GripperFinalSpinner, app.GripperTaskFinalSlider]);
         end
 
         % Changes arrangement of the app based on UIFigure width
