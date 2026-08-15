@@ -5,6 +5,7 @@ classdef RobotRenderer < handle
         Pobj_d
         Pobj_f
         Pobj_r
+        LineHandles = struct()
     end
     
     methods
@@ -14,6 +15,7 @@ classdef RobotRenderer < handle
         
 function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghost_on, line_on, task_mode, running_flag, trj_profile)
 
+    obj.LineHandles = struct();
     if line_on == 0
         cla(obj.AxesHandle)
         if robot_model == 0
@@ -781,24 +783,53 @@ function updateView(obj, state)
             siz_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,3,end)];
         end
 
-        cla(obj.AxesHandle)
-        plot3(obj.AxesHandle,DH_vec_act(1,1:state.kin.n+1),DH_vec_act(2,1:state.kin.n+1),DH_vec_act(3,1:state.kin.n+1),'LineWidth',10,'Color',[link_color 1])
-        plot3(obj.AxesHandle,DH_vec_act(1,state.kin.n+1:state.kin.n+2),DH_vec_act(2,state.kin.n+1:state.kin.n+2),DH_vec_act(3,state.kin.n+1:state.kin.n+2),'LineWidth',5,'Color',[link_color 1])
-        scatter3(obj.AxesHandle,DH_vec_act(1,2:state.kin.n+1),DH_vec_act(2,2:state.kin.n+1),DH_vec_act(3,2:state.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color)
-        scatter3(obj.AxesHandle,DH_vec_act(1,state.kin.n+2),DH_vec_act(2,state.kin.n+2),DH_vec_act(3,state.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color)
-        if state.ghost_on == 1
-            plot3(obj.AxesHandle,DH_vec_des(1,1:state.kin.n+1),DH_vec_des(2,1:state.kin.n+1),DH_vec_des(3,1:state.kin.n+1),'LineWidth',10,'Color',[link_color 0.5])
-            plot3(obj.AxesHandle,DH_vec_des(1,state.kin.n+1:state.kin.n+2),DH_vec_des(2,state.kin.n+1:state.kin.n+2),DH_vec_des(3,state.kin.n+1:state.kin.n+2),'LineWidth',5,'Color',[link_color 0.5])
-            scatter3(obj.AxesHandle,DH_vec_des(1,2:state.kin.n+1),DH_vec_des(2,2:state.kin.n+1),DH_vec_des(3,2:state.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5)
-            scatter3(obj.AxesHandle,DH_vec_des(1,state.kin.n+2),DH_vec_des(2,state.kin.n+2),DH_vec_des(3,state.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5)
-        end
-        if state.coord_frame_on == 1
-            quiver3(obj.AxesHandle,six_act(1,1),six_act(2,1),six_act(3,1),six_act(1,2),six_act(2,2),six_act(3,2),'-r','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-            quiver3(obj.AxesHandle,siy_act(1,1),siy_act(2,1),siy_act(3,1),siy_act(1,2),siy_act(2,2),siy_act(3,2),'-g','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-            quiver3(obj.AxesHandle,siz_act(1,1),siz_act(2,1),siz_act(3,1),siz_act(1,2),siz_act(2,2),siz_act(3,2),'-b','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-            quiver3(obj.AxesHandle,six_des(1,1),six_des(2,1),six_des(3,1),six_des(1,2),six_des(2,2),six_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[red 0.5]);
-            quiver3(obj.AxesHandle,siy_des(1,1),siy_des(2,1),siy_des(3,1),siy_des(1,2),siy_des(2,2),siy_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[green 0.5]);
-            quiver3(obj.AxesHandle,siz_des(1,1),siz_des(2,1),siz_des(3,1),siz_des(1,2),siz_des(2,2),siz_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[blue 0.5]);
+        can_reuse = isfield(obj.LineHandles, 'act_link1') && ...
+                    isvalid(obj.LineHandles.act_link1) && ...
+                    isfield(obj.LineHandles, 'n') && ...
+                    obj.LineHandles.n == state.kin.n;
+                    
+        if ~can_reuse
+            cla(obj.AxesHandle);
+            hold(obj.AxesHandle, 'on');
+            obj.LineHandles = struct();
+            obj.LineHandles.n = state.kin.n;
+            obj.LineHandles.act_link1 = plot3(obj.AxesHandle,DH_vec_act(1,1:state.kin.n+1),DH_vec_act(2,1:state.kin.n+1),DH_vec_act(3,1:state.kin.n+1),'LineWidth',10,'Color',[link_color 1]);
+            obj.LineHandles.act_link2 = plot3(obj.AxesHandle,DH_vec_act(1,state.kin.n+1:state.kin.n+2),DH_vec_act(2,state.kin.n+1:state.kin.n+2),DH_vec_act(3,state.kin.n+1:state.kin.n+2),'LineWidth',5,'Color',[link_color 1]);
+            obj.LineHandles.act_sc1 = scatter3(obj.AxesHandle,DH_vec_act(1,2:state.kin.n+1),DH_vec_act(2,2:state.kin.n+1),DH_vec_act(3,2:state.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color);
+            obj.LineHandles.act_sc2 = scatter3(obj.AxesHandle,DH_vec_act(1,state.kin.n+2),DH_vec_act(2,state.kin.n+2),DH_vec_act(3,state.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color);
+            if state.ghost_on == 1
+                obj.LineHandles.des_link1 = plot3(obj.AxesHandle,DH_vec_des(1,1:state.kin.n+1),DH_vec_des(2,1:state.kin.n+1),DH_vec_des(3,1:state.kin.n+1),'LineWidth',10,'Color',[link_color 0.5]);
+                obj.LineHandles.des_link2 = plot3(obj.AxesHandle,DH_vec_des(1,state.kin.n+1:state.kin.n+2),DH_vec_des(2,state.kin.n+1:state.kin.n+2),DH_vec_des(3,state.kin.n+1:state.kin.n+2),'LineWidth',5,'Color',[link_color 0.5]);
+                obj.LineHandles.des_sc1 = scatter3(obj.AxesHandle,DH_vec_des(1,2:state.kin.n+1),DH_vec_des(2,2:state.kin.n+1),DH_vec_des(3,2:state.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5);
+                obj.LineHandles.des_sc2 = scatter3(obj.AxesHandle,DH_vec_des(1,state.kin.n+2),DH_vec_des(2,state.kin.n+2),DH_vec_des(3,state.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5);
+            end
+            if state.coord_frame_on == 1
+                obj.LineHandles.q_act_x = quiver3(obj.AxesHandle,six_act(1,1),six_act(2,1),six_act(3,1),six_act(1,2),six_act(2,2),six_act(3,2),'-r','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
+                obj.LineHandles.q_act_y = quiver3(obj.AxesHandle,siy_act(1,1),siy_act(2,1),siy_act(3,1),siy_act(1,2),siy_act(2,2),siy_act(3,2),'-g','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
+                obj.LineHandles.q_act_z = quiver3(obj.AxesHandle,siz_act(1,1),siz_act(2,1),siz_act(3,1),siz_act(1,2),siz_act(2,2),siz_act(3,2),'-b','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
+                obj.LineHandles.q_des_x = quiver3(obj.AxesHandle,six_des(1,1),six_des(2,1),six_des(3,1),six_des(1,2),six_des(2,2),six_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[red 0.5]);
+                obj.LineHandles.q_des_y = quiver3(obj.AxesHandle,siy_des(1,1),siy_des(2,1),siy_des(3,1),siy_des(1,2),siy_des(2,2),siy_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[green 0.5]);
+                obj.LineHandles.q_des_z = quiver3(obj.AxesHandle,siz_des(1,1),siz_des(2,1),siz_des(3,1),siz_des(1,2),siz_des(2,2),siz_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[blue 0.5]);
+            end
+        else
+            set(obj.LineHandles.act_link1, 'XData', DH_vec_act(1,1:state.kin.n+1), 'YData', DH_vec_act(2,1:state.kin.n+1), 'ZData', DH_vec_act(3,1:state.kin.n+1));
+            set(obj.LineHandles.act_link2, 'XData', DH_vec_act(1,state.kin.n+1:state.kin.n+2), 'YData', DH_vec_act(2,state.kin.n+1:state.kin.n+2), 'ZData', DH_vec_act(3,state.kin.n+1:state.kin.n+2));
+            set(obj.LineHandles.act_sc1, 'XData', DH_vec_act(1,2:state.kin.n+1), 'YData', DH_vec_act(2,2:state.kin.n+1), 'ZData', DH_vec_act(3,2:state.kin.n+1));
+            set(obj.LineHandles.act_sc2, 'XData', DH_vec_act(1,state.kin.n+2), 'YData', DH_vec_act(2,state.kin.n+2), 'ZData', DH_vec_act(3,state.kin.n+2));
+            if state.ghost_on == 1 && isfield(obj.LineHandles, 'des_link1') && isvalid(obj.LineHandles.des_link1)
+                set(obj.LineHandles.des_link1, 'XData', DH_vec_des(1,1:state.kin.n+1), 'YData', DH_vec_des(2,1:state.kin.n+1), 'ZData', DH_vec_des(3,1:state.kin.n+1));
+                set(obj.LineHandles.des_link2, 'XData', DH_vec_des(1,state.kin.n+1:state.kin.n+2), 'YData', DH_vec_des(2,state.kin.n+1:state.kin.n+2), 'ZData', DH_vec_des(3,state.kin.n+1:state.kin.n+2));
+                set(obj.LineHandles.des_sc1, 'XData', DH_vec_des(1,2:state.kin.n+1), 'YData', DH_vec_des(2,2:state.kin.n+1), 'ZData', DH_vec_des(3,2:state.kin.n+1));
+                set(obj.LineHandles.des_sc2, 'XData', DH_vec_des(1,state.kin.n+2), 'YData', DH_vec_des(2,state.kin.n+2), 'ZData', DH_vec_des(3,state.kin.n+2));
+            end
+            if state.coord_frame_on == 1 && isfield(obj.LineHandles, 'q_act_x') && isvalid(obj.LineHandles.q_act_x)
+                set(obj.LineHandles.q_act_x, 'XData', six_act(1,1), 'YData', six_act(2,1), 'ZData', six_act(3,1), 'UData', six_act(1,2), 'VData', six_act(2,2), 'WData', six_act(3,2));
+                set(obj.LineHandles.q_act_y, 'XData', siy_act(1,1), 'YData', siy_act(2,1), 'ZData', siy_act(3,1), 'UData', siy_act(1,2), 'VData', siy_act(2,2), 'WData', siy_act(3,2));
+                set(obj.LineHandles.q_act_z, 'XData', siz_act(1,1), 'YData', siz_act(2,1), 'ZData', siz_act(3,1), 'UData', siz_act(1,2), 'VData', siz_act(2,2), 'WData', siz_act(3,2));
+                set(obj.LineHandles.q_des_x, 'XData', six_des(1,1), 'YData', six_des(2,1), 'ZData', six_des(3,1), 'UData', six_des(1,2), 'VData', six_des(2,2), 'WData', six_des(3,2));
+                set(obj.LineHandles.q_des_y, 'XData', siy_des(1,1), 'YData', siy_des(2,1), 'ZData', siy_des(3,1), 'UData', siy_des(1,2), 'VData', siy_des(2,2), 'WData', siy_des(3,2));
+                set(obj.LineHandles.q_des_z, 'XData', siz_des(1,1), 'YData', siz_des(2,1), 'ZData', siz_des(3,1), 'UData', siz_des(1,2), 'VData', siz_des(2,2), 'WData', siz_des(3,2));
+            end
         end
     end
 

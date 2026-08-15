@@ -33,6 +33,7 @@ classdef SimulationEngine < handle
             trjConfig.trj_profile = obj.model.trj_profile;
             
             sim_time = 0;
+            last_render_real_time = -inf;
             tic
             
             for k = 0:round(obj.model.tfin/obj.model.tstp)
@@ -73,8 +74,9 @@ classdef SimulationEngine < handle
                 sim_time = sim_time + obj.model.tstp;
                 real_time = toc;
                 
-                % Graphics update loop
-                if sim_time > real_time*obj.model.time_const
+                % Graphics update loop (throttled to ~60 FPS max to avoid choking the UI event queue)
+                if ((real_time - last_render_real_time >= 0.016) && (sim_time >= real_time*obj.model.time_const))
+                    last_render_real_time = real_time;
                     obj.renderer.updateView(obj.model);
                     
                     % UI callbacks (if registered by the View)
@@ -83,6 +85,12 @@ classdef SimulationEngine < handle
                     end
                 end
                 
+            end
+            
+            % Ensure final frame and labels are drawn at completion
+            obj.renderer.updateView(obj.model);
+            if ~isempty(obj.onUpdateLabels)
+                obj.onUpdateLabels(obj.model.tfin, obj.model.act.q_pos, obj.model.kin.n);
             end
         end
         
@@ -96,6 +104,7 @@ classdef SimulationEngine < handle
             trjConfig.trj_profile = obj.model.trj_profile;
             
             sim_time = 0;
+            last_render_real_time = -inf;
             tic
             
             for k = 0:round(obj.model.tfin_trj/obj.model.tstp)
@@ -110,8 +119,9 @@ classdef SimulationEngine < handle
                 sim_time = sim_time + obj.model.tstp;
                 real_time = toc;
                 
-                % Graphics update loop
-                if sim_time > real_time*obj.model.time_const
+                % Graphics update loop (throttled to ~60 FPS max to avoid choking the UI event queue)
+                if ((real_time - last_render_real_time >= 0.016) && (sim_time >= real_time*obj.model.time_const))
+                    last_render_real_time = real_time;
                     obj.renderer.updateView(obj.model);
                     
                     % UI callbacks (if registered by the View)
@@ -119,6 +129,12 @@ classdef SimulationEngine < handle
                         obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n);
                     end
                 end
+            end
+            
+            % Ensure final frame and labels are drawn at completion
+            obj.renderer.updateView(obj.model);
+            if ~isempty(obj.onUpdateLabels)
+                obj.onUpdateLabels(obj.model.tfin_trj, obj.model.act.q_pos, obj.model.kin.n);
             end
         end
     end
