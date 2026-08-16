@@ -34,6 +34,8 @@ classdef SimulationEngine < handle
             
             sim_time = 0;
             last_render_real_time = -inf;
+            fps_smoothed = 60;
+            actual_rtf = 1.0;
             tic
             
             for k = 0:round(obj.model.tfin/obj.model.tstp)
@@ -76,12 +78,20 @@ classdef SimulationEngine < handle
                 
                 % Graphics update loop (throttled to ~60 FPS max to avoid choking the UI event queue)
                 if ((real_time - last_render_real_time >= 0.016) && (sim_time >= real_time*obj.model.time_const))
+                    dt_render = real_time - last_render_real_time;
+                    if last_render_real_time > 0 && dt_render > 0
+                        instant_fps = 1.0 / dt_render;
+                        fps_smoothed = 0.85 * fps_smoothed + 0.15 * instant_fps;
+                    else
+                        fps_smoothed = 60;
+                    end
                     last_render_real_time = real_time;
                     obj.renderer.updateView(obj.model);
                     
                     % UI callbacks (if registered by the View)
                     if ~isempty(obj.onUpdateLabels)
-                        obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n);
+                        actual_rtf = sim_time / max(real_time, 1e-4);
+                        obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
                     end
                 end
                 
@@ -90,7 +100,7 @@ classdef SimulationEngine < handle
             % Ensure final frame and labels are drawn at completion
             obj.renderer.updateView(obj.model);
             if ~isempty(obj.onUpdateLabels)
-                obj.onUpdateLabels(obj.model.tfin, obj.model.act.q_pos, obj.model.kin.n);
+                obj.onUpdateLabels(obj.model.tfin, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
             end
         end
         
@@ -105,6 +115,8 @@ classdef SimulationEngine < handle
             
             sim_time = 0;
             last_render_real_time = -inf;
+            fps_smoothed = 60;
+            actual_rtf = 1.0;
             tic
             
             for k = 0:round(obj.model.tfin_trj/obj.model.tstp)
@@ -121,12 +133,20 @@ classdef SimulationEngine < handle
                 
                 % Graphics update loop (throttled to ~60 FPS max to avoid choking the UI event queue)
                 if ((real_time - last_render_real_time >= 0.016) && (sim_time >= real_time*obj.model.time_const))
+                    dt_render = real_time - last_render_real_time;
+                    if last_render_real_time > 0 && dt_render > 0
+                        instant_fps = 1.0 / dt_render;
+                        fps_smoothed = 0.85 * fps_smoothed + 0.15 * instant_fps;
+                    else
+                        fps_smoothed = 60;
+                    end
                     last_render_real_time = real_time;
                     obj.renderer.updateView(obj.model);
                     
                     % UI callbacks (if registered by the View)
                     if ~isempty(obj.onUpdateLabels)
-                        obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n);
+                        actual_rtf = sim_time / max(real_time, 1e-4);
+                        obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
                     end
                 end
             end
@@ -134,7 +154,7 @@ classdef SimulationEngine < handle
             % Ensure final frame and labels are drawn at completion
             obj.renderer.updateView(obj.model);
             if ~isempty(obj.onUpdateLabels)
-                obj.onUpdateLabels(obj.model.tfin_trj, obj.model.act.q_pos, obj.model.kin.n);
+                obj.onUpdateLabels(obj.model.tfin_trj, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
             end
         end
     end

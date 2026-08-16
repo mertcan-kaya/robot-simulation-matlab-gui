@@ -764,7 +764,6 @@ classdef MainApp < matlab.apps.AppBase
         
         function updateSimMode(app)
 
-            app.FinalsEditField.Value = app.controller.model.tfin_trj;
             if strcmpi(app.SimModeSwitch.Value,'Kinematic') == 1
                 app.sim_mode = 0;
                 app.controller.model.tstp = 0.001;
@@ -777,6 +776,7 @@ classdef MainApp < matlab.apps.AppBase
                 app.InterpolationDropDown.Items = {'No interpolation', 'Linear', 'Cubic', 'Quintic'};
             end
             
+            updateFinTimeTrj(app);
             app.StepsEditField.Value = app.controller.model.tstp;
 
         end
@@ -793,6 +793,10 @@ classdef MainApp < matlab.apps.AppBase
 
         function updateFinTimeTrj(app)
             app.controller.updateFinTimeTrj(app.prcnt);
+            app.FinalsEditField.Value = app.controller.model.tfin_trj;
+            if app.sim_mode == 1
+                app.controller.model.tfin = app.controller.model.tfin_trj;
+            end
         end
 
 
@@ -852,9 +856,29 @@ classdef MainApp < matlab.apps.AppBase
             sPsi.Value = r(3); spPsi.Value = r(3);
         end
 
-        function updateSimulationLabels(app, time, q_pos, n)
+        function updateSimulationLabels(app, varargin)
+            if numel(varargin) < 3
+                return;
+            end
+            time = varargin{1};
+            q_pos = varargin{2};
+            n = varargin{3};
+            
             % Updates the simulation time label
             app.secLabel.Text = sprintf('%.2f sec', time);
+            
+            % Updates the real-time & FPS label
+            if numel(varargin) >= 4 && ~isempty(varargin{4}) && isvalid(app.x1RealtimeLabel)
+                fps = varargin{4};
+                if numel(varargin) >= 5 && ~isempty(varargin{5})
+                    rtf = varargin{5};
+                    app.x1RealtimeLabel.Text = sprintf('(%.1fx Real-time | %d FPS)', rtf, round(fps));
+                elseif app.sim_mode == 1
+                    app.x1RealtimeLabel.Text = sprintf('(x%.1f Real-time | %d FPS)', app.controller.model.time_const, round(fps));
+                else
+                    app.x1RealtimeLabel.Text = sprintf('(x1 Real-time | %d FPS)', round(fps));
+                end
+            end
             
             % Updates the actual joint positions label
             qact_text = 'qact=[';
@@ -908,7 +932,7 @@ classdef MainApp < matlab.apps.AppBase
             end
             app.controller.setJointPosition(target, jointIdx, pos, app.eulerSet);
             app.updateTaskSpaceUI(target);
-            app.controller.updateFinTimeTrj(app.prcnt);
+            updateFinTimeTrj(app);
             updateRunButtonState(app);
             app.controller.updateView();
         end
@@ -992,6 +1016,8 @@ classdef MainApp < matlab.apps.AppBase
             updateRobotModel(app);
             resetJointValues(app);
             updateSliderSpinnerValues(app);
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
             app.controller.updateView();
         end
 
@@ -1029,7 +1055,7 @@ classdef MainApp < matlab.apps.AppBase
             app.viewModel = robotics.viewmodels.SimulationViewModel(app.controller.model);
 
             % Register UI callback for live text updates during simulation
-            app.controller.onUpdateLabels = @(time, q, n) app.updateSimulationLabels(time, q, n);
+            app.controller.onUpdateLabels = @(varargin) app.updateSimulationLabels(varargin{:});
 
             % app.RobotModelDropDown.Items = {'Franka Emika Robot', 'Universal Robots UR3', 'Unitree Z1', 'St ubli RX160', 'St ubli RX160L'};
             app.RobotModelDropDown.Items = cellstr(app.robot_name);
@@ -1116,8 +1142,15 @@ classdef MainApp < matlab.apps.AppBase
 
         % Menu selected function: AboutMenu
         function AboutMenuSelected(app, event)
-            message = sprintf('Robot Simulation Program\nVersion 0.00001');
-            uialert(app.UIFigure,message,'About','Icon','info');
+            ver = '1.0.0-beta.3';
+            if exist('VERSION', 'file')
+                try
+                    ver = strtrim(fileread('VERSION'));
+                catch
+                end
+            end
+            message = sprintf('Robot Simulation Program (MATLAB GUI)\nVersion: %s\n\nModular 3D Robotics Kinematics & Dynamics Simulator.\nAuthor: Mertcan Kaya', ver);
+            uialert(app.UIFigure, message, 'About Robot Simulation GUI', 'Icon', 'info');
         end
 
         % Value changed function: RobotModelDropDown
@@ -1158,6 +1191,8 @@ classdef MainApp < matlab.apps.AppBase
             resetJointValues(app)
             updateSliderSpinnerValues(app)
             updateTaskInputValues(app)
+            updateFinTimeTrj(app)
+            updateRunButtonState(app)
             updateEnableState(app)
             app.controller.initRobot()
             app.controller.updateView()
@@ -1184,6 +1219,8 @@ classdef MainApp < matlab.apps.AppBase
             updateEndEffectorModel(app)
             updateSliderSpinnerValues(app)
             updateTaskInputValues(app)
+            updateFinTimeTrj(app)
+            updateRunButtonState(app)
             app.controller.initRobot()
             app.controller.updateView()
         end
@@ -1302,17 +1339,15 @@ classdef MainApp < matlab.apps.AppBase
         % Value changed function: VelEditField
         function VelEditFieldValueChanged(app, event)
             app.prcnt(1) = app.VelEditField.Value/100;
-
-            app.controller.updateFinTimeTrj(app.prcnt);
-            app.FinalsEditField.Value = app.controller.model.tfin_trj;
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
         end
 
         % Value changed function: AccEditField
         function AccEditFieldValueChanged(app, event)
             app.prcnt(2) = app.AccEditField.Value/100;
-
-            app.controller.updateFinTimeTrj(app.prcnt);
-            app.FinalsEditField.Value = app.controller.model.tfin_trj;
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
         end
 
         % Menu selected function: EnableghostmodelsMenu
@@ -1430,6 +1465,8 @@ classdef MainApp < matlab.apps.AppBase
             resetJointValues(app)
             updateSliderSpinnerValues(app)
             updateTaskInputValues(app)
+            updateFinTimeTrj(app)
+            updateRunButtonState(app)
             app.controller.updateView()
         end
 
@@ -2412,13 +2449,13 @@ classdef MainApp < matlab.apps.AppBase
 
             % Create x1RealtimeLabel
             app.x1RealtimeLabel = uilabel(app.TimePanel);
-            app.x1RealtimeLabel.Position = [106 4 117 22];
+            app.x1RealtimeLabel.Position = [106 4 165 22];
             app.x1RealtimeLabel.Text = '(x1 Real-time)';
 
             % Create q_actq1q2q3q4q5q6q7degLabel
             app.q_actq1q2q3q4q5q6q7degLabel = uilabel(app.TimePanel);
             app.q_actq1q2q3q4q5q6q7degLabel.HorizontalAlignment = 'right';
-            app.q_actq1q2q3q4q5q6q7degLabel.Position = [211 4 218 22];
+            app.q_actq1q2q3q4q5q6q7degLabel.Position = [275 4 218 22];
             app.q_actq1q2q3q4q5q6q7degLabel.Text = 'q_act=[q1,q2,q3,q4,q5,q6,q7]deg';
 
             % Create ModelPanel

@@ -12,6 +12,45 @@ classdef RobotRenderer < handle
         function obj = RobotRenderer(axesHandle)
             obj.AxesHandle = axesHandle;
         end
+
+        function p = createMeshPatch(obj, msData, role, isVertexColor)
+            if nargin < 4
+                isVertexColor = (size(msData.C, 1) > 1);
+            end
+            
+            p = patch(obj.AxesHandle, 'Faces', msData.F, 'Vertices', msData.V);
+            
+            if isVertexColor
+                set(p, 'FaceVertexCData', msData.C, 'FaceColor', 'interp');
+            else
+                set(p, 'FaceColor', msData.C);
+            end
+            set(p, 'EdgeColor', 'none');
+            set(p, 'FaceLighting', 'gouraud');
+            set(p, 'BackFaceLighting', 'reverselit');
+
+            switch role
+                case 'actual'
+                    set(p, 'AmbientStrength', 0.5, ...
+                           'DiffuseStrength', 0.8, ...
+                           'SpecularStrength', 0.35, ...
+                           'SpecularExponent', 20, ...
+                           'FaceAlpha', 1.0);
+                case 'ghost'
+                    set(p, 'AmbientStrength', 0.7, ...
+                           'DiffuseStrength', 0.5, ...
+                           'SpecularStrength', 0.1, ...
+                           'SpecularExponent', 10, ...
+                           'FaceAlpha', 0.3);
+                case 'target'
+                    set(p, 'AmbientStrength', 0.6, ...
+                           'DiffuseStrength', 0.6, ...
+                           'SpecularStrength', 0.2, ...
+                           'SpecularExponent', 15, ...
+                           'FaceAlpha', 0.4);
+            end
+        end
+
         
 function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghost_on, line_on, task_mode, running_flag, trj_profile)
 
@@ -21,115 +60,118 @@ function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghos
         if robot_model == 0
             return;
         end
-        light(obj.AxesHandle,'Position',[-1 0 1])
+        delete(findobj(obj.AxesHandle, 'Type', 'light'));
+        % Studio Dual-Point Lighting: Key Light (warm-white) + Fill Light (cool-ambient)
+        light(obj.AxesHandle, 'Position', [-1, -0.5, 2], 'Color', [1.0, 0.98, 0.95], 'Style', 'infinite');
+        light(obj.AxesHandle, 'Position', [1.5, 1.0, 0.5], 'Color', [0.65, 0.7, 0.8], 'Style', 'infinite');
         
         % Load CAD files
         if robot_model == 5 || robot_model == 4
             if high_quality == 1
-                temp = load('meshes\rx160\visual\base_link.mat');       obj.ms.s0 = temp.modelstruct;
-                temp = load('meshes\rx160\visual\link_1.mat');          obj.ms.s1 = temp.modelstruct;
-                temp = load('meshes\rx160\visual\link_2.mat');          obj.ms.s2 = temp.modelstruct;
-                temp = load('meshes\rx160\visual\link_3.mat');          obj.ms.s3 = temp.modelstruct;
+                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\base_link.mat');
+                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_1.mat');
+                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_2.mat');
+                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_3.mat');
                 if robot_model == 5
-                    temp = load('meshes\rx160\visual\link_4l.mat');     obj.ms.s4 = temp.modelstruct;
+                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_4l.mat');
                 else
-                    temp = load('meshes\rx160\visual\link_4.mat');      obj.ms.s4 = temp.modelstruct;
+                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_4.mat');
                 end
-                temp = load('meshes\rx160\visual\link_5.mat');          obj.ms.s5 = temp.modelstruct;
-                temp = load('meshes\rx160\visual\link_6.mat');          obj.ms.s6 = temp.modelstruct;
+                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_5.mat');
+                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_6.mat');
                 if ee_att > 0
-                    temp = load('meshes\rx160\visual\ati_delta.mat');   obj.ms.sS = temp.modelstruct;
+                    obj.ms.sS = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\ati_delta.mat');
                 end
                 if ee_att == 2
-                    temp = load('meshes\rx160\visual\gripper.mat');     obj.ms.sG = temp.modelstruct;
+                    obj.ms.sG = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\gripper.mat');
                 end
             else
-                temp = load('meshes\rx160\collision\base_link.mat');    obj.ms.s0 = temp.modelstruct;
-                temp = load('meshes\rx160\collision\link_1.mat');       obj.ms.s1 = temp.modelstruct;
-                temp = load('meshes\rx160\collision\link_2.mat');       obj.ms.s2 = temp.modelstruct;
-                temp = load('meshes\rx160\collision\link_3.mat');       obj.ms.s3 = temp.modelstruct;
+                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\base_link.mat');
+                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_1.mat');
+                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_2.mat');
+                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_3.mat');
                 if robot_model == 5
-                    temp = load('meshes\rx160\collision\link_4l.mat');  obj.ms.s4 = temp.modelstruct;
+                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_4l.mat');
                 else
-                    temp = load('meshes\rx160\collision\link_4.mat');   obj.ms.s4 = temp.modelstruct;
+                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_4.mat');
                 end
-                temp = load('meshes\rx160\collision\link_5.mat');       obj.ms.s5 = temp.modelstruct;
-                temp = load('meshes\rx160\collision\link_6.mat');       obj.ms.s6 = temp.modelstruct;
+                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_5.mat');
+                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_6.mat');
                 if ee_att > 0
-                    temp = load('meshes\rx160\collision\ati_delta.mat');    obj.ms.sS = temp.modelstruct;
+                    obj.ms.sS = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\ati_delta.mat');
                 end
                 if ee_att == 2
-                    temp = load('meshes\rx160\collision\gripper.mat');      obj.ms.sG = temp.modelstruct;
+                    obj.ms.sG = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\gripper.mat');
                 end
             end
             if ee_att == 3
-                temp = load('meshes\rx160\adaptor_holder.mat');         obj.ms.sTa = temp.modelstruct;
-                temp = load('meshes\rx160\rod_sphere.mat');             obj.ms.sTb = temp.modelstruct;
+                obj.ms.sTa = robotics.graphics.MeshCache.getMesh('meshes\rx160\adaptor_holder.mat');
+                obj.ms.sTb = robotics.graphics.MeshCache.getMesh('meshes\rx160\rod_sphere.mat');
             end
         elseif robot_model == 3
-            temp = load('meshes\z1\z1_Link00.mat'); obj.ms.s0 = temp.modelstruct;
-            temp = load('meshes\z1\z1_Link01.mat'); obj.ms.s1 = temp.modelstruct;
-            temp = load('meshes\z1\z1_Link02.mat'); obj.ms.s2 = temp.modelstruct;
-            temp = load('meshes\z1\z1_Link03.mat'); obj.ms.s3 = temp.modelstruct;
-            temp = load('meshes\z1\z1_Link04.mat'); obj.ms.s4 = temp.modelstruct;
-            temp = load('meshes\z1\z1_Link05.mat'); obj.ms.s5 = temp.modelstruct;
-            temp = load('meshes\z1\z1_Link06.mat'); obj.ms.s6 = temp.modelstruct;
+            obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_Link00.mat');
+            obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_Link01.mat');
+            obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_Link02.mat');
+            obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_Link03.mat');
+            obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_Link04.mat');
+            obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_Link05.mat');
+            obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_Link06.mat');
             if ee_att == 1
-                temp = load('meshes\z1\z1_GripperStator.mat');   obj.ms.sE = temp.modelstruct;
-                temp = load('meshes\z1\z1_GripperMover.mat');   obj.ms.sE2 = temp.modelstruct;
+                obj.ms.sE = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_GripperStator.mat');
+                obj.ms.sE2 = robotics.graphics.MeshCache.getMesh('meshes\z1\z1_GripperMover.mat');
             end
         elseif robot_model == 2
-            temp = load('meshes\ur3\base.mat');     obj.ms.s0 = temp.modelstruct;
-            temp = load('meshes\ur3\shoulder.mat'); obj.ms.s1 = temp.modelstruct;
-            temp = load('meshes\ur3\upperarm.mat'); obj.ms.s2 = temp.modelstruct;
-            temp = load('meshes\ur3\forearm.mat');  obj.ms.s3 = temp.modelstruct;
-            temp = load('meshes\ur3\wrist1.mat');   obj.ms.s4 = temp.modelstruct;
-            temp = load('meshes\ur3\wrist2.mat');   obj.ms.s5 = temp.modelstruct;
-            temp = load('meshes\ur3\wrist3.mat');   obj.ms.s6 = temp.modelstruct;
+            obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\ur3\base.mat');
+            obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\ur3\shoulder.mat');
+            obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\ur3\upperarm.mat');
+            obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\ur3\forearm.mat');
+            obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\ur3\wrist1.mat');
+            obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\ur3\wrist2.mat');
+            obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\ur3\wrist3.mat');
             if ee_att == 1
-                temp = load('meshes\ur3\fts150_coupling.mat');                  obj.ms.sSC = temp.modelstruct;
-                temp = load('meshes\ur3\fts150.mat');                           obj.ms.sS = temp.modelstruct;
-                temp = load('meshes\ur3\gripper_coupling.mat');                 obj.ms.sGC = temp.modelstruct;
-                temp = load('meshes\ur3\arg2f_85_base_link_simp.mat');          obj.ms.sGB = temp.modelstruct;
-                temp = load('meshes\ur3\arg2f_85_outer_knuckle_simp.mat');      obj.ms.sOK = temp.modelstruct;
-                temp = load('meshes\ur3\arg2f_85_outer_finger_simp.mat');       obj.ms.sOF = temp.modelstruct;
-                temp = load('meshes\ur3\arg2f_85_inner_knuckle_simp.mat');      obj.ms.sIK = temp.modelstruct;
-                temp = load('meshes\ur3\arg2f_85_inner_finger_pad_simp.mat');   obj.ms.sIF = temp.modelstruct;
+                obj.ms.sSC = robotics.graphics.MeshCache.getMesh('meshes\ur3\fts150_coupling.mat');
+                obj.ms.sS = robotics.graphics.MeshCache.getMesh('meshes\ur3\fts150.mat');
+                obj.ms.sGC = robotics.graphics.MeshCache.getMesh('meshes\ur3\gripper_coupling.mat');
+                obj.ms.sGB = robotics.graphics.MeshCache.getMesh('meshes\ur3\arg2f_85_base_link_simp.mat');
+                obj.ms.sOK = robotics.graphics.MeshCache.getMesh('meshes\ur3\arg2f_85_outer_knuckle_simp.mat');
+                obj.ms.sOF = robotics.graphics.MeshCache.getMesh('meshes\ur3\arg2f_85_outer_finger_simp.mat');
+                obj.ms.sIK = robotics.graphics.MeshCache.getMesh('meshes\ur3\arg2f_85_inner_knuckle_simp.mat');
+                obj.ms.sIF = robotics.graphics.MeshCache.getMesh('meshes\ur3\arg2f_85_inner_finger_pad_simp.mat');
             end
         else
             if high_quality == 1
-                temp = load('meshes\fer\visual\link0.mat');   obj.ms.s0 = temp.modelstruct;
-                temp = load('meshes\fer\visual\link1.mat');   obj.ms.s1 = temp.modelstruct;
-                temp = load('meshes\fer\visual\link2.mat');   obj.ms.s2 = temp.modelstruct;
-                temp = load('meshes\fer\visual\link3.mat');   obj.ms.s3 = temp.modelstruct;
-                temp = load('meshes\fer\visual\link4.mat');   obj.ms.s4 = temp.modelstruct;
-                temp = load('meshes\fer\visual\link5.mat');   obj.ms.s5 = temp.modelstruct;
-                temp = load('meshes\fer\visual\link6.mat');   obj.ms.s6 = temp.modelstruct;
-                temp = load('meshes\fer\visual\link7.mat');   obj.ms.s7 = temp.modelstruct;
+                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link0.mat');
+                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link1.mat');
+                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link2.mat');
+                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link3.mat');
+                obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link4.mat');
+                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link5.mat');
+                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link6.mat');
+                obj.ms.s7 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link7.mat');
                 if ee_att == 1
-                    temp = load('meshes\fer\visual\hand.mat');   obj.ms.sE = temp.modelstruct;
-                    temp = load('meshes\fer\visual\finger.mat');   obj.ms.sFl = temp.modelstruct;
-                    temp = load('meshes\fer\visual\finger.mat');   obj.ms.sFr = temp.modelstruct;
+                    obj.ms.sE = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\hand.mat');
+                    obj.ms.sFl = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\finger.mat');
+                    obj.ms.sFr = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\finger.mat');
                 end
             else
-                temp = load('meshes\fer\collision\link0.mat');    obj.ms.s0 = temp.modelstruct;
-                temp = load('meshes\fer\collision\link1.mat');    obj.ms.s1 = temp.modelstruct;
-                temp = load('meshes\fer\collision\link2.mat');    obj.ms.s2 = temp.modelstruct;
-                temp = load('meshes\fer\collision\link3.mat');    obj.ms.s3 = temp.modelstruct;
-                temp = load('meshes\fer\collision\link4.mat');    obj.ms.s4 = temp.modelstruct;
-                temp = load('meshes\fer\collision\link5.mat');    obj.ms.s5 = temp.modelstruct;
-                temp = load('meshes\fer\collision\link6.mat');    obj.ms.s6 = temp.modelstruct;
-                temp = load('meshes\fer\collision\link7.mat');    obj.ms.s7 = temp.modelstruct;
+                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link0.mat');
+                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link1.mat');
+                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link2.mat');
+                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link3.mat');
+                obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link4.mat');
+                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link5.mat');
+                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link6.mat');
+                obj.ms.s7 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link7.mat');
                 if ee_att == 1
-                    temp = load('meshes\fer\collision\hand.mat');   obj.ms.sE = temp.modelstruct;
-                    temp = load('meshes\fer\collision\finger.mat');   obj.ms.sFl = temp.modelstruct;
-                    temp = load('meshes\fer\collision\finger.mat');   obj.ms.sFr = temp.modelstruct;
+                    obj.ms.sE = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\hand.mat');
+                    obj.ms.sFl = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\finger.mat');
+                    obj.ms.sFr = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\finger.mat');
                 end
             end
         end
         
         if coord_frame_on == 1
-            temp = load('meshes\coord_frame.mat');  obj.ms.sF = temp.modelstruct;
+            obj.ms.sF = robotics.graphics.MeshCache.getMesh('meshes\coord_frame.mat');
         end
     
         clear temp
