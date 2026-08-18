@@ -37,24 +37,17 @@ trjConfig.tstp = dt;
 trjConfig.tfin_trj = tfin_trj;
 trjConfig.trj_profile = trj_profile;
 
-q_des   = zeros(kin.n, N_steps);
-qd_des  = zeros(kin.n, N_steps);
-qdd_des = zeros(kin.n, N_steps);
+% 1-line vectorized batch evaluation across all time steps
+[q_des, qd_des, qdd_des] = robotics.engines.TrajectoryEngine.generateTrajectoryBatch(...
+    trjConfig, kin, q_initial, q_final, time_vec);
+
 tau_inv = zeros(kin.n, N_steps);
 g_vector = [0; 0; -9.81];
 
 for k = 1:N_steps
-    % Evaluate analytical trajectory at step k-1
-    [q_k, qd_k, qdd_k] = robotics.engines.TrajectoryEngine.generateTrajectory(...
-        trjConfig, kin, q_initial, q_final, k - 1);
-    
-    q_des(:, k)   = q_k;
-    qd_des(:, k)  = qd_k;
-    qdd_des(:, k) = qdd_k;
-    
     % Evaluate inverse dynamics (RNEA/MNEA) to find required feedforward torques
     tau_inv(:, k) = robotics.engines.DynamicsEngine.inverseDynamicsMNEA(...
-        kin, q_k, qd_k, qd_k, qdd_k, g_vector, dyn.pj_j);
+        kin, q_des(:,k), qd_des(:,k), qd_des(:,k), qdd_des(:,k), g_vector, dyn.pj_j);
 end
 
 %% 4. Plot Trajectory and Torque Profiles
