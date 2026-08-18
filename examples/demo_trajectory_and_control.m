@@ -23,7 +23,7 @@ prcnt_velocity = 80; % 80% maximum joint speed
 
 % Dynamically compute minimum safe execution time
 tfin_trj = robotics.engines.TrajectoryEngine.computeTime(...
-    q_initial, q_final, kin.q_velLim, kin.q_accLim, trj_profile, prcnt_velocity);
+    q_initial, q_final, prcnt_velocity, trj_profile, kin.q_velLim, kin.q_accLim);
 
 fprintf('Trajectory Profile: Quintic Polynomial\n');
 fprintf('Calculated Execution Duration: %.3f seconds\n', tfin_trj);

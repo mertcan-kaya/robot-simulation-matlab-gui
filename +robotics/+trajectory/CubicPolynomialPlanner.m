@@ -1,8 +1,16 @@
 classdef CubicPolynomialPlanner < robotics.trajectory.TrajectoryPlanner
     methods
         function tf = computeTime(obj, qi, qf, prcnt, velLim, accLim)
-            v_prcnt = prcnt(1);
-            a_prcnt = prcnt(2);
+            if isscalar(prcnt)
+                if prcnt > 1, prcnt = prcnt / 100; end
+                v_prcnt = prcnt;
+                a_prcnt = prcnt;
+            else
+                if prcnt(1) > 1, prcnt(1) = prcnt(1) / 100; end
+                if prcnt(2) > 1, prcnt(2) = prcnt(2) / 100; end
+                v_prcnt = prcnt(1);
+                a_prcnt = prcnt(2);
+            end
             kv = v_prcnt * velLim(:,2);
             ka = a_prcnt * accLim(:,2);
             D = qf - qi;

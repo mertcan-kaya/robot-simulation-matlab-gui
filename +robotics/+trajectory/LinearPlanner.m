@@ -1,7 +1,13 @@
 classdef LinearPlanner < robotics.trajectory.TrajectoryPlanner
     methods
         function tf = computeTime(obj, qi, qf, prcnt, velLim, accLim)
-            v_prcnt = prcnt(1);
+            if isscalar(prcnt)
+                if prcnt > 1, prcnt = prcnt / 100; end
+                v_prcnt = prcnt;
+            else
+                if prcnt(1) > 1, prcnt(1) = prcnt(1) / 100; end
+                v_prcnt = prcnt(1);
+            end
             kv = v_prcnt * velLim(:,2);
             D = qf - qi;
             tf = max(abs(D)./kv);
