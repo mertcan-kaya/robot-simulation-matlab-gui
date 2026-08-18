@@ -55,6 +55,43 @@ classdef TrajectoryEngine
             end
         end
         
+        function [q_pos, q_vel, q_acc] = generateTrajectoryBatch(trjConfig, kin, ini_q, fin_q, t_vec)
+            % GENERATETRAJECTORYBATCH Evaluates trajectory across an entire time vector in a single vectorized call.
+            %   [Q_POS, Q_VEL, Q_ACC] = GENERATETRAJECTORYBATCH(TRJCONFIG, KIN, INI_Q, FIN_Q, T_VEC)
+            %   evaluates polynomial/linear interpolation for all timesteps in T_VEC simultaneously.
+            %
+            %   Inputs:
+            %       trjConfig - struct: Timing and profile configuration (.tfin_trj, .trj_profile)
+            %       kin       - struct: Kinematic parameters (.n: number of DoF)
+            %       ini_q     - (Nx1) double: Initial joint position vector [rad or m]
+            %       fin_q     - (Nx1) double: Final target joint position vector [rad or m]
+            %       t_vec     - (1xM) or (Mx1) double: Vector of evaluation time points [s]
+            %
+            %   Outputs:
+            %       q_pos     - (NxM) double: Desired joint positions across M time steps [rad or m]
+            %       q_vel     - (NxM) double: Desired joint velocities across M time steps [rad/s or m/s]
+            %       q_acc     - (NxM) double: Desired joint accelerations across M time steps [rad/s^2 or m/s^2]
+            
+            tf = trjConfig.tfin_trj;
+            qi = ini_q(:);
+            qf = fin_q(:);
+            D = qf - qi;
+            M = length(t_vec);
+            
+            if trjConfig.trj_profile ~= 0
+                planner = robotics.trajectory.TrajectoryPlannerFactory.create(trjConfig.trj_profile);
+                [s_pos, s_vel, s_acc] = planner.p2pTrj(t_vec(:)', tf);
+                
+                q_pos = qi + D * s_pos;
+                q_vel = D * s_vel;
+                q_acc = D * s_acc;
+            else
+                q_pos = repmat(qf, 1, M);
+                q_vel = zeros(kin.n, M);
+                q_acc = zeros(kin.n, M);
+            end
+        end
+        
         function tf = computeTime(qi, qf, prcnt, trj_profile, velLim, accLim)
             % COMPUTETIME Calculates minimum trajectory duration satisfying kinematic limits.
             %   tf = COMPUTETIME(QI, QF, PRCNT, TRJ_PROFILE, VELLIM, ACCLIM) calculates

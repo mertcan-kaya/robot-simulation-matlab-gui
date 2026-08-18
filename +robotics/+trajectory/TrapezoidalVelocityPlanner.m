@@ -19,19 +19,26 @@ classdef TrapezoidalVelocityPlanner < robotics.trajectory.TrajectoryPlanner
         
         function [s_pos, s_vel, s_acc] = p2pTrj(obj, t, tf)
             if tf <= 0
-                s_pos = 1; s_vel = 0; s_acc = 0;
+                s_pos = ones(size(t)); s_vel = zeros(size(t)); s_acc = zeros(size(t));
                 return;
             end
-            tau = t / tf;
-            if tau <= 0.5
-                s_pos = 2 * tau * tau;
-                s_vel = (4 * tau) / tf;
-                s_acc = 4 / (tf * tf);
-            else
-                s_pos = -1 + 4*tau - 2*tau*tau;
-                s_vel = (4 - 4*tau) / tf;
-                s_acc = -4 / (tf * tf);
-            end
+            tau = min(max(t / tf, 0), 1);
+            s_pos = zeros(size(tau));
+            s_vel = zeros(size(tau));
+            s_acc = zeros(size(tau));
+            
+            mask1 = (tau <= 0.5);
+            mask2 = ~mask1;
+            
+            % Phase 1: Acceleration (tau <= 0.5)
+            s_pos(mask1) = 2 * tau(mask1).^2;
+            s_vel(mask1) = (4 * tau(mask1)) / tf;
+            s_acc(mask1) = 4 / (tf * tf);
+            
+            % Phase 2: Deceleration (tau > 0.5)
+            s_pos(mask2) = -1 + 4*tau(mask2) - 2*tau(mask2).^2;
+            s_vel(mask2) = (4 - 4*tau(mask2)) / tf;
+            s_acc(mask2) = -4 / (tf * tf);
         end
     end
 end

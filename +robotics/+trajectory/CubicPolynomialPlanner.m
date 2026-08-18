@@ -19,14 +19,14 @@ classdef CubicPolynomialPlanner < robotics.trajectory.TrajectoryPlanner
         
         function [s_pos, s_vel, s_acc] = p2pTrj(obj, t, tf)
             if tf <= 0
-                s_pos = 1; s_vel = 0; s_acc = 0;
+                s_pos = ones(size(t)); s_vel = zeros(size(t)); s_acc = zeros(size(t));
                 return;
             end
-            tau = t / tf;
-            tau2 = tau * tau;
-            s_pos = 3*tau2 - 2*(tau2*tau);
+            tau = min(max(t / tf, 0), 1);
+            tau2 = tau .* tau;
+            s_pos = 3*tau2 - 2*(tau2 .* tau);
             s_vel = (6*tau - 6*tau2) / tf;
-            s_acc = (6 - 12*tau) / (tf*tf);
+            s_acc = (6 - 12*tau) / (tf * tf);
         end
     end
 end

@@ -1,18 +1,23 @@
 classdef TrajectoryPlannerFactory
-    % TRAJECTORYPLANNERFACTORY Factory class to instantiate the correct 
-    % TrajectoryPlanner strategy based on the profile index.
+    % TRAJECTORYPLANNERFACTORY Factory class to instantiate and cache 
+    % TrajectoryPlanner strategies based on the profile index.
     
     methods (Static)
         function planner = create(trj_profile)
+            persistent linearPlanner cubicPlanner quinticPlanner trapPlanner
             switch trj_profile
                 case 1
-                    planner = robotics.trajectory.LinearPlanner();
+                    if isempty(linearPlanner), linearPlanner = robotics.trajectory.LinearPlanner(); end
+                    planner = linearPlanner;
                 case 2
-                    planner = robotics.trajectory.CubicPolynomialPlanner();
+                    if isempty(cubicPlanner), cubicPlanner = robotics.trajectory.CubicPolynomialPlanner(); end
+                    planner = cubicPlanner;
                 case 3
-                    planner = robotics.trajectory.QuinticPolynomialPlanner();
+                    if isempty(quinticPlanner), quinticPlanner = robotics.trajectory.QuinticPolynomialPlanner(); end
+                    planner = quinticPlanner;
                 case 4
-                    planner = robotics.trajectory.TrapezoidalVelocityPlanner();
+                    if isempty(trapPlanner), trapPlanner = robotics.trajectory.TrapezoidalVelocityPlanner(); end
+                    planner = trapPlanner;
                 otherwise
                     error('Unknown trajectory profile index: %d', trj_profile);
             end

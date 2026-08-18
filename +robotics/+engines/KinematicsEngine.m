@@ -97,13 +97,49 @@ classdef KinematicsEngine
             %   Outputs:
             %       TI_i    - (4x4x(N+2)) double: Cumulative homogeneous transformations
             
-            TR_i = robotics.engines.KinematicsEngine.getRelativeTransMatrix(TI_0, a_j, alpha_j, d_j, theta_j, j_type, q_j);
             k = length(q_j);
             TI_i = zeros(4, 4, k+2);
-            TI_i(:,:,1) = TR_i(:,:,1);
-            for j = 1:k+1
-                TI_i(:,:,j+1) = TI_i(:,:,j) * TR_i(:,:,j+1);
+            TI_i(:,:,1) = TI_0;
+            
+            for j = 1:k
+                th = theta_j(j) + j_type(j)*q_j(j);
+                dj = d_j(j) + (1-j_type(j))*q_j(j);
+                
+                % Fast inlined MDH relative transform
+                ca = cos(alpha_j(j)); sa = sin(alpha_j(j));
+                ct = cos(th);         st = sin(th);
+                aj = a_j(j);
+                
+                % Direct SE(3) compounding: T_next = T_prev * TR
+                R_prev = TI_i(1:3, 1:3, j);
+                p_prev = TI_i(1:3, 4,   j);
+                
+                R_rel = [ ct,       -st,        0;
+                          ca * st,   ca * ct,  -sa;
+                          sa * st,   sa * ct,   ca ];
+                p_rel = [ aj; -sa * dj; ca * dj ];
+                
+                TI_i(1:3, 1:3, j+1) = R_prev * R_rel;
+                TI_i(1:3, 4,   j+1) = R_prev * p_rel + p_prev;
+                TI_i(4,   4,   j+1) = 1;
             end
+            
+            % Tool/Flange transform (joint k+1)
+            ca = cos(alpha_j(k+1)); sa = sin(alpha_j(k+1));
+            ct = cos(theta_j(k+1)); st = sin(theta_j(k+1));
+            aj = a_j(k+1);          dj = d_j(k+1);
+            
+            R_prev = TI_i(1:3, 1:3, k+1);
+            p_prev = TI_i(1:3, 4,   k+1);
+            
+            R_rel = [ ct,       -st,        0;
+                      ca * st,   ca * ct,  -sa;
+                      sa * st,   sa * ct,   ca ];
+            p_rel = [ aj; -sa * dj; ca * dj ];
+            
+            TI_i(1:3, 1:3, k+2) = R_prev * R_rel;
+            TI_i(1:3, 4,   k+2) = R_prev * p_rel + p_prev;
+            TI_i(4,   4,   k+2) = 1;
         end
         
         % Helper methods for Transformation Matrices
