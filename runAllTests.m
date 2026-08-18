@@ -22,6 +22,7 @@ if all([result.Passed])
     disp('   ALL TESTS PASSED SUCCESSFULLY!       ');
 else
     disp('   SOME TESTS FAILED!                   ');
+    assert(all([result.Passed]), 'One or more unit tests failed.');
 end
 disp('========================================');
 

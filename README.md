@@ -1,5 +1,6 @@
 # Robot Simulation MATLAB GUI
 
+[![CI](https://github.com/mertcan-kaya/robot-simulation-matlab-gui/actions/workflows/ci.yml/badge.svg)](https://github.com/mertcan-kaya/robot-simulation-matlab-gui/actions/workflows/ci.yml)
 [![MATLAB](https://img.shields.io/badge/MATLAB-R2020b%2B-blue.svg)](https://www.mathworks.com/products/matlab.html)
 [![Toolbox](https://img.shields.io/badge/Toolbox-v1.0.0--beta.1-orange.svg)](releases/Robot_Simulation_GUI.mltbx)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
