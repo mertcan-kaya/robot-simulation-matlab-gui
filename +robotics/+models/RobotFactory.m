@@ -24,6 +24,10 @@ classdef RobotFactory
             %   Outputs:
             %       robot          - Concrete subclass instance of RobotModel
             
+            if nargin < 1 || isempty(robot_model_id) || ~isnumeric(robot_model_id)
+                robot_model_id = 0;
+            end
+            
             switch robot_model_id
                 case 1
                     robot = robotics.models.FrankaEmika();
@@ -35,12 +39,16 @@ classdef RobotFactory
                     robot = robotics.models.StaubliRX160();
                 case 5
                     robot = robotics.models.StaubliRX160L();
-                otherwise
-                    if nargin > 1
+                case 0
+                    if nargin > 1 && ~isempty(customParams)
                         robot = robotics.models.CustomRobot(customParams);
                     else
                         robot = robotics.models.CustomRobot();
                     end
+                otherwise
+                    warning('RobotFactory:UnknownModelId', ...
+                        'Unknown robot_model_id %s. Defaulting to CustomRobot.', num2str(robot_model_id));
+                    robot = robotics.models.CustomRobot();
             end
         end
     end

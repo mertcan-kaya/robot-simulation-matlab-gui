@@ -104,9 +104,18 @@ classdef (Abstract) RobotModel < handle
                 errNorm = norm(xErr);
                 
                 if invGeoConfig.inv_geo_trn == 0
+                    % Jacobian Transpose method
                     qItr = qItr + J'*(k.*xErr);
                 else
-                    qItr = qItr + J\(k.*xErr);
+                    % Damped Least-Squares (DLS / Levenberg-Marquardt) Inverse
+                    % J_dls = J' * inv(J*J' + lambda^2 * eye(6))
+                    JJt = J * J';
+                    lambda_sq = 1e-4; % Base regularization for numerical stability
+                    if min(svd(J)) < 0.05
+                        lambda_sq = 1e-2; % Adaptive damping near kinematic singularities
+                    end
+                    J_dls = J' / (JJt + lambda_sq * eye(6));
+                    qItr = qItr + J_dls * (k.*xErr);
                 end
 
                 itr = itr + 1;
