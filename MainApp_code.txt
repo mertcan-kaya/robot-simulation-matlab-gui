@@ -1415,21 +1415,7 @@ classdef MainApp < matlab.apps.AppBase
 
         % Value changed function: StepsEditField
         function StepsEditFieldValueChanged(app, event)
-            val = app.StepsEditField.Value;
-            
-            % Stability Guard for Dynamic Mode
-            if app.sim_mode == 1 && val > 0.001
-                val = 0.0001; % Clamp to optimal 0.1 ms
-                app.StepsEditField.Value = val;
-                uialert(app.UIFigure, ...
-                    'In Dynamic mode, step size (Step s) must be <= 0.001 s (1 ms) to prevent numerical instability under high feedback gains and friction. Reset to 0.0001 s (0.1 ms).', ...
-                    'Numerical Stability Warning', 'Icon', 'warning');
-            elseif val <= 0
-                val = 0.0001;
-                app.StepsEditField.Value = val;
-            end
-            
-            app.controller.model.tstp = val;
+            app.controller.model.tstp = app.StepsEditField.Value;
             updateFinTimeTrj(app);
             updateRunButtonState(app);
         end
