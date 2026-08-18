@@ -8,45 +8,44 @@ This document outlines the architecture, design patterns, module interactions, a
 
 The codebase is built on a strict **Model-View-Controller (MVC)** architecture, decoupling physics, kinematics, and trajectory computations from the MATLAB App Designer UI.
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                   VIEW (Presentation Layer)              │
-│  ┌───────────────────────┐   ┌────────────────────────┐  │
-│  │     MainApp.mlapp     │   │   SimulationViewModel  │  │
-│  │ (App Designer Events) │──>│ (Pre-formatted Strings)│  │
-│  └───────────────────────┘   └────────────────────────┘  │
-└────────────────────────────┬─────────────────────────────┘
-                             │ User Actions / Callbacks
-                             ▼
-┌──────────────────────────────────────────────────────────┐
-│               CONTROLLER (Mediation Layer)               │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │           robotics.engines.SimulationController    │  │
-│  │   • Mediates between UI and Backend Engines        │  │
-│  │   • Coordinates Kinematics, Dynamics & Graphics   │  │
-│  └────────────────────────────────────────────────────┘  │
-└────────────────────────────┬─────────────────────────────┘
-                             │ State Updates & Invocations
-                             ▼
-┌──────────────────────────────────────────────────────────┐
-│                    MODEL & ENGINES (Core)                │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │         robotics.models.SimulationModel            │  │
-│  │  (State Structs: kin, dyn, ini, fin, act, des, ctr)│  │
-│  └────────────────────────────────────────────────────┘  │
-│         ▲                    ▲                   ▲       │
-│         │                    │                   │       │
-│  ┌──────────────┐    ┌───────────────┐    ┌───────────┐  │
-│  │ Kinematics-  │    │   Dynamics-   │    │Trajectory-│  │
-│  │    Engine    │    │    Engine     │    │  Engine   │  │
-│  └──────────────┘    └───────────────┘    └───────────┘  │
-│         ▲                    ▲                   ▲       │
-│         │                    │                   │       │
-│  ┌──────────────┐    ┌───────────────┐    ┌───────────┐  │
-│  │ Robot Models │    │Friction Models│    │ Planners  │  │
-│  │  (Factory)   │    │  & Springs    │    │(Strategy) │  │
-│  └──────────────┘    └───────────────┘    └───────────┘  │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph View ["Presentation Layer (View)"]
+        UI["MainApp.mlapp<br/>(App Designer UI)"]
+        VM["SimulationViewModel<br/>(Pre-formatted Strings)"]
+        UI --> VM
+    end
+
+    subgraph Controller ["Mediation Layer (Controller)"]
+        SC["SimulationController<br/>(Coordinates Kinematics, Dynamics & Graphics)"]
+    end
+
+    subgraph Model ["Data & Physics Layer (Model & Engines)"]
+        SM["SimulationModel<br/>(State Structs: kin, dyn, ini, fin, act, des, ctr)"]
+        KE["KinematicsEngine<br/>(FK, DLS IK, Analytical IK)"]
+        DE["DynamicsEngine<br/>(RNEA, Forward Dynamics, Gravity)"]
+        TE["TrajectoryEngine<br/>(Trajectory Interpolation & Timing)"]
+        CE["ControlEngine<br/>(PID, Computed Torque Control)"]
+        SE["SimulationEngine<br/>(Symplectic Euler Loop)"]
+        RF["RobotFactory<br/>(Polymorphic Instantiation)"]
+    end
+
+    subgraph Graphics ["Visualization Layer"]
+        RR["RobotRenderer<br/>(Scene Graph & hgtransform)"]
+        ML["MeshLoader<br/>(Cached STL Importer)"]
+        RR --> ML
+    end
+
+    UI -->|"User Actions"| SC
+    SC -->|"Mutate State"| SM
+    SC -->|"Invoke Kinematics"| KE
+    SC -->|"Invoke Dynamics"| DE
+    SC -->|"Invoke Trajectory"| TE
+    SC -->|"Step Simulation"| SE
+    SE --> CE
+    SE --> DE
+    SC -->|"Update Visuals"| RR
+    SM -.->|"State Notification"| UI
 ```
 
 ---
@@ -56,8 +55,8 @@ The codebase is built on a strict **Model-View-Controller (MVC)** architecture, 
 All backend logic resides in the `+robotics` namespace:
 
 ### `+robotics/+models`
-* **`RobotModel.m`**: Abstract base class defining interface methods (`getKinematicParameters`, `getJointLimits`, `getTaskLimits`, `getInertialParameters`, `getDefaultControlParams`).
-* **`RobotFactory.m`**: Factory pattern implementing `create(robot_model_id, customParams)`.
+* **`RobotModel.m`**: Abstract base class defining interface methods (`getKinematicParameters`, `getJointLimits`, `getTaskLimits`, `getInertialParameters`, `getDefaultControlParams`, `computeInverseKinematics`, `invGeoNumeric`).
+* **`RobotFactory.m`**: Factory pattern implementing `create(robot_model_id, customParams)` with defensive validation.
 * **Robot Implementations**:
   * `FrankaEmika.m` (7-DoF)
   * `UR3.m` (6-DoF)
@@ -67,11 +66,11 @@ All backend logic resides in the `+robotics` namespace:
 * **`SimulationModel.m`**: Central data model holding physics, simulation timing, and joint/task state structures.
 
 ### `+robotics/+engines`
-* **`KinematicsEngine.m`**: Forward kinematics via standard Denavit-Hartenberg matrices, differential kinematics (Jacobians), and numerical/analytical inverse kinematics.
-* **`DynamicsEngine.m`**: Recursive Newton-Euler Algorithm (RNEA) forward and inverse dynamics computations, including gravity torque calculation (`getTauG`).
+* **`KinematicsEngine.m`**: Forward kinematics via Modified Denavit-Hartenberg (MDH) matrices, differential kinematics (Jacobians), and numerical/analytical inverse kinematics.
+* **`DynamicsEngine.m`**: Vectorized Recursive Newton-Euler Algorithm (RNEA/MNEA/ANEA) forward and inverse dynamics computations, including analytical gravity torque calculation (`getTauG`).
 * **`ControlEngine.m`**: Joint-level PID and Computed Torque Control (Inverse Dynamics Control / IDC) with gravity and friction compensation.
 * **`TrajectoryEngine.m`**: Interpolation calculations, timing validation, and step-by-step state generation.
-* **`SimulationEngine.m`**: Real-time simulation loops (`runKinematics` and `runDynamics`).
+* **`SimulationEngine.m`**: Real-time simulation loops (`runKinematics` and `runDynamics`) using a Symplectic Euler numerical integrator.
 * **`SimulationController.m`**: Central orchestrator mediating between `SimulationModel`, `SimulationEngine`, and `RobotRenderer`.
 
 ### `+robotics/+trajectory` (Strategy Pattern)
@@ -92,6 +91,8 @@ All backend logic resides in the `+robotics` namespace:
 * Pure, vectorized matrix utilities:
   * `SE3_SO3R3.m` / `SO3R3_SE3.m`: Homogeneous transformation decompositions.
   * `SkewSym.m`: Cross-product skew-symmetric matrices.
+  * `SO3R3_R66_twist.m`: Spatial motion adjoint matrices.
+  * `getRi_j.m`: Analytical MDH rotation matrix calculation.
   * `getEulerPosVec.m` / `getRotMatfromEA.m`: Euler angle translations across multiple conventions.
 
 ### `+robotics/+viewmodels`
@@ -99,7 +100,7 @@ All backend logic resides in the `+robotics` namespace:
 
 ---
 
-## 3. Key Design Patterns
+## 3. Key Design Patterns & Technical Innovations
 
 ### Factory Pattern (`RobotFactory`, `TrajectoryPlannerFactory`)
 Isolates object instantiation logic from application callers. New robots and trajectory algorithms can be registered with zero modifications to the UI:
@@ -118,6 +119,14 @@ Rather than clearing and re-plotting geometry on every simulation timestep ($O(N
 ```matlab
 set(obj.linkTransforms(j), 'Matrix', T(:,:,j));
 ```
+
+### Damped Least-Squares (DLS) Inverse Kinematics
+Regularized numerical inverse kinematics preventing velocity spikes near kinematic singularities:
+$$J_{\text{DLS}} = J^T (J J^T + \lambda^2 I_6)^{-1}$$
+
+### Symplectic Euler Numerical Integrator
+Simulates forward multi-body dynamics at $10\text{ kHz}$ ($0.1\text{ ms}$) while preserving energy and numerical stability under non-smooth Coulomb and Stribeck friction:
+$$\dot{q}_{k+1} = \dot{q}_k + \Delta t \, \ddot{q}(q_k, \dot{q}_k, \tau_k), \quad q_{k+1} = q_k + \Delta t \, \dot{q}_{k+1}$$
 
 ---
 
