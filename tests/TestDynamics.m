@@ -90,7 +90,7 @@ classdef TestDynamics < matlab.unittest.TestCase
             qRdd = ones(kin.n, 1);
             g = [0; 0; -9.81];
 
-            p_init = dyn.pj_bar;
+            p_init = dyn.pj_j(:);
             Pdiag = ones(length(p_init), 1) * 0.01;
 
             [tau_fj, phat_next] = robotics.engines.DynamicsEngine.inverseDynamicsANEA(ctr, kin, q, qd, qRd, qRdd, g, p_init, Pdiag);

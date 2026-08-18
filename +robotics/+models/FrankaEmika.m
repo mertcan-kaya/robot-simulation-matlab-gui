@@ -52,7 +52,7 @@ classdef FrankaEmika < robotics.models.RobotModel
         end
         
         function tau_frc = getFrictionTorque(obj, q_vel)
-            tau_frc = frictionFERModel(q_vel);
+            tau_frc = robotics.friction.frictionFERModel(q_vel);
         end
         
         function [q_posLim, q_posSafeLim, q_velLim, q_velSafeLim, q_accLim] = getJointLimits(obj)

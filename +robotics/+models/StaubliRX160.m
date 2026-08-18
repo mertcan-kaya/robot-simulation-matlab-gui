@@ -142,7 +142,7 @@ classdef StaubliRX160 < robotics.models.RobotModel
         end
         
         function tau_spr = getSpringTorque(obj, q_pos)
-            tau_spr = springModel(q_pos);
+            tau_spr = robotics.friction.springModel(q_pos);
         end
         
         function [q_pos, err] = computeAnalyticIK(obj, invGeoConfig, kin, RGoal, tGoal, qPrev)

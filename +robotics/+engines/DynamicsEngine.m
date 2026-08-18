@@ -113,6 +113,15 @@ classdef DynamicsEngine
             zj_j = kin.zj_j;
             Rj_i = zeros(3,3,n+1);
             
+            if isfield(kin, 'ri_j') && ~isempty(kin.ri_j)
+                ri_j = kin.ri_j;
+            else
+                ri_j = zeros(3,1,n+1);
+                for j = 1:n+1
+                    ri_j(:,:,j) = robotics.math.getri_j_vec(kin.alpha_j(j), kin.a_j(j), kin.d_j(j));
+                end
+            end
+            
             tau_j = zeros(n,1);
             
             wi_i = zeros(3,1);
@@ -126,7 +135,7 @@ classdef DynamicsEngine
                 Rj_i(:,:,j) = robotics.math.getRi_j(kin.alpha_j(j), kin.theta_O_j(j) + q(j))';
                 
                 wdi_i = Rj_i(:,:,j)*wdi_i + (cross(Rj_i(:,:,j)*wRi_i, qd(j)*zj_j) + cross(Rj_i(:,:,j)*wi_i, qRd(j)*zj_j))/2 + qRdd(j)*zj_j;
-                mui_i = Rj_i(:,:,j)*(mui_i + Ui_i*kin.ri_j(:,:,j));
+                mui_i = Rj_i(:,:,j)*(mui_i + Ui_i*ri_j(:,:,j));
         
                 wi_i = Rj_i(:,:,j)*wi_i + qd(j)*zj_j;
                 wRi_i = Rj_i(:,:,j)*wRi_i + qRd(j)*zj_j;
@@ -141,7 +150,7 @@ classdef DynamicsEngine
             fi_i = zeros(3,1);
             ni_i = zeros(3,1);
             for j = n:-1:1
-                ni_i = Psini_i(:,:,j+1)*pj_j(:,:,j) + Rj_i(:,:,j+1)'*(robotics.math.SkewSym(Rj_i(:,:,j+1)*kin.ri_j(:,:,j+1))*fi_i + ni_i);
+                ni_i = Psini_i(:,:,j+1)*pj_j(:,:,j) + Rj_i(:,:,j+1)'*(robotics.math.SkewSym(Rj_i(:,:,j+1)*ri_j(:,:,j+1))*fi_i + ni_i);
                 fi_i = Psifi_i(:,:,j+1)*pj_j(:,:,j) + Rj_i(:,:,j+1)'*fi_i;
                 tau_j(j) = zj_j'*ni_i;
             end
@@ -173,6 +182,15 @@ classdef DynamicsEngine
             zj_j = kin.zj_j;
             Rj_i = zeros(3,3,n+1);
             
+            if isfield(kin, 'ri_j') && ~isempty(kin.ri_j)
+                ri_j = kin.ri_j;
+            else
+                ri_j = zeros(3,1,n+1);
+                for j = 1:n+1
+                    ri_j(:,:,j) = robotics.math.getri_j_vec(kin.alpha_j(j), kin.a_j(j), kin.d_j(j));
+                end
+            end
+            
             tau_fj = zeros(n,1);
             phatj_bar = zeros(n*np,1);
             
@@ -190,7 +208,7 @@ classdef DynamicsEngine
                 Rj_i(:,:,j) = robotics.math.getRi_j(kin.alpha_j(j), kin.theta_O_j(j) + q(j))';
                 
                 wdi_i = Rj_i(:,:,j)*wdi_i + (cross(Rj_i(:,:,j)*wRi_i, qd(j)*zj_j) + cross(Rj_i(:,:,j)*wi_i, qRd(j)*zj_j))/2 + qRdd(j)*zj_j;
-                mui_i = Rj_i(:,:,j)*(mui_i + Ui_i*kin.ri_j(:,:,j));
+                mui_i = Rj_i(:,:,j)*(mui_i + Ui_i*ri_j(:,:,j));
         
                 wi_i = Rj_i(:,:,j)*wi_i + qd(j)*zj_j;
                 wRi_i = Rj_i(:,:,j)*wRi_i + qRd(j)*zj_j;
@@ -201,7 +219,7 @@ classdef DynamicsEngine
                 Psifi_i(:,:,j+1) = [zeros(3,6), Ui_i, mui_i];
                 Psini_i(:,:,j+1) = [Oh_h, -robotics.math.SkewSym(mui_i), zeros(3,1)];
         
-                svi_i = Rj_i(:,:,j)*(svi_i + cross(swi_i, kin.ri_j(:,:,j)));
+                svi_i = Rj_i(:,:,j)*(svi_i + cross(swi_i, ri_j(:,:,j)));
                 swi_i = wRi_i - wi_i;
                 
                 sigmai_i = Psifi_i(:,:,j+1)'*svi_i + Psini_i(:,:,j+1)'*swi_i;
@@ -214,7 +232,7 @@ classdef DynamicsEngine
             fi_fi = zeros(3,1);
             ni_fi = zeros(3,1);
             for j = n:-1:1
-                ni_fi = Psini_i(:,:,j+1)*phatj_j(:,:,j) + Rj_i(:,:,j+1)'*(robotics.math.SkewSym(Rj_i(:,:,j+1)*kin.ri_j(:,:,j+1))*fi_fi + ni_fi);
+                ni_fi = Psini_i(:,:,j+1)*phatj_j(:,:,j) + Rj_i(:,:,j+1)'*(robotics.math.SkewSym(Rj_i(:,:,j+1)*ri_j(:,:,j+1))*fi_fi + ni_fi);
                 fi_fi = Psifi_i(:,:,j+1)*phatj_j(:,:,j) + Rj_i(:,:,j+1)'*fi_fi;
                 tau_fj(j) = zj_j'*ni_fi;
             end

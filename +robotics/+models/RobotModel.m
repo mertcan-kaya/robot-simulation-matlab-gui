@@ -28,7 +28,7 @@ classdef (Abstract) RobotModel < handle
     methods
         function tau_frc = getFrictionTorque(obj, q_vel)
             % GETFRICTIONTORQUE Computes joint friction torques.
-            tau_frc = frictionFERModelUni(q_vel);
+            tau_frc = robotics.friction.frictionFERModelUni(q_vel);
         end
         
         function tau_spr = getSpringTorque(obj, q_pos)

@@ -35,10 +35,10 @@ classdef TestKinematics < matlab.unittest.TestCase
         function testClosedLoopInverseKinematics(testCase)
             % Test that forward kinematics of solved qDes matches commanded target pose
             robot = robotics.models.RobotFactory.create(2); % UR3
-            kin = robot.getKinematicParameters(0);
+            kin = robot.getKinematicParameters(1); % with standard tool attachment
 
-            % Choose a reachable configuration
-            q_target = [0.2; -0.4; 0.6; -0.8; 0.3; 0.5];
+            % Choose a reachable configuration within UR3 analytic domain
+            q_target = [0.1; -0.2; 0.3; -0.4; 0.5; 0.6];
             TI_0 = eye(4);
 
             T_target = robotics.engines.KinematicsEngine.getTransMatrix(TI_0, kin.a_j, kin.alpha_j, kin.d_j, kin.theta_O_j, kin.j_type, q_target);
@@ -46,11 +46,11 @@ classdef TestKinematics < matlab.unittest.TestCase
             tGoal = T_target(1:3, 4, kin.n+2);
 
             invGeoConfig.robot_model = 2;
-            invGeoConfig.inv_geo_type = 2; % Hybrid (analytic with numeric fallback)
+            invGeoConfig.inv_geo_type = 0; % Analytic IK
             invGeoConfig.TI_0 = TI_0;
             invGeoConfig.inv_geo_trn = 0;
-            invGeoConfig.kp_inv = 0.23;
-            invGeoConfig.kr_inv = 0.015;
+            invGeoConfig.kp_inv = 0.5;
+            invGeoConfig.kr_inv = 0.5;
 
             q0 = zeros(kin.n, 1);
             qDes = robotics.engines.KinematicsEngine.inverseKinematics(robot, invGeoConfig, kin, RGoal, tGoal, q0);
@@ -63,7 +63,7 @@ classdef TestKinematics < matlab.unittest.TestCase
             % Position error should be < 1 mm
             testCase.verifyEqual(t_solved, tGoal, 'AbsTol', 1e-3);
             % Rotation matrix Frobenius norm error
-            testCase.verifyEqual(norm(R_solved - RGoal, 'fro'), 0.0, 'AbsTol', 1e-2);
+            testCase.verifyEqual(norm(R_solved - RGoal, 'fro'), 0.0, 'AbsTol', 1e-3);
         end
 
     end
