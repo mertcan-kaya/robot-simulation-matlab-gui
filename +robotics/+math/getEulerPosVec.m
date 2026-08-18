@@ -1,4 +1,22 @@
 function r_pos = getEulerPosVec(R_mat, eulerSet)
+% GETEULERPOSVEC Extracts Euler / Cardan angle vector from a 3x3 rotation matrix.
+%   r_pos = GETEULERPOSVEC(R_MAT, EULERSET) computes the angle vector [phi; tht; psi]
+%   from an SO(3) rotation matrix R according to the specified sequence identifier:
+%
+%   Supported Sequences (eulerSet):
+%       1 - Z-Y-Z Euler angles (phi, theta, psi)
+%       2 - Z-Y-X Cardan / Yaw-Pitch-Roll (phi, theta, psi)
+%       3 - X-Y-Z Cardan angles (phi, theta, psi)
+%       4 - Z-X-Z Euler angles (phi, theta, psi) [Default/Otherwise]
+%
+%   Inputs:
+%       R_mat    - (3x3) double: Rotation matrix in SO(3)
+%       eulerSet - (1x1) double/integer: Sequence identifier (1, 2, 3, or 4)
+%
+%   Outputs:
+%       r_pos    - (3x1) double: [phi; tht; psi] in radians
+%
+%   See also getRotMatfromEA, SE3_SO3R3.
 
     sx = R_mat(1,1);
     sy = R_mat(2,1);

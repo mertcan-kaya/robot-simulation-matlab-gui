@@ -8,8 +8,12 @@ classdef LinearPlanner < robotics.trajectory.TrajectoryPlanner
         end
         
         function [s_pos, s_vel, s_acc] = p2pTrj(obj, t, tf)
-            s_pos = t/tf;
-            s_vel = 1/tf;
+            if tf <= 0
+                s_pos = 1; s_vel = 0; s_acc = 0;
+                return;
+            end
+            s_pos = t / tf;
+            s_vel = 1 / tf;
             s_acc = 0;
         end
     end

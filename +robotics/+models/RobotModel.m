@@ -1,28 +1,43 @@
 classdef (Abstract) RobotModel < handle
+    % ROBOTMODEL Abstract base class defining the standard interface for all robot arms.
+    %   Subclasses implement kinematic parameters (DH tables), joint/task limits,
+    %   inertial parameters (mass, center of mass, inertia tensor), controller presets,
+    %   and specialized inverse kinematics routines (analytical or numerical).
+    
     properties (Abstract)
         Name
     end
     
     methods (Abstract)
+        % GETKINEMATICPARAMETERS Returns robot kinematic struct (MDH parameters, limits).
         kin = getKinematicParameters(obj, ee_att)
+        
+        % GETJOINTLIMITS Returns position, velocity, and acceleration joint limits.
         [q_posLim, q_posSafeLim, q_velLim, q_velSafeLim, q_accLim] = getJointLimits(obj)
+        
+        % GETTASKLIMITS Returns position, velocity, and acceleration Cartesian task space limits.
         [t_posLim, t_posSafeLim, t_velLim, t_velSafeLim, t_accLim] = getTaskLimits(obj, DH)
+        
+        % GETINERTIALPARAMETERS Returns link mass, center of mass, and spatial inertia parameters.
         dyn = getInertialParameters(obj)
+        
+        % GETDEFAULTCONTROLPARAMS Returns default feedback and feedforward controller gains.
         ctr = getDefaultControlParams(obj, algo_id)
     end
     
     methods
         function tau_frc = getFrictionTorque(obj, q_vel)
-            % Default to universal friction model unless overridden
+            % GETFRICTIONTORQUE Computes joint friction torques.
             tau_frc = frictionFERModelUni(q_vel);
         end
         
         function tau_spr = getSpringTorque(obj, q_pos)
-            % Default to no spring torque unless overridden
+            % GETSPRINGTORQUE Computes gravity compensation spring torques.
             tau_spr = zeros(size(q_pos));
         end
         
         function [qDes, err] = computeInverseKinematics(obj, invGeoConfig, kin, RGoal, tGoal, q0)
+            % COMPUTEINVERSEKINEMATICS Dispatches to analytic or numerical inverse kinematics.
             err = 0;
             if invGeoConfig.inv_geo_type == 1
                 qDes = obj.invGeoNumeric(invGeoConfig, kin, RGoal, tGoal, q0);
@@ -37,7 +52,7 @@ classdef (Abstract) RobotModel < handle
         end
         
         function [qDes, err] = computeAnalyticIK(obj, invGeoConfig, kin, RGoal, tGoal, q0)
-            % By default, base class has no analytic IK
+            % COMPUTEANALYTICIK Base method for closed-form analytical inverse kinematics.
             err = 1;
             qDes = q0;
         end

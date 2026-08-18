@@ -1,6 +1,8 @@
 classdef SimulationEngine < handle
-    % SIMULATIONENGINE Extracts the heavy simulation loops from the Controller.
-    % Handles the time-stepping execution for runSimulation and runKinematics.
+    % SIMULATIONENGINE Executes time-stepping simulation loops for dynamic and kinematic modes.
+    %   Orchestrates forward dynamics integration (Euler/RK), control torque dispatch,
+    %   trajectory evaluation, joint limit enforcement, real-time wall-clock pacing,
+    %   and hardware-accelerated 3D graphics rendering.
     
     properties
         model
@@ -11,6 +13,14 @@ classdef SimulationEngine < handle
     
     methods
         function obj = SimulationEngine(model, robot, renderer, onUpdateLabels)
+            % SIMULATIONENGINE Constructs an instance of the simulation engine.
+            %
+            %   Inputs:
+            %       model          - SimulationModel instance (simulation state and params)
+            %       robot          - RobotModel instance (physics and analytical models)
+            %       renderer       - RobotRenderer instance (3D graphics pipeline)
+            %       onUpdateLabels - function_handle: UI callback for stats (time, FPS, RTF)
+            
             obj.model = model;
             obj.robot = robot;
             obj.renderer = renderer;
@@ -18,7 +28,10 @@ classdef SimulationEngine < handle
         end
         
         function runSimulation(obj)
-            % The main simulation loop extracted from SimulationController
+            % RUNSIMULATION Executes the full forward dynamic numerical simulation loop.
+            %   Integrates forward dynamics (q_acc -> q_vel -> q_pos), computes feedback
+            %   control torques, enforces joint limits, and synchronizes rendering to real-time.
+            
             obj.model.running_flag = 1;
             
             d = round(obj.model.ctr.tcyc/obj.model.tstp);
@@ -32,13 +45,24 @@ classdef SimulationEngine < handle
             trjConfig.tfin_trj = obj.model.tfin_trj;
             trjConfig.trj_profile = obj.model.trj_profile;
             
-            sim_time = 0;
-            last_render_real_time = -inf;
-            fps_smoothed = 60;
-            actual_rtf = 1.0;
-            tic
+            speed_scale = obj.model.time_const;
+            if isempty(speed_scale) || speed_scale <= 0
+                speed_scale = 1.0;
+            end
             
-            for k = 0:round(obj.model.tfin/obj.model.tstp)
+            target_fps = 100; % High-framerate rendering cap
+            dt_frame_real = 1.0 / target_fps;
+            dt_frame_sim = dt_frame_real * speed_scale;
+            steps_per_frame = max(1, round(dt_frame_sim / obj.model.tstp));
+            total_steps = round(obj.model.tfin / obj.model.tstp);
+            
+            last_render_wall_time = -inf;
+            last_label_wall_time = -inf;
+            fps_smoothed = target_fps;
+            actual_rtf = speed_scale;
+            
+            tic;
+            for k = 0:total_steps
                 
                 if obj.model.running_flag == 0
                     break;
@@ -73,28 +97,36 @@ classdef SimulationEngine < handle
                     end
                 end
                 
-                sim_time = sim_time + obj.model.tstp;
-                real_time = toc;
-                
-                % Graphics update loop (throttled to ~60 FPS max to avoid choking the UI event queue)
-                if ((real_time - last_render_real_time >= 0.016) && (sim_time >= real_time*obj.model.time_const))
-                    dt_render = real_time - last_render_real_time;
-                    if last_render_real_time > 0 && dt_render > 0
-                        instant_fps = 1.0 / dt_render;
-                        fps_smoothed = 0.85 * fps_smoothed + 0.15 * instant_fps;
-                    else
-                        fps_smoothed = 60;
+                % Render frame at frame boundary or completion
+                if rem(k, steps_per_frame) == 0 || k == total_steps
+                    sim_time = k * obj.model.tstp;
+                    target_wall_time = sim_time / speed_scale;
+                    current_wall_time = toc;
+                    
+                    wait_time = target_wall_time - current_wall_time;
+                    if wait_time > 0.001
+                        pause(wait_time);
+                        current_wall_time = toc;
                     end
-                    last_render_real_time = real_time;
+                    
+                    if last_render_wall_time > 0
+                        dt_render = current_wall_time - last_render_wall_time;
+                        if dt_render > 0
+                            instant_fps = 1.0 / dt_render;
+                            fps_smoothed = 0.85 * fps_smoothed + 0.15 * instant_fps;
+                        end
+                    end
+                    last_render_wall_time = current_wall_time;
+                    
                     obj.renderer.updateView(obj.model);
                     
-                    % UI callbacks (if registered by the View)
-                    if ~isempty(obj.onUpdateLabels)
-                        actual_rtf = sim_time / max(real_time, 1e-4);
-                        obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
+                    % UI text callbacks throttled to ~20 Hz to avoid IPC overhead
+                    if ~isempty(obj.onUpdateLabels) && (current_wall_time - last_label_wall_time >= 0.050 || k == total_steps)
+                        last_label_wall_time = current_wall_time;
+                        actual_rtf = sim_time / max(current_wall_time, 1e-4);
+                        obj.onUpdateLabels(sim_time, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
                     end
                 end
-                
             end
             
             % Ensure final frame and labels are drawn at completion
@@ -105,7 +137,10 @@ classdef SimulationEngine < handle
         end
         
         function runKinematics(obj)
-            % The kinematic simulation loop
+            % RUNKINEMATICS Executes pure kinematic trajectory replay.
+            %   Tracks joint trajectories directly without torque/dynamics simulation,
+            %   rendering at high framerates locked to real-time wall-clock speed.
+            
             obj.model.running_flag = 1;
             obj.model.des.q_pos = obj.model.fin.q_pos;
             
@@ -113,13 +148,24 @@ classdef SimulationEngine < handle
             trjConfig.tfin_trj = obj.model.tfin_trj;
             trjConfig.trj_profile = obj.model.trj_profile;
             
-            sim_time = 0;
-            last_render_real_time = -inf;
-            fps_smoothed = 60;
-            actual_rtf = 1.0;
-            tic
+            speed_scale = obj.model.time_const;
+            if isempty(speed_scale) || speed_scale <= 0
+                speed_scale = 1.0;
+            end
             
-            for k = 0:round(obj.model.tfin_trj/obj.model.tstp)
+            target_fps = 100; % High-framerate rendering cap
+            dt_frame_real = 1.0 / target_fps;
+            dt_frame_sim = dt_frame_real * speed_scale;
+            steps_per_frame = max(1, round(dt_frame_sim / obj.model.tstp));
+            total_steps = round(obj.model.tfin_trj / obj.model.tstp);
+            
+            last_render_wall_time = -inf;
+            last_label_wall_time = -inf;
+            fps_smoothed = target_fps;
+            actual_rtf = speed_scale;
+            
+            tic;
+            for k = 0:total_steps
                 if obj.model.running_flag == 0
                     break;
                 end
@@ -127,26 +173,35 @@ classdef SimulationEngine < handle
                 % Trajectory generation updates actual state directly in kinematic mode
                 [obj.model.act.q_pos, obj.model.act.q_vel, obj.model.act.q_acc] = ...
                     robotics.engines.TrajectoryEngine.generateTrajectory(trjConfig, obj.model.kin, obj.model.ini.q_pos, obj.model.fin.q_pos, k);
-                    
-                sim_time = sim_time + obj.model.tstp;
-                real_time = toc;
                 
-                % Graphics update loop (throttled to ~60 FPS max to avoid choking the UI event queue)
-                if ((real_time - last_render_real_time >= 0.016) && (sim_time >= real_time*obj.model.time_const))
-                    dt_render = real_time - last_render_real_time;
-                    if last_render_real_time > 0 && dt_render > 0
-                        instant_fps = 1.0 / dt_render;
-                        fps_smoothed = 0.85 * fps_smoothed + 0.15 * instant_fps;
-                    else
-                        fps_smoothed = 60;
+                % Render frame at frame boundary or completion
+                if rem(k, steps_per_frame) == 0 || k == total_steps
+                    sim_time = k * obj.model.tstp;
+                    target_wall_time = sim_time / speed_scale;
+                    current_wall_time = toc;
+                    
+                    wait_time = target_wall_time - current_wall_time;
+                    if wait_time > 0.001
+                        pause(wait_time);
+                        current_wall_time = toc;
                     end
-                    last_render_real_time = real_time;
+                    
+                    if last_render_wall_time > 0
+                        dt_render = current_wall_time - last_render_wall_time;
+                        if dt_render > 0
+                            instant_fps = 1.0 / dt_render;
+                            fps_smoothed = 0.85 * fps_smoothed + 0.15 * instant_fps;
+                        end
+                    end
+                    last_render_wall_time = current_wall_time;
+                    
                     obj.renderer.updateView(obj.model);
                     
-                    % UI callbacks (if registered by the View)
-                    if ~isempty(obj.onUpdateLabels)
-                        actual_rtf = sim_time / max(real_time, 1e-4);
-                        obj.onUpdateLabels(k*obj.model.tstp, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
+                    % UI text callbacks throttled to ~20 Hz to avoid IPC overhead
+                    if ~isempty(obj.onUpdateLabels) && (current_wall_time - last_label_wall_time >= 0.050 || k == total_steps)
+                        last_label_wall_time = current_wall_time;
+                        actual_rtf = sim_time / max(current_wall_time, 1e-4);
+                        obj.onUpdateLabels(sim_time, obj.model.act.q_pos, obj.model.kin.n, fps_smoothed, actual_rtf);
                     end
                 end
             end

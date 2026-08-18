@@ -1,9 +1,29 @@
 classdef DynamicsEngine
-    % DYNAMICSENGINE Encapsulates algorithms for forward and inverse dynamics.
+    % DYNAMICSENGINE Static algorithms for forward and inverse robot dynamics.
+    %   Encapsulates recursive dynamic solvers including Recursive Newton-Euler (RNEA),
+    %   Articulated-Body Forward Dynamics (ABA/RNEA), Modified Newton-Euler (MNEA),
+    %   Adaptive Newton-Euler (ANEA), and Analytical Gravity Compensation.
     
     methods (Static)
         function q_acc = forwardDynamics(robot, kin, dyn, tau, q_pos, q_vel)
-            % Migrated from robotAlgo.m (Recursive Newton-Euler for forward dynamics)
+            % FORWARDDYNAMICS Computes joint accelerations from applied joint torques.
+            %   q_acc = FORWARDDYNAMICS(ROBOT, KIN, DYN, TAU, Q_POS, Q_VEL) solves the
+            %   forward dynamics equation M(q)*q_acc + C(q,q_vel)*q_vel + G(q) = tau
+            %   using the recursive articulated forward dynamics formulation (Featherstone / RNEA).
+            %
+            %   Inputs:
+            %       robot - RobotModel instance (for spring and friction evaluation)
+            %       kin   - struct: Kinematic parameters (DH tables, axes, gravity)
+            %       dyn   - struct: Inertial parameters (masses m_j, CoM d_j, inertias I_j)
+            %       tau   - (Nx1) double: Actuator joint torques [N*m]
+            %       q_pos - (Nx1) double: Current joint positions [rad or m]
+            %       q_vel - (Nx1) double: Current joint velocities [rad/s or m/s]
+            %
+            %   Outputs:
+            %       q_acc - (Nx1) double: Resulting joint accelerations [rad/s^2 or m/s^2]
+            %
+            %   See also inverseDynamicsMNEA, getTauG.
+            
             n = kin.n;
             Phij_j = [zeros(3,1); kin.zj_j];
         
@@ -69,7 +89,25 @@ classdef DynamicsEngine
         end
         
         function tau_j = inverseDynamicsMNEA(kin, q, qd, qRd, qRdd, g, pj_j)
-            % Migrated from MNEA.m
+            % INVERSEDYNAMICSMNEA Computes inverse dynamics using Modified Newton-Euler (MNEA).
+            %   tau_j = INVERSEDYNAMICSMNEA(KIN, Q, QD, QRD, QRDD, G, PJ_J) evaluates the
+            %   inverse dynamics torques using linearly parameterized inertial parameters
+            %   and reference trajectory acceleration terms.
+            %
+            %   Inputs:
+            %       kin   - struct: Kinematics parameters (.n, .np, .zj_j, .alpha_j, etc.)
+            %       q     - (Nx1) double: Joint positions [rad or m]
+            %       qd    - (Nx1) double: Joint velocities [rad/s or m/s]
+            %       qRd   - (Nx1) double: Reference joint velocities [rad/s or m/s]
+            %       qRdd  - (Nx1) double: Reference joint accelerations [rad/s^2 or m/s^2]
+            %       g     - (3x1) double: Gravity acceleration vector in base frame [m/s^2]
+            %       pj_j  - (npx1xn) double: Base inertial parameters vector
+            %
+            %   Outputs:
+            %       tau_j - (Nx1) double: Joint torque vector [N*m]
+            %
+            %   See also inverseDynamicsANEA, forwardDynamics.
+            
             n = kin.n;
             np = kin.np;
             zj_j = kin.zj_j;
@@ -110,7 +148,26 @@ classdef DynamicsEngine
         end
 
         function [tau_fj, phatj_bar] = inverseDynamicsANEA(ctr, kin, q, qd, qRd, qRdd, g, p, Pdiag)
-            % Migrated from ANEA.m
+            % INVERSEDYNAMICSANEA Evaluates Adaptive Newton-Euler inverse dynamics with parameter estimation.
+            %   [tau_fj, phatj_bar] = INVERSEDYNAMICSANEA(CTR, KIN, Q, QD, QRD, QRDD, G, P, PDIAG)
+            %   updates the estimated inertial parameters phat online via composite adaptive
+            %   laws and computes feedforward control torques tau_fj.
+            %
+            %   Inputs:
+            %       ctr       - struct: Controller parameters (e.g. sample period .tcyc)
+            %       kin       - struct: Kinematics parameters (.n, .np, .zj_j, etc.)
+            %       q         - (Nx1) double: Joint positions [rad or m]
+            %       qd        - (Nx1) double: Joint velocities [rad/s or m/s]
+            %       qRd       - (Nx1) double: Reference joint velocities [rad/s or m/s]
+            %       qRdd      - (Nx1) double: Reference joint accelerations [rad/s^2 or m/s^2]
+            %       g         - (3x1) double: Gravity acceleration vector in base frame [m/s^2]
+            %       p         - ((N*np)x1) double: Current estimated parameter vector
+            %       Pdiag     - ((N*np)x1) double: Adaptation gain matrix diagonal
+            %
+            %   Outputs:
+            %       tau_fj    - (Nx1) double: Adaptive feedforward control torque vector [N*m]
+            %       phatj_bar - ((N*np)x1) double: Updated inertial parameter estimate vector
+            
             n = kin.n;
             np = kin.np;
             zj_j = kin.zj_j;
@@ -164,6 +221,20 @@ classdef DynamicsEngine
         end
         
         function tau_gj = getTauG(kin, q, g, m_j, dj_j)
+            % GETTAUG Computes analytical gravity compensation torques.
+            %   tau_gj = GETTAUG(KIN, Q, G, M_J, DJ_J) computes the gravity torque vector
+            %   G(q) via backward link-by-link recursion for gravity cancellation.
+            %
+            %   Inputs:
+            %       kin    - struct: Kinematics parameters (.n, .zj_j, .alpha_j, etc.)
+            %       q      - (Nx1) double: Current joint position vector [rad or m]
+            %       g      - (3x1) double: Gravity acceleration in base frame [m/s^2]
+            %       m_j    - (Nx1) double: Link mass vector [kg]
+            %       dj_j   - (3x1xN) double: Link Center-of-Mass (CoM) position vectors [m]
+            %
+            %   Outputs:
+            %       tau_gj - (Nx1) double: Gravity compensation torque vector [N*m]
+            
             n = kin.n;
             Rj_i = zeros(3,3,n+1);
             ri_j = zeros(3,1,n+1);

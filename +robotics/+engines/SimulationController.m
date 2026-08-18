@@ -44,42 +44,31 @@ classdef SimulationController < handle
         end
         
         function updateForwardKinematics(obj, targetType, eulerSet)
-            if strcmp(targetType, 'ini')
-                q_pos = obj.model.ini.q_pos;
-            else
-                q_pos = obj.model.fin.q_pos;
-            end
+            q_pos = obj.model.(targetType).q_pos;
             
-            Ti = zeros(4,4,obj.model.kin.n+2);
+            n = obj.model.kin.n;
+            Ti = zeros(4, 4, n + 2);
             Ti(:,:,1) = eye(4);
-            for j = 1:obj.model.kin.n
+            for j = 1:n
                 Ti(:,:,j+1) = Ti(:,:,j) * robotics.math.SO3R3_SE3(robotics.math.getRi_j(obj.model.kin.alpha_j(j), obj.model.kin.theta_O_j(j)+q_pos(j)), obj.model.kin.ri_j(:,:,j));
             end
-            Ti(:,:,obj.model.kin.n+2) = Ti(:,:,obj.model.kin.n+1) * robotics.math.SO3R3_SE3(robotics.math.getRi_j(obj.model.kin.alpha_j(obj.model.kin.n+1), obj.model.kin.theta_O_j(obj.model.kin.n+1)), obj.model.kin.ri_j(:,:,obj.model.kin.n+1));
+            Ti(:,:,n+2) = Ti(:,:,n+1) * robotics.math.SO3R3_SE3(robotics.math.getRi_j(obj.model.kin.alpha_j(n+1), obj.model.kin.theta_O_j(n+1)), obj.model.kin.ri_j(:,:,n+1));
             
-            [Re, t_pos] = robotics.math.SE3_SO3R3(Ti(:,:,obj.model.kin.n+2));
+            [Re, t_pos] = robotics.math.SE3_SO3R3(Ti(:,:,n+2));
             r_pos = robotics.math.getEulerPosVec(Re, eulerSet);
             
-            if strcmp(targetType, 'ini')
-                obj.model.ini.Ti = Ti;
-                obj.model.ini.Re = Re;
-                obj.model.ini.t_pos = t_pos;
-                obj.model.ini.r_pos = r_pos;
-            else
-                obj.model.fin.Ti = Ti;
-                obj.model.fin.Re = Re;
-                obj.model.fin.t_pos = t_pos;
-                obj.model.fin.r_pos = r_pos;
-            end
+            obj.model.(targetType).Ti = Ti;
+            obj.model.(targetType).Re = Re;
+            obj.model.(targetType).t_pos = t_pos;
+            obj.model.(targetType).r_pos = r_pos;
         end
 
         function setJointPosition(obj, targetType, jointIndex, value, eulerSet)
-            if strcmp(targetType, 'ini')
-                obj.model.ini.q_pos(jointIndex) = value;
-            else
-                obj.model.fin.q_pos(jointIndex) = value;
-            end
+            obj.model.(targetType).q_pos(jointIndex) = value;
             obj.updateForwardKinematics(targetType, eulerSet);
+            obj.model.(targetType).Re_ref = obj.model.(targetType).Re;
+            obj.model.(targetType).t_pos_ref = obj.model.(targetType).t_pos;
+            obj.model.(targetType).r_pos_ref = obj.model.(targetType).r_pos;
             obj.model.notifyTargetUpdated();
         end
 
@@ -95,6 +84,10 @@ classdef SimulationController < handle
             Re_ref = robotics.math.getRotMatfromEA(eulerValues, eulerSet);
             t_pos_ref = xyzValues;
             
+            obj.model.(targetType).Re_ref = Re_ref;
+            obj.model.(targetType).t_pos_ref = t_pos_ref;
+            obj.model.(targetType).r_pos_ref = eulerValues;
+            
             invGeoConfig.inv_geo_type = obj.model.inv_geo_type;
             invGeoConfig.robot_model = obj.model.robot_model;
             invGeoConfig.TI_0 = obj.model.TI_0;
@@ -104,13 +97,9 @@ classdef SimulationController < handle
             invGeoConfig.kp_trn = obj.model.kp_trn;
             invGeoConfig.kr_trn = obj.model.kr_trn;
             
-            if strcmp(targetType, 'ini')
-                qDes = robotics.engines.KinematicsEngine.inverseKinematics(obj.robot, invGeoConfig, obj.model.kin, Re_ref, t_pos_ref, obj.model.ini.q_pos);
-                obj.model.ini.q_pos = qDes;
-            else
-                qDes = robotics.engines.KinematicsEngine.inverseKinematics(obj.robot, invGeoConfig, obj.model.kin, Re_ref, t_pos_ref, obj.model.fin.q_pos);
-                obj.model.fin.q_pos = qDes;
-            end
+            qDes = robotics.engines.KinematicsEngine.inverseKinematics(...
+                obj.robot, invGeoConfig, obj.model.kin, Re_ref, t_pos_ref, obj.model.(targetType).q_pos);
+            obj.model.(targetType).q_pos = qDes;
             
             % Update kinematics matrices based on new q_pos
             obj.updateForwardKinematics(targetType, eulerSet);

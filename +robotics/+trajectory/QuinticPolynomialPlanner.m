@@ -10,9 +10,17 @@ classdef QuinticPolynomialPlanner < robotics.trajectory.TrajectoryPlanner
         end
         
         function [s_pos, s_vel, s_acc] = p2pTrj(obj, t, tf)
-            s_pos = 10*(t/tf)^3 - 15*(t/tf)^4 + 6*(t/tf)^5;
-            s_vel = 30*(t^2/tf^3) - 60*(t^3/tf^4) + 30*(t^4/tf^5);
-            s_acc = 60*(t/tf^3) - 180*(t^2/tf^4) + 120*(t^3/tf^5);
+            if tf <= 0
+                s_pos = 1; s_vel = 0; s_acc = 0;
+                return;
+            end
+            tau = t / tf;
+            tau2 = tau * tau;
+            tau3 = tau2 * tau;
+            tau4 = tau3 * tau;
+            s_pos = 10*tau3 - 15*tau4 + 6*(tau4*tau);
+            s_vel = (30*tau2 - 60*tau3 + 30*tau4) / tf;
+            s_acc = (60*tau - 180*tau2 + 120*tau3) / (tf*tf);
         end
     end
 end

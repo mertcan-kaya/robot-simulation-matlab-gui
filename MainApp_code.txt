@@ -24,6 +24,8 @@ classdef MainApp < matlab.apps.AppBase
         RobotModelDropDown            matlab.ui.control.DropDown
         RobotModelDropDownLabel       matlab.ui.control.Label
         SimulationPanel               matlab.ui.container.Panel
+        SpeedxSpinner                 matlab.ui.control.Spinner
+        SpeedxSpinnerLabel            matlab.ui.control.Label
         StepsEditField                matlab.ui.control.NumericEditField
         StepsEditFieldLabel           matlab.ui.control.Label
         FinalsEditField               matlab.ui.control.NumericEditField
@@ -249,12 +251,12 @@ classdef MainApp < matlab.apps.AppBase
     properties (Access = public)
         
         robot_name = [
-            "Franka Emika Robot"
-            "Universal Robots UR3"
-            "Unitree Z1"
-            "Stäubli RX160"
-            "Stäubli RX160L"
-            "Custom Robot"];
+        "Franka Emika Robot"
+        "Universal Robots UR3"
+        "Unitree Z1"
+        "Stäubli RX160"
+        "Stäubli RX160L"
+        "Custom Robot"];
 
         eulerSet = 1;
         sim_mode = 0;
@@ -267,7 +269,7 @@ classdef MainApp < matlab.apps.AppBase
         rj_jcj_custom;
         Ij_cj_custom;
         j_type_custom;
-
+        
         controller;
         viewModel;
         JointUI = struct();
@@ -294,13 +296,13 @@ classdef MainApp < matlab.apps.AppBase
                 
                 app.controller.setRobotModel(robotId, app.controller.model.ee_att, customParams);
                 
-                app.EditButton.Enable = "on";
+                app.setCustomControlsState(true, app.EditButton.Value, app.n_custom);
                 app.DmodelsSwitch.Visible = "off";
                 app.EndEffectorDropDown.Visible = "off";
             else
                 app.controller.setRobotModel(robotId, app.controller.model.ee_att);
                 
-                app.EditButton.Enable = "off";
+                app.setCustomControlsState(false, false);
                 app.DmodelsSwitch.Visible = "on";
                 app.EndEffectorDropDown.Visible = "on";
             end
@@ -414,7 +416,7 @@ classdef MainApp < matlab.apps.AppBase
             C1 = table2cell(T);
             C = [T.Properties.RowNames, vertcat(C1{:})];
             app.DHTable.Data = C;
-            app.DHTable.ColumnName = {''; 'a_j'; 'alpha_j'; 'd_j'; 'theta_O_j'};
+            app.DHTable.ColumnName = {''; 'a_j'; [char(945) '_j']; 'd_j'; [char(952) '_j']};
             app.DHTable.RowName = [];
             app.DHTable.ColumnWidth = {15, 55, 55, 55, 55};
             colStyle = uistyle('BackgroundColor', app.DHTable.BackgroundColor(2,:), 'FontWeight', 'bold'); 
@@ -468,16 +470,9 @@ classdef MainApp < matlab.apps.AppBase
         end
 
         function resetJointValues(app)
-
-            app.controller.model.ini.q_pos = [];
-            app.controller.model.fin.q_pos = [];
-            app.controller.model.ini.q_pos = zeros(app.controller.model.kin.n,1);
-            app.controller.model.fin.q_pos = zeros(app.controller.model.kin.n,1);
-            for j = 1:app.controller.model.kin.n
-                app.controller.model.ini.q_pos(j,1) = (app.controller.model.kin.q_posLim(j,1)+app.controller.model.kin.q_posLim(j,2))/2;
-                app.controller.model.fin.q_pos(j,1) = (app.controller.model.kin.q_posLim(j,1)+app.controller.model.kin.q_posLim(j,2))/2;
-            end
-
+            midQ = mean(app.controller.model.kin.q_posLim, 2);
+            app.controller.model.ini.q_pos = midQ;
+            app.controller.model.fin.q_pos = midQ;
         end
 
         function updateSliderSpinnerValues(app)
@@ -495,6 +490,9 @@ classdef MainApp < matlab.apps.AppBase
                         valIni = 1e3 * app.controller.model.ini.q_pos(j);
                         valFin = 1e3 * app.controller.model.fin.q_pos(j);
                     end
+
+                    valIni = min(max(valIni, lims(1)), lims(2));
+                    valFin = min(max(valFin, lims(1)), lims(2));
 
                     app.JointUI.ini.labels(j).Text = sprintf('Joint %d%s', j, unitStr);
                     app.JointUI.ini.sliders(j).Limits = lims;
@@ -528,28 +526,30 @@ classdef MainApp < matlab.apps.AppBase
 
             if app.controller.model.ee_att == 1
                 if app.controller.model.robot_model == 1
-                    app.GripperInitialLabel.Text        = "Gripper [mm]  ";
-                    app.GripperInitialSlider.Limits     = app.controller.model.kin.qELim*1e3;
-                    app.GripperInitialSpinner.Limits    = app.controller.model.kin.qELim*1e3;
-                    app.GripperInitialSlider.Value      = app.controller.model.qEIni*1e3;
-                    app.GripperInitialSpinner.Value     = app.controller.model.qEIni*1e3;
-                    app.GripperFinalLabel.Text          = "Gripper [mm]  ";
-                    app.GripperFinalSlider.Limits       = app.controller.model.kin.qELim*1e3;
-                    app.GripperFinalSpinner.Limits      = app.controller.model.kin.qELim*1e3;
-                    app.GripperFinalSlider.Value        = app.controller.model.qEDes*1e3;
-                    app.GripperFinalSpinner.Value       = app.controller.model.qEDes*1e3;
+                    unitText = "Gripper [mm]  ";
+                    lims = app.controller.model.kin.qELim * 1e3;
+                    vIni = app.controller.model.qEIni * 1e3;
+                    vFin = app.controller.model.qEDes * 1e3;
                 elseif app.controller.model.robot_model == 3
-                    app.GripperInitialLabel.Text        = "Gripper [deg]  ";
-                    app.GripperInitialSlider.Limits     = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperInitialSpinner.Limits    = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperInitialSlider.Value      = rad2deg(app.controller.model.kin.qELim(1));
-                    app.GripperInitialSpinner.Value     = rad2deg(app.controller.model.kin.qELim(1));
-                    app.GripperFinalLabel.Text          = "Gripper [deg]  ";
-                    app.GripperFinalSlider.Limits       = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperFinalSpinner.Limits      = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperFinalSlider.Value        = rad2deg(app.controller.model.kin.qELim(1));
-                    app.GripperFinalSpinner.Value       = rad2deg(app.controller.model.kin.qELim(1));
+                    unitText = "Gripper [deg]  ";
+                    lims = rad2deg(app.controller.model.kin.qELim);
+                    vIni = rad2deg(app.controller.model.kin.qELim(1));
+                    vFin = rad2deg(app.controller.model.kin.qELim(1));
+                else
+                    return;
                 end
+                vIni = min(max(vIni, lims(1)), lims(2));
+                vFin = min(max(vFin, lims(1)), lims(2));
+                app.GripperInitialLabel.Text     = unitText;
+                app.GripperFinalLabel.Text       = unitText;
+                app.GripperInitialSlider.Limits  = lims;
+                app.GripperInitialSpinner.Limits = lims;
+                app.GripperFinalSlider.Limits    = lims;
+                app.GripperFinalSpinner.Limits   = lims;
+                app.GripperInitialSlider.Value   = vIni;
+                app.GripperInitialSpinner.Value  = vIni;
+                app.GripperFinalSlider.Value     = vFin;
+                app.GripperFinalSpinner.Value    = vFin;
             end
 
         end
@@ -564,84 +564,67 @@ classdef MainApp < matlab.apps.AppBase
             app.controller.model.fin.Re_ref = app.controller.model.fin.Re;
             app.controller.model.fin.t_pos_ref = app.controller.model.fin.t_pos;
 
-            app.XAxisInitialSlider.Limits   = 1e3*(app.controller.model.kin.t_posLim(1,:));
-            app.XAxisInitialSpinner.Limits  = 1e3*(app.controller.model.kin.t_posLim(1,:));
-            app.XAxisInitialSlider.Value    = 1e3*(app.controller.model.ini.t_pos(1));
-            app.XAxisInitialSpinner.Value   = 1e3*(app.controller.model.ini.t_pos(1));
-            app.XAxisFinalSlider.Limits     = 1e3*(app.controller.model.kin.t_posLim(1,:));
-            app.XAxisFinalSpinner.Limits    = 1e3*(app.controller.model.kin.t_posLim(1,:));
-            app.XAxisFinalSlider.Value      = 1e3*(app.controller.model.fin.t_pos(1));
-            app.XAxisFinalSpinner.Value     = 1e3*(app.controller.model.fin.t_pos(1));
+            posSliders = {[app.XAxisInitialSlider, app.YAxisInitialSlider, app.ZAxisInitialSlider], ...
+                          [app.XAxisFinalSlider,   app.YAxisFinalSlider,   app.ZAxisFinalSlider]};
+            posSpinners = {[app.XAxisInitialSpinner, app.YAxisInitialSpinner, app.ZAxisInitialSpinner], ...
+                           [app.XAxisFinalSpinner,   app.YAxisFinalSpinner,   app.ZAxisFinalSpinner]};
+            
+            rotSliders = {[app.PhiInitialSlider, app.ThetaInitialSlider, app.PsiInitialSlider], ...
+                          [app.PhiFinalSlider,   app.ThetaFinalSlider,   app.PsiFinalSlider]};
+            rotSpinners = {[app.PhiInitialSpinner, app.ThetaInitialSpinner, app.PsiInitialSpinner], ...
+                           [app.PhiFinalSpinner,   app.ThetaFinalSpinner,   app.PsiFinalSpinner]};
 
-            app.YAxisInitialSlider.Limits   = 1e3*(app.controller.model.kin.t_posLim(2,:));
-            app.YAxisInitialSpinner.Limits  = 1e3*(app.controller.model.kin.t_posLim(2,:));
-            app.YAxisInitialSlider.Value    = 1e3*(app.controller.model.ini.t_pos(2));
-            app.YAxisInitialSpinner.Value   = 1e3*(app.controller.model.ini.t_pos(2));
-            app.YAxisFinalSlider.Limits     = 1e3*(app.controller.model.kin.t_posLim(2,:));
-            app.YAxisFinalSpinner.Limits    = 1e3*(app.controller.model.kin.t_posLim(2,:));
-            app.YAxisFinalSlider.Value      = 1e3*(app.controller.model.fin.t_pos(2));
-            app.YAxisFinalSpinner.Value     = 1e3*(app.controller.model.fin.t_pos(2));
+            targets = {'ini', 'fin'};
 
-            app.ZAxisInitialSlider.Limits   = 1e3*(app.controller.model.kin.t_posLim(3,:));
-            app.ZAxisInitialSpinner.Limits  = 1e3*(app.controller.model.kin.t_posLim(3,:));
-            app.ZAxisInitialSlider.Value    = 1e3*(app.controller.model.ini.t_pos(3));
-            app.ZAxisInitialSpinner.Value   = 1e3*(app.controller.model.ini.t_pos(3));
-            app.ZAxisFinalSlider.Limits     = 1e3*(app.controller.model.kin.t_posLim(3,:));
-            app.ZAxisFinalSpinner.Limits    = 1e3*(app.controller.model.kin.t_posLim(3,:));
-            app.ZAxisFinalSlider.Value      = 1e3*(app.controller.model.fin.t_pos(3));
-            app.ZAxisFinalSpinner.Value     = 1e3*(app.controller.model.fin.t_pos(3));
+            for t = 1:2
+                targetName = targets{t};
+                for k = 1:3
+                    % Cartesian Position Limits & Values (scaled x1000 to mm)
+                    pLim = 1e3 * app.controller.model.kin.t_posLim(k,:);
+                    pVal = 1e3 * app.controller.model.(targetName).t_pos(k);
+                    pVal = min(max(pVal, pLim(1)), pLim(2));
+                    posSliders{t}(k).Limits  = pLim;
+                    posSpinners{t}(k).Limits = pLim;
+                    posSliders{t}(k).Value   = pVal;
+                    posSpinners{t}(k).Value  = pVal;
 
-            app.PhiInitialSlider.Limits   = rad2deg(app.controller.model.kin.r_posLim(1,:));
-            app.PhiInitialSpinner.Limits  = rad2deg(app.controller.model.kin.r_posLim(1,:));
-            app.PhiInitialSlider.Value    = rad2deg(app.controller.model.ini.r_pos(1));
-            app.PhiInitialSpinner.Value   = rad2deg(app.controller.model.ini.r_pos(1));
-            app.PhiFinalSlider.Limits     = rad2deg(app.controller.model.kin.r_posLim(1,:));
-            app.PhiFinalSpinner.Limits    = rad2deg(app.controller.model.kin.r_posLim(1,:));
-            app.PhiFinalSlider.Value      = rad2deg(app.controller.model.fin.r_pos(1));
-            app.PhiFinalSpinner.Value     = rad2deg(app.controller.model.fin.r_pos(1));
-
-            app.ThetaInitialSlider.Limits   = rad2deg(app.controller.model.kin.r_posLim(2,:));
-            app.ThetaInitialSpinner.Limits  = rad2deg(app.controller.model.kin.r_posLim(2,:));
-            app.ThetaInitialSlider.Value    = rad2deg(app.controller.model.ini.r_pos(2));
-            app.ThetaInitialSpinner.Value   = rad2deg(app.controller.model.ini.r_pos(2));
-            app.ThetaFinalSlider.Limits     = rad2deg(app.controller.model.kin.r_posLim(2,:));
-            app.ThetaFinalSpinner.Limits    = rad2deg(app.controller.model.kin.r_posLim(2,:));
-            app.ThetaFinalSlider.Value      = rad2deg(app.controller.model.fin.r_pos(2));
-            app.ThetaFinalSpinner.Value     = rad2deg(app.controller.model.fin.r_pos(2));
-
-            app.PsiInitialSlider.Limits   = rad2deg(app.controller.model.kin.r_posLim(3,:));
-            app.PsiInitialSpinner.Limits  = rad2deg(app.controller.model.kin.r_posLim(3,:));
-            app.PsiInitialSlider.Value    = rad2deg(app.controller.model.ini.r_pos(3));
-            app.PsiInitialSpinner.Value   = rad2deg(app.controller.model.ini.r_pos(3));
-            app.PsiFinalSlider.Limits     = rad2deg(app.controller.model.kin.r_posLim(3,:));
-            app.PsiFinalSpinner.Limits    = rad2deg(app.controller.model.kin.r_posLim(3,:));
-            app.PsiFinalSlider.Value      = rad2deg(app.controller.model.fin.r_pos(3));
-            app.PsiFinalSpinner.Value     = rad2deg(app.controller.model.fin.r_pos(3));
+                    % Euler Angles Limits & Values (scaled to degrees)
+                    rLim = rad2deg(app.controller.model.kin.r_posLim(k,:));
+                    rVal = rad2deg(app.controller.model.(targetName).r_pos(k));
+                    rVal = min(max(rVal, rLim(1)), rLim(2));
+                    rotSliders{t}(k).Limits  = rLim;
+                    rotSpinners{t}(k).Limits = rLim;
+                    rotSliders{t}(k).Value   = rVal;
+                    rotSpinners{t}(k).Value  = rVal;
+                end
+            end
 
             if app.controller.model.ee_att == 1
                 if app.controller.model.robot_model == 1
-                    app.GripperTaskInitialLabel.Text        = "Gripper [mm]  ";
-                    app.GripperTaskInitialSlider.Limits     = app.controller.model.kin.qELim*1e3;
-                    app.GripperTaskInitialSpinner.Limits    = app.controller.model.kin.qELim*1e3;
-                    app.GripperTaskInitialSlider.Value      = app.controller.model.qEIni*1e3;
-                    app.GripperTaskInitialSpinner.Value     = app.controller.model.qEIni*1e3;
-                    app.GripperTaskFinalLabel.Text          = "Gripper [mm]  ";
-                    app.GripperTaskFinalSlider.Limits       = app.controller.model.kin.qELim*1e3;
-                    app.GripperTaskFinalSpinner.Limits      = app.controller.model.kin.qELim*1e3;
-                    app.GripperTaskFinalSlider.Value        = app.controller.model.qEDes*1e3;
-                    app.GripperTaskFinalSpinner.Value       = app.controller.model.qEDes*1e3;
+                    unitText = "Gripper [mm]  ";
+                    lims = app.controller.model.kin.qELim * 1e3;
+                    vIni = app.controller.model.qEIni * 1e3;
+                    vFin = app.controller.model.qEDes * 1e3;
                 elseif app.controller.model.robot_model == 3
-                    app.GripperTaskInitialLabel.Text        = "Gripper [deg]  ";
-                    app.GripperTaskInitialSlider.Limits     = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperTaskInitialSpinner.Limits    = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperTaskInitialSlider.Value      = rad2deg(app.controller.model.kin.qELim(1));
-                    app.GripperTaskInitialSpinner.Value     = rad2deg(app.controller.model.kin.qELim(1));
-                    app.GripperTaskFinalLabel.Text          = "Gripper [deg]  ";
-                    app.GripperTaskFinalSlider.Limits       = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperTaskFinalSpinner.Limits      = rad2deg(app.controller.model.kin.qELim);
-                    app.GripperTaskFinalSlider.Value        = rad2deg(app.controller.model.kin.qELim(1));
-                    app.GripperTaskFinalSpinner.Value       = rad2deg(app.controller.model.kin.qELim(1));
+                    unitText = "Gripper [deg]  ";
+                    lims = rad2deg(app.controller.model.kin.qELim);
+                    vIni = rad2deg(app.controller.model.kin.qELim(1));
+                    vFin = rad2deg(app.controller.model.kin.qELim(1));
+                else
+                    return;
                 end
+                vIni = min(max(vIni, lims(1)), lims(2));
+                vFin = min(max(vFin, lims(1)), lims(2));
+                app.GripperTaskInitialLabel.Text     = unitText;
+                app.GripperTaskFinalLabel.Text       = unitText;
+                app.GripperTaskInitialSlider.Limits  = lims;
+                app.GripperTaskInitialSpinner.Limits = lims;
+                app.GripperTaskFinalSlider.Limits    = lims;
+                app.GripperTaskFinalSpinner.Limits   = lims;
+                app.GripperTaskInitialSlider.Value   = vIni;
+                app.GripperTaskInitialSpinner.Value  = vIni;
+                app.GripperTaskFinalSlider.Value     = vFin;
+                app.GripperTaskFinalSpinner.Value    = vFin;
             end
 
         end
@@ -661,6 +644,8 @@ classdef MainApp < matlab.apps.AppBase
 
             app.SimModeSwitchLabel.Enable = en;
             app.SimModeSwitch.Enable = en;
+            app.SpeedxSpinnerLabel.Enable = en;
+            app.SpeedxSpinner.Enable = en;
             app.StepsEditFieldLabel.Enable = en;
             app.StepsEditField.Enable = en;
             if app.sim_mode == 1
@@ -799,8 +784,6 @@ classdef MainApp < matlab.apps.AppBase
             end
         end
 
-
-        
     end
     
     methods (Access = private)
@@ -881,18 +864,9 @@ classdef MainApp < matlab.apps.AppBase
             end
             
             % Updates the actual joint positions label
-            qact_text = 'qact=[';
-            for j = 1:n-1
-                qact_text = append(qact_text, num2str(rad2deg(q_pos(j,1)), '%4.0f'), ',');
-            end
-            qact_text = append(qact_text, num2str(rad2deg(q_pos(n,1)), '%4.0f'), ']deg');
-            app.q_actq1q2q3q4q5q6q7degLabel.Text = qact_text;
-            
-            % Force the UI to refresh without freezing
-            drawnow limitrate;
+            q_deg = rad2deg(q_pos(1:n));
+            app.q_actq1q2q3q4q5q6q7degLabel.Text = ['qact=[' sprintf('%.0f,', q_deg(1:end-1)) sprintf('%.0f]deg', q_deg(end))];
         end
-
-
 
         function updateControlParams(app)
             % Updates the GUI Table and edit fields from the Model's control state
@@ -939,8 +913,16 @@ classdef MainApp < matlab.apps.AppBase
 
         function handleTaskPosInput(app, target, axisIdx, val, peerControl)
             peerControl.Value = val;
-            t_ref = app.controller.model.(target).t_pos;
-            r_ref = app.controller.model.(target).r_pos;
+            if isfield(app.controller.model.(target), 't_pos_ref') && ~isempty(app.controller.model.(target).t_pos_ref)
+                t_ref = app.controller.model.(target).t_pos_ref;
+            else
+                t_ref = app.controller.model.(target).t_pos;
+            end
+            if isfield(app.controller.model.(target), 'r_pos_ref') && ~isempty(app.controller.model.(target).r_pos_ref)
+                r_ref = app.controller.model.(target).r_pos_ref;
+            else
+                r_ref = app.controller.model.(target).r_pos;
+            end
             t_ref(axisIdx) = 1e-3 * val;
             app.controller.setTargetPosition(target, t_ref, r_ref, app.eulerSet);
             app.updateJointSpaceUI(target);
@@ -951,8 +933,16 @@ classdef MainApp < matlab.apps.AppBase
 
         function handleTaskEulerInput(app, target, eulerIdx, val, peerControl)
             peerControl.Value = val;
-            t_ref = app.controller.model.(target).t_pos;
-            r_ref = app.controller.model.(target).r_pos;
+            if isfield(app.controller.model.(target), 't_pos_ref') && ~isempty(app.controller.model.(target).t_pos_ref)
+                t_ref = app.controller.model.(target).t_pos_ref;
+            else
+                t_ref = app.controller.model.(target).t_pos;
+            end
+            if isfield(app.controller.model.(target), 'r_pos_ref') && ~isempty(app.controller.model.(target).r_pos_ref)
+                r_ref = app.controller.model.(target).r_pos_ref;
+            else
+                r_ref = app.controller.model.(target).r_pos;
+            end
             r_ref(eulerIdx) = deg2rad(val);
             app.controller.setTargetPosition(target, t_ref, r_ref, app.eulerSet);
             app.updateJointSpaceUI(target);
@@ -993,8 +983,14 @@ classdef MainApp < matlab.apps.AppBase
             app.controller.model.task_mode = targetMode;
             if targetMode == 1
                 app.controller.model.ini.r_pos = robotics.math.getEulerPosVec(app.controller.model.ini.Re, app.eulerSet);
+                app.controller.model.ini.Re_ref = app.controller.model.ini.Re;
+                app.controller.model.ini.t_pos_ref = app.controller.model.ini.t_pos;
+                app.controller.model.ini.r_pos_ref = app.controller.model.ini.r_pos;
             elseif targetMode == 2
                 app.controller.model.fin.r_pos = robotics.math.getEulerPosVec(app.controller.model.fin.Re, app.eulerSet);
+                app.controller.model.fin.Re_ref = app.controller.model.fin.Re;
+                app.controller.model.fin.t_pos_ref = app.controller.model.fin.t_pos;
+                app.controller.model.fin.r_pos_ref = app.controller.model.fin.r_pos;
             end
             app.controller.initRobot();
             app.controller.updateView();
@@ -1037,6 +1033,54 @@ classdef MainApp < matlab.apps.AppBase
             end
         end
 
+        function setCustomControlsState(app, isCustom, isEditing, n)
+            if nargin < 4 || isempty(n)
+                if isfield(app.controller.model, 'kin') && isfield(app.controller.model.kin, 'n') && ~isempty(app.controller.model.kin.n)
+                    n = app.controller.model.kin.n;
+                else
+                    n = 7;
+                end
+            end
+            if isCustom
+                app.EditButton.Enable = "on";
+                if isEditing
+                    app.DHTable.ColumnEditable = logical([0 1 1 1 1]);
+                    app.DoFSpinner.Enable = "on";
+                    qGroups = [app.q_1ButtonGroup, app.q_2ButtonGroup, app.q_3ButtonGroup, ...
+                               app.q_4ButtonGroup, app.q_5ButtonGroup, app.q_6ButtonGroup, app.q_7ButtonGroup];
+                    for j = 1:7
+                        if j <= n
+                            qGroups(j).Enable = "on";
+                        else
+                            qGroups(j).Enable = "off";
+                        end
+                    end
+                else
+                    app.DHTable.ColumnEditable = logical([0 0 0 0 0]);
+                    app.DoFSpinner.Enable = "off";
+                    app.q_1ButtonGroup.Enable = "off";
+                    app.q_2ButtonGroup.Enable = "off";
+                    app.q_3ButtonGroup.Enable = "off";
+                    app.q_4ButtonGroup.Enable = "off";
+                    app.q_5ButtonGroup.Enable = "off";
+                    app.q_6ButtonGroup.Enable = "off";
+                    app.q_7ButtonGroup.Enable = "off";
+                end
+            else
+                app.EditButton.Enable = "off";
+                app.EditButton.Value = false;
+                app.DoFSpinner.Enable = "off";
+                app.DHTable.ColumnEditable = logical([0 0 0 0 0]);
+                app.q_1ButtonGroup.Enable = "off";
+                app.q_2ButtonGroup.Enable = "off";
+                app.q_3ButtonGroup.Enable = "off";
+                app.q_4ButtonGroup.Enable = "off";
+                app.q_5ButtonGroup.Enable = "off";
+                app.q_6ButtonGroup.Enable = "off";
+                app.q_7ButtonGroup.Enable = "off";
+            end
+        end
+
     end
 
 
@@ -1059,7 +1103,7 @@ classdef MainApp < matlab.apps.AppBase
 
             % app.RobotModelDropDown.Items = {'Franka Emika Robot', 'Universal Robots UR3', 'Unitree Z1', 'St ubli RX160', 'St ubli RX160L'};
             app.RobotModelDropDown.Items = cellstr(app.robot_name);
-            app.EditButton.Enable = "off";
+            app.setCustomControlsState(false, false);
             app.DoFSpinner.Limits = [1 7];
 
             app.EnablehighqualitymodelsMenu.Checked = 'on';
@@ -1096,6 +1140,7 @@ classdef MainApp < matlab.apps.AppBase
 
             app.StepsEditField.Value = app.controller.model.tstp;
             app.FinalsEditField.Value = app.controller.model.tfin;
+            app.SpeedxSpinner.Value = app.controller.model.time_const;
             
             updateRobotModel(app)
             updateEndEffectorModel(app)
@@ -1157,33 +1202,25 @@ classdef MainApp < matlab.apps.AppBase
         function RobotModelDropDownValueChanged(app, event)
             value = app.RobotModelDropDown.Value;
             
-            rx = 0;
-            if (app.controller.model.robot_model == 4 || app.controller.model.robot_model == 5)
-                rx = 1;
-            end
+            oldModel = app.controller.model.robot_model;
+            isOldRX = (oldModel == 4 || oldModel == 5);
 
-            if strcmp(value, app.robot_name(size(app.robot_name,1)))
-                app.controller.model.robot_model = 0;
+            robotId = find(strcmp(app.robot_name, value), 1);
+            if robotId == size(app.robot_name, 1)
+                newModel = 0;
             else
-                for i = size(app.robot_name,1)-1:-1:1
-                    if strcmp(value, app.robot_name(i))
-                        app.controller.model.robot_model = i;
-                    end
-                end
+                newModel = robotId;
             end
+            app.controller.model.robot_model = newModel;
 
-            if (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 2 || app.controller.model.robot_model == 3) && app.controller.model.ee_att > 1
+            if (newModel == 1 || newModel == 2 || newModel == 3) && app.controller.model.ee_att > 1
                 app.exceeding = 1;
             else
                 app.exceeding = 0;
             end
 
-            if (app.controller.model.robot_model == 4 || app.controller.model.robot_model == 5) && app.controller.model.ee_att == 1
-                if rx == 0
-                    app.grip = 1;
-                else
-                    app.grip = 0;
-                end
+            if (newModel == 4 || newModel == 5) && app.controller.model.ee_att == 1
+                app.grip = ~isOldRX;
             end
 
             updateRobotModel(app)
@@ -1315,10 +1352,10 @@ classdef MainApp < matlab.apps.AppBase
 
             if app.sim_mode == 1
                 app.controller.model.tfin = app.FinalsEditField.Value;
-                app.x1RealtimeLabel.Text = append('(x', num2str(app.controller.model.time_const,'%.1f'), ' Real-time)');
+                app.x1RealtimeLabel.Text = sprintf('(x%.1f Real-time)', app.controller.model.time_const);
                 app.controller.runSimulation()
             else
-                app.x1RealtimeLabel.Text = '(x1 Real-time)';
+                app.x1RealtimeLabel.Text = sprintf('(x%.1f Real-time)', app.controller.model.time_const);
                 app.controller.runKinematics()
             end
 
@@ -1434,27 +1471,7 @@ classdef MainApp < matlab.apps.AppBase
 
         % Value changed function: EditButton
         function EditButtonValueChanged(app, event)
-            if app.EditButton.Value
-                app.DHTable.ColumnEditable = logical([0 1 1 1 1]);
-                app.DoFSpinner.Enable = "on";
-                app.q_1ButtonGroup.Enable = "on";
-                app.q_2ButtonGroup.Enable = "on";
-                app.q_3ButtonGroup.Enable = "on";
-                app.q_4ButtonGroup.Enable = "on";
-                app.q_5ButtonGroup.Enable = "on";
-                app.q_6ButtonGroup.Enable = "on";
-                app.q_7ButtonGroup.Enable = "on";
-            else
-                app.DHTable.ColumnEditable = logical([0 0 0 0 0]);
-                app.DoFSpinner.Enable = "off";
-                app.q_1ButtonGroup.Enable = "off";
-                app.q_2ButtonGroup.Enable = "off";
-                app.q_3ButtonGroup.Enable = "off";
-                app.q_4ButtonGroup.Enable = "off";
-                app.q_5ButtonGroup.Enable = "off";
-                app.q_6ButtonGroup.Enable = "off";
-                app.q_7ButtonGroup.Enable = "off";
-            end
+            app.setCustomControlsState(true, app.EditButton.Value, app.n_custom);
         end
 
         % Value changed function: DoFSpinner
@@ -1467,6 +1484,7 @@ classdef MainApp < matlab.apps.AppBase
             updateTaskInputValues(app)
             updateFinTimeTrj(app)
             updateRunButtonState(app)
+            app.setCustomControlsState(true, app.EditButton.Value, app.n_custom);
             app.controller.updateView()
         end
 
@@ -1842,6 +1860,16 @@ classdef MainApp < matlab.apps.AppBase
             app.handleGripperInput('fin', event.Value, [app.GripperFinalSlider, app.GripperFinalSpinner, app.GripperTaskFinalSlider]);
         end
 
+        % Value changed function: SpeedxSpinner
+        function SpeedxSpinnerValueChanged(app, event)
+            val = app.SpeedxSpinner.Value;
+            if val <= 0
+                val = 1.0;
+                app.SpeedxSpinner.Value = 1.0;
+            end
+            app.controller.model.time_const = val;
+        end
+
         % Changes arrangement of the app based on UIFigure width
         function updateAppLayout(app, event)
             currentFigureWidth = app.UIFigure.Position(3);
@@ -1974,20 +2002,20 @@ classdef MainApp < matlab.apps.AppBase
             app.DHTable.ColumnWidth = {55, 55, 55, 55};
             app.DHTable.RowName = {};
             app.DHTable.CellEditCallback = createCallbackFcn(app, @DHTableCellEdit, true);
-            app.DHTable.Position = [8 79 237 215];
+            app.DHTable.Position = [8 78 237 216];
 
             % Create mmdegmmdegLabel
             app.mmdegmmdegLabel = uilabel(app.KinematicsTab);
-            app.mmdegmmdegLabel.Position = [46 56 203 22];
+            app.mmdegmmdegLabel.Position = [46 55 203 22];
             app.mmdegmmdegLabel.Text = '[mm]         [deg]         [mm]         [deg]';
 
             % Create Panel
             app.Panel = uipanel(app.KinematicsTab);
-            app.Panel.Position = [244 79 65 215];
+            app.Panel.Position = [244 78 65 216];
 
             % Create q_jPanel
             app.q_jPanel = uipanel(app.Panel);
-            app.q_jPanel.Position = [0 187 65 28];
+            app.q_jPanel.Position = [0 188 65 28];
 
             % Create q_jRPLabel
             app.q_jRPLabel = uilabel(app.q_jPanel);
@@ -1998,7 +2026,7 @@ classdef MainApp < matlab.apps.AppBase
             % Create q_1ButtonGroup
             app.q_1ButtonGroup = uibuttongroup(app.Panel);
             app.q_1ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_1ButtonGroupSelectionChanged, true);
-            app.q_1ButtonGroup.Position = [0 164 65 24];
+            app.q_1ButtonGroup.Position = [0 165 65 24];
 
             % Create Button
             app.Button = uiradiobutton(app.q_1ButtonGroup);
@@ -2019,7 +2047,7 @@ classdef MainApp < matlab.apps.AppBase
             % Create q_2ButtonGroup
             app.q_2ButtonGroup = uibuttongroup(app.Panel);
             app.q_2ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_2ButtonGroupSelectionChanged, true);
-            app.q_2ButtonGroup.Position = [0 140 65 25];
+            app.q_2ButtonGroup.Position = [0 141 65 25];
 
             % Create Button_2
             app.Button_2 = uiradiobutton(app.q_2ButtonGroup);
@@ -2040,7 +2068,7 @@ classdef MainApp < matlab.apps.AppBase
             % Create q_3ButtonGroup
             app.q_3ButtonGroup = uibuttongroup(app.Panel);
             app.q_3ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_3ButtonGroupSelectionChanged, true);
-            app.q_3ButtonGroup.Position = [0 117 65 24];
+            app.q_3ButtonGroup.Position = [0 118 65 24];
 
             % Create Button_3
             app.Button_3 = uiradiobutton(app.q_3ButtonGroup);
@@ -2061,7 +2089,7 @@ classdef MainApp < matlab.apps.AppBase
             % Create q_4ButtonGroup
             app.q_4ButtonGroup = uibuttongroup(app.Panel);
             app.q_4ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_4ButtonGroupSelectionChanged, true);
-            app.q_4ButtonGroup.Position = [0 94 65 24];
+            app.q_4ButtonGroup.Position = [0 95 65 24];
 
             % Create Button_4
             app.Button_4 = uiradiobutton(app.q_4ButtonGroup);
@@ -2082,7 +2110,7 @@ classdef MainApp < matlab.apps.AppBase
             % Create q_5ButtonGroup
             app.q_5ButtonGroup = uibuttongroup(app.Panel);
             app.q_5ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_5ButtonGroupSelectionChanged, true);
-            app.q_5ButtonGroup.Position = [0 71 65 24];
+            app.q_5ButtonGroup.Position = [0 72 65 24];
 
             % Create Button_5
             app.Button_5 = uiradiobutton(app.q_5ButtonGroup);
@@ -2103,7 +2131,7 @@ classdef MainApp < matlab.apps.AppBase
             % Create q_6ButtonGroup
             app.q_6ButtonGroup = uibuttongroup(app.Panel);
             app.q_6ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_6ButtonGroupSelectionChanged, true);
-            app.q_6ButtonGroup.Position = [0 47 65 25];
+            app.q_6ButtonGroup.Position = [0 48 65 25];
 
             % Create Button_6
             app.Button_6 = uiradiobutton(app.q_6ButtonGroup);
@@ -2124,7 +2152,7 @@ classdef MainApp < matlab.apps.AppBase
             % Create q_7ButtonGroup
             app.q_7ButtonGroup = uibuttongroup(app.Panel);
             app.q_7ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_7ButtonGroupSelectionChanged, true);
-            app.q_7ButtonGroup.Position = [0 24 65 24];
+            app.q_7ButtonGroup.Position = [0 25 65 24];
 
             % Create Button_7
             app.Button_7 = uiradiobutton(app.q_7ButtonGroup);
@@ -2342,7 +2370,7 @@ classdef MainApp < matlab.apps.AppBase
             app.SimModeSwitch = uiswitch(app.SimulationPanel, 'slider');
             app.SimModeSwitch.Items = {'Kinematic', 'Dynamic'};
             app.SimModeSwitch.ValueChangedFcn = createCallbackFcn(app, @SimModeSwitchValueChanged, true);
-            app.SimModeSwitch.Position = [143 60 36 16];
+            app.SimModeSwitch.Position = [71 39 36 16];
             app.SimModeSwitch.Value = 'Kinematic';
 
             % Create StopButton
@@ -2377,6 +2405,20 @@ classdef MainApp < matlab.apps.AppBase
             app.StepsEditField.ValueChangedFcn = createCallbackFcn(app, @StepsEditFieldValueChanged, true);
             app.StepsEditField.Position = [195 7 51 22];
             app.StepsEditField.Value = 0.001;
+
+            % Create SpeedxSpinnerLabel
+            app.SpeedxSpinnerLabel = uilabel(app.SimulationPanel);
+            app.SpeedxSpinnerLabel.HorizontalAlignment = 'right';
+            app.SpeedxSpinnerLabel.Position = [189 57 56 22];
+            app.SpeedxSpinnerLabel.Text = 'Speed [x]';
+
+            % Create SpeedxSpinner
+            app.SpeedxSpinner = uispinner(app.SimulationPanel);
+            app.SpeedxSpinner.Step = 0.1;
+            app.SpeedxSpinner.Limits = [0 10];
+            app.SpeedxSpinner.ValueChangedFcn = createCallbackFcn(app, @SpeedxSpinnerValueChanged, true);
+            app.SpeedxSpinner.Position = [260 57 50 22];
+            app.SpeedxSpinner.Value = 1;
 
             % Create RobotModelDropDownLabel
             app.RobotModelDropDownLabel = uilabel(app.LeftPanel);
@@ -2449,13 +2491,13 @@ classdef MainApp < matlab.apps.AppBase
 
             % Create x1RealtimeLabel
             app.x1RealtimeLabel = uilabel(app.TimePanel);
-            app.x1RealtimeLabel.Position = [106 4 165 22];
+            app.x1RealtimeLabel.Position = [106 4 145 22];
             app.x1RealtimeLabel.Text = '(x1 Real-time)';
 
             % Create q_actq1q2q3q4q5q6q7degLabel
             app.q_actq1q2q3q4q5q6q7degLabel = uilabel(app.TimePanel);
             app.q_actq1q2q3q4q5q6q7degLabel.HorizontalAlignment = 'right';
-            app.q_actq1q2q3q4q5q6q7degLabel.Position = [275 4 218 22];
+            app.q_actq1q2q3q4q5q6q7degLabel.Position = [211 4 218 22];
             app.q_actq1q2q3q4q5q6q7degLabel.Text = 'q_act=[q1,q2,q3,q4,q5,q6,q7]deg';
 
             % Create ModelPanel

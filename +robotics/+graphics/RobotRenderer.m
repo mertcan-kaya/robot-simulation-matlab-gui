@@ -55,8 +55,8 @@ classdef RobotRenderer < handle
 function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghost_on, line_on, task_mode, running_flag, trj_profile)
 
     obj.LineHandles = struct();
+    cla(obj.AxesHandle);
     if line_on == 0
-        cla(obj.AxesHandle)
         if robot_model == 0
             return;
         end
@@ -66,43 +66,28 @@ function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghos
         light(obj.AxesHandle, 'Position', [1.5, 1.0, 0.5], 'Color', [0.65, 0.7, 0.8], 'Style', 'infinite');
         
         % Load CAD files
+        meshSub = 'collision';
+        if high_quality == 1
+            meshSub = 'visual';
+        end
+
         if robot_model == 5 || robot_model == 4
-            if high_quality == 1
-                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\base_link.mat');
-                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_1.mat');
-                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_2.mat');
-                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_3.mat');
-                if robot_model == 5
-                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_4l.mat');
-                else
-                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_4.mat');
-                end
-                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_5.mat');
-                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\link_6.mat');
-                if ee_att > 0
-                    obj.ms.sS = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\ati_delta.mat');
-                end
-                if ee_att == 2
-                    obj.ms.sG = robotics.graphics.MeshCache.getMesh('meshes\rx160\visual\gripper.mat');
-                end
+            obj.ms.s0 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\base_link.mat']);
+            obj.ms.s1 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\link_1.mat']);
+            obj.ms.s2 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\link_2.mat']);
+            obj.ms.s3 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\link_3.mat']);
+            if robot_model == 5
+                obj.ms.s4 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\link_4l.mat']);
             else
-                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\base_link.mat');
-                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_1.mat');
-                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_2.mat');
-                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_3.mat');
-                if robot_model == 5
-                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_4l.mat');
-                else
-                    obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_4.mat');
-                end
-                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_5.mat');
-                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\link_6.mat');
-                if ee_att > 0
-                    obj.ms.sS = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\ati_delta.mat');
-                end
-                if ee_att == 2
-                    obj.ms.sG = robotics.graphics.MeshCache.getMesh('meshes\rx160\collision\gripper.mat');
-                end
+                obj.ms.s4 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\link_4.mat']);
+            end
+            obj.ms.s5 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\link_5.mat']);
+            obj.ms.s6 = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\link_6.mat']);
+            if ee_att > 0
+                obj.ms.sS = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\ati_delta.mat']);
+            end
+            if ee_att == 2
+                obj.ms.sG = robotics.graphics.MeshCache.getMesh(['meshes\rx160\' meshSub '\gripper.mat']);
             end
             if ee_att == 3
                 obj.ms.sTa = robotics.graphics.MeshCache.getMesh('meshes\rx160\adaptor_holder.mat');
@@ -139,34 +124,18 @@ function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghos
                 obj.ms.sIF = robotics.graphics.MeshCache.getMesh('meshes\ur3\arg2f_85_inner_finger_pad_simp.mat');
             end
         else
-            if high_quality == 1
-                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link0.mat');
-                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link1.mat');
-                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link2.mat');
-                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link3.mat');
-                obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link4.mat');
-                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link5.mat');
-                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link6.mat');
-                obj.ms.s7 = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\link7.mat');
-                if ee_att == 1
-                    obj.ms.sE = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\hand.mat');
-                    obj.ms.sFl = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\finger.mat');
-                    obj.ms.sFr = robotics.graphics.MeshCache.getMesh('meshes\fer\visual\finger.mat');
-                end
-            else
-                obj.ms.s0 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link0.mat');
-                obj.ms.s1 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link1.mat');
-                obj.ms.s2 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link2.mat');
-                obj.ms.s3 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link3.mat');
-                obj.ms.s4 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link4.mat');
-                obj.ms.s5 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link5.mat');
-                obj.ms.s6 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link6.mat');
-                obj.ms.s7 = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\link7.mat');
-                if ee_att == 1
-                    obj.ms.sE = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\hand.mat');
-                    obj.ms.sFl = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\finger.mat');
-                    obj.ms.sFr = robotics.graphics.MeshCache.getMesh('meshes\fer\collision\finger.mat');
-                end
+            obj.ms.s0 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link0.mat']);
+            obj.ms.s1 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link1.mat']);
+            obj.ms.s2 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link2.mat']);
+            obj.ms.s3 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link3.mat']);
+            obj.ms.s4 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link4.mat']);
+            obj.ms.s5 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link5.mat']);
+            obj.ms.s6 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link6.mat']);
+            obj.ms.s7 = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\link7.mat']);
+            if ee_att == 1
+                obj.ms.sE = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\hand.mat']);
+                obj.ms.sFl = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\finger.mat']);
+                obj.ms.sFr = robotics.graphics.MeshCache.getMesh(['meshes\fer\' meshSub '\finger.mat']);
             end
         end
         
@@ -490,7 +459,7 @@ function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghos
             set(obj.Pobj_f.pF, 'FaceVertexCData', obj.ms.sF.C); % Set the color (from file)
             set(obj.Pobj_f.pF, 'EdgeColor', 'none');            % Set the edge color
         end
-        if coord_frame_on == 1 && (task_mode == 1 && running_flag == 0) || (task_mode == 2 && (running_flag == 0 || trj_profile == 0))
+        if coord_frame_on == 1 && ((task_mode == 1 && running_flag == 0) || (task_mode == 2 && (running_flag == 0 || trj_profile == 0)))
             obj.Pobj_r.pF = patch(obj.AxesHandle,'Faces', obj.ms.sF.F, 'Vertices', obj.ms.sF.V);
             set(obj.Pobj_r.pF, 'facec', 'none');                % Set the face color flat
             set(obj.Pobj_r.pF, 'FaceVertexCData', obj.ms.sF.C); % Set the color (from file)
@@ -515,9 +484,17 @@ function updateView(obj, state)
 
     if state.task_mode > 0
         if state.running_flag == 0
-            Tref_ini = [state.ini.Re,state.ini.t_pos;zeros(1,3),1];
+            if isfield(state.ini, 'Re_ref') && isfield(state.ini, 't_pos_ref') && ~isempty(state.ini.Re_ref) && ~isempty(state.ini.t_pos_ref)
+                Tref_ini = [state.ini.Re_ref, state.ini.t_pos_ref; zeros(1,3), 1];
+            else
+                Tref_ini = [state.ini.Re, state.ini.t_pos; zeros(1,3), 1];
+            end
         end
-        Tref_fin = [state.fin.Re,state.fin.t_pos;zeros(1,3),1];
+        if isfield(state.fin, 'Re_ref') && isfield(state.fin, 't_pos_ref') && ~isempty(state.fin.Re_ref) && ~isempty(state.fin.t_pos_ref)
+            Tref_fin = [state.fin.Re_ref, state.fin.t_pos_ref; zeros(1,3), 1];
+        else
+            Tref_fin = [state.fin.Re, state.fin.t_pos; zeros(1,3), 1];
+        end
     end
 
     if state.ee_att == 1 && state.robot_model == 2
@@ -525,7 +502,6 @@ function updateView(obj, state)
         TsC_S   = [eye(3),[0;0;0.0375];zeros(1,3),1];
         TS_gC   = [eye(3),[0;0;0.0111];zeros(1,3),1];
         TgC_gB  = [eye(3),[0;0;0.0900];zeros(1,3),1];
-        % TgB_E   = [eye(3),[0;0;0.0403];zeros(1,3),1];
         TgB_oKa = [rot_y(pi/4),[0.035;0;-0.035];zeros(1,3),1];
         TgB_oKb = [rot_z(pi)*rot_y(pi/4),[-0.035;0;-0.035];zeros(1,3),1];
         TgB_oFa = [rot_y(pi/2),[0.06;0;-0.015];zeros(1,3),1];
@@ -534,7 +510,7 @@ function updateView(obj, state)
         TgB_iKb = [rot_z(pi)*rot_y(pi/2.25),[-0.02;0;-0.025];zeros(1,3),1];
         TgB_iFa = [rot_y(pi/2),[0.065;0;0.035];zeros(1,3),1];
         TgB_iFb = [rot_z(pi)*rot_y(pi/2),[-0.065;0;0.035];zeros(1,3),1];
-        dz_e = 0.1874; % Tn_sC(3,4)+TsC_S(3,4)+TS_gC(3,4)+TgC_gB(3,4)+TgB_E(3,4);
+        dz_e = 0.1874;
     end
     if state.ee_att > 0 && (state.robot_model == 4 || state.robot_model == 5)
         if state.robot_model == 5
@@ -785,30 +761,24 @@ function updateView(obj, state)
     else
         ee_axes_length = 0.1;
         
-        % Color Map
-        black = [0 0 0];
-        white = [1 1 1];
-        lemon = [255 200 0]./255;
-        orange = [255 128 0]./255;
-        grey = [192 192 192]./255;
-        gray = [204 204 204]./255;
-        red = [1 0 0];
-        green = [0 1 0];
-        blue = [0 0 1];
-        light_blue = [110 158 194]./255;
-        light_grey = [0.7 0.7 0.7];
-        dark_grey = [91 95 98]./255;
-        light_grey2 = [203 203 203]./255;
-
+        % Robot Stick Color Palette Reference:
+        %   lemon      = [255, 200,   0]./255  (Staubli RX160 / RX160L)
+        %   cyan_blue  = [0.3, 0.7, 0.9]       (UR3)
+        %   deep_blue  = [0.2, 0.6, 0.8]       (Unitree Z1)
+        %   crimson    = [0.8, 0.3, 0.2]       (Franka Emika / Default)
+        %   orange     = [255, 128,   0]./255  (Custom/Industrial theme)
+        %   light_blue = [110, 158, 194]./255  (Light theme accent)
+        %   dark_grey  = [ 91,  95,  98]./255  (Metallic accent)
         if state.robot_model == 4 || state.robot_model == 5
-            link_color = [255 200 0]./255;
+            link_color = [255 200 0]./255;      % Staubli Yellow
         elseif state.robot_model == 3
-            link_color = [192 192 192]./255;
+            link_color = [0.2 0.6 0.8];          % Unitree Blue
         elseif state.robot_model == 2
-            link_color = [192 192 192]./255;
+            link_color = [0.3 0.7 0.9];          % UR3 Cyan
         else
-            link_color = [204 204 204]./255;
+            link_color = [0.8 0.3 0.2];          % Franka Crimson
         end
+        
         DH_vec_act = zeros(3,state.kin.n+2);
         DH_vec_des = zeros(3,state.kin.n+2);
         for i = 1:state.kin.n+2
@@ -816,17 +786,8 @@ function updateView(obj, state)
             DH_vec_des(:,i) = TdesI_h(1:3,4,i);
         end
 
-        if state.coord_frame_on == 1
-            six_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,1,end)];
-            siy_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,2,end)];
-            siz_act = [ TactI_h(1:3,4,end) ee_axes_length*TactI_h(1:3,3,end)];
-            six_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,1,end)];
-            siy_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,2,end)];
-            siz_des = [ TdesI_h(1:3,4,end) ee_axes_length*TdesI_h(1:3,3,end)];
-        end
-
-        can_reuse = isfield(obj.LineHandles, 'act_link1') && ...
-                    isvalid(obj.LineHandles.act_link1) && ...
+        can_reuse = isfield(obj.LineHandles, 'act_link') && ...
+                    isvalid(obj.LineHandles.act_link) && ...
                     isfield(obj.LineHandles, 'n') && ...
                     obj.LineHandles.n == state.kin.n;
                     
@@ -835,49 +796,100 @@ function updateView(obj, state)
             hold(obj.AxesHandle, 'on');
             obj.LineHandles = struct();
             obj.LineHandles.n = state.kin.n;
-            obj.LineHandles.act_link1 = plot3(obj.AxesHandle,DH_vec_act(1,1:state.kin.n+1),DH_vec_act(2,1:state.kin.n+1),DH_vec_act(3,1:state.kin.n+1),'LineWidth',10,'Color',[link_color 1]);
-            obj.LineHandles.act_link2 = plot3(obj.AxesHandle,DH_vec_act(1,state.kin.n+1:state.kin.n+2),DH_vec_act(2,state.kin.n+1:state.kin.n+2),DH_vec_act(3,state.kin.n+1:state.kin.n+2),'LineWidth',5,'Color',[link_color 1]);
-            obj.LineHandles.act_sc1 = scatter3(obj.AxesHandle,DH_vec_act(1,2:state.kin.n+1),DH_vec_act(2,2:state.kin.n+1),DH_vec_act(3,2:state.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color);
-            obj.LineHandles.act_sc2 = scatter3(obj.AxesHandle,DH_vec_act(1,state.kin.n+2),DH_vec_act(2,state.kin.n+2),DH_vec_act(3,state.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color);
+            
+            % Lightweight hardware-accelerated stick model
+            obj.LineHandles.act_link = plot3(obj.AxesHandle, DH_vec_act(1,:), DH_vec_act(2,:), DH_vec_act(3,:), ...
+                'LineWidth', 6, 'Color', link_color, 'Marker', 'o', 'MarkerSize', 8, 'MarkerFaceColor', link_color, 'MarkerEdgeColor', [0.1 0.1 0.1]);
+            
             if state.ghost_on == 1
-                obj.LineHandles.des_link1 = plot3(obj.AxesHandle,DH_vec_des(1,1:state.kin.n+1),DH_vec_des(2,1:state.kin.n+1),DH_vec_des(3,1:state.kin.n+1),'LineWidth',10,'Color',[link_color 0.5]);
-                obj.LineHandles.des_link2 = plot3(obj.AxesHandle,DH_vec_des(1,state.kin.n+1:state.kin.n+2),DH_vec_des(2,state.kin.n+1:state.kin.n+2),DH_vec_des(3,state.kin.n+1:state.kin.n+2),'LineWidth',5,'Color',[link_color 0.5]);
-                obj.LineHandles.des_sc1 = scatter3(obj.AxesHandle,DH_vec_des(1,2:state.kin.n+1),DH_vec_des(2,2:state.kin.n+1),DH_vec_des(3,2:state.kin.n+1),'LineWidth',10,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5);
-                obj.LineHandles.des_sc2 = scatter3(obj.AxesHandle,DH_vec_des(1,state.kin.n+2),DH_vec_des(2,state.kin.n+2),DH_vec_des(3,state.kin.n+2),'LineWidth',5,'MarkerEdgeColor',link_color, 'MarkerEdgeAlpha', 0.5);
+                obj.LineHandles.des_link = plot3(obj.AxesHandle, DH_vec_des(1,:), DH_vec_des(2,:), DH_vec_des(3,:), ...
+                    'LineWidth', 3, 'Color', [0.55 0.55 0.55], 'LineStyle', '--', 'Marker', 'o', 'MarkerSize', 6, 'MarkerFaceColor', [0.75 0.75 0.75], 'MarkerEdgeColor', [0.4 0.4 0.4]);
             end
+            
             if state.coord_frame_on == 1
-                obj.LineHandles.q_act_x = quiver3(obj.AxesHandle,six_act(1,1),six_act(2,1),six_act(3,1),six_act(1,2),six_act(2,2),six_act(3,2),'-r','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-                obj.LineHandles.q_act_y = quiver3(obj.AxesHandle,siy_act(1,1),siy_act(2,1),siy_act(3,1),siy_act(1,2),siy_act(2,2),siy_act(3,2),'-g','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-                obj.LineHandles.q_act_z = quiver3(obj.AxesHandle,siz_act(1,1),siz_act(2,1),siz_act(3,1),siz_act(1,2),siz_act(2,2),siz_act(3,2),'-b','LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0);
-                obj.LineHandles.q_des_x = quiver3(obj.AxesHandle,six_des(1,1),six_des(2,1),six_des(3,1),six_des(1,2),six_des(2,2),six_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[red 0.5]);
-                obj.LineHandles.q_des_y = quiver3(obj.AxesHandle,siy_des(1,1),siy_des(2,1),siy_des(3,1),siy_des(1,2),siy_des(2,2),siy_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[green 0.5]);
-                obj.LineHandles.q_des_z = quiver3(obj.AxesHandle,siz_des(1,1),siz_des(2,1),siz_des(3,1),siz_des(1,2),siz_des(2,2),siz_des(3,2),'LineWidth',1,'AutoScale','off','ShowArrowHead','on','MaxHeadSize',1.0,'Color',[blue 0.5]);
+                p_ee = TactI_h(1:3,4,end);
+                px = p_ee + ee_axes_length*TactI_h(1:3,1,end);
+                py = p_ee + ee_axes_length*TactI_h(1:3,2,end);
+                pz = p_ee + ee_axes_length*TactI_h(1:3,3,end);
+                obj.LineHandles.frame_x = plot3(obj.AxesHandle, [p_ee(1) px(1)], [p_ee(2) px(2)], [p_ee(3) px(3)], 'r-', 'LineWidth', 2.5);
+                obj.LineHandles.frame_y = plot3(obj.AxesHandle, [p_ee(1) py(1)], [p_ee(2) py(2)], [p_ee(3) py(3)], 'g-', 'LineWidth', 2.5);
+                obj.LineHandles.frame_z = plot3(obj.AxesHandle, [p_ee(1) pz(1)], [p_ee(2) pz(2)], [p_ee(3) pz(3)], 'b-', 'LineWidth', 2.5);
+
+                if state.ghost_on == 1
+                    p_des = TdesI_h(1:3,4,end);
+                    pdx = p_des + ee_axes_length*TdesI_h(1:3,1,end);
+                    pdy = p_des + ee_axes_length*TdesI_h(1:3,2,end);
+                    pdz = p_des + ee_axes_length*TdesI_h(1:3,3,end);
+                    obj.LineHandles.des_frame_x = plot3(obj.AxesHandle, [p_des(1) pdx(1)], [p_des(2) pdx(2)], [p_des(3) pdx(3)], 'r--', 'LineWidth', 1.5);
+                    obj.LineHandles.des_frame_y = plot3(obj.AxesHandle, [p_des(1) pdy(1)], [p_des(2) pdy(2)], [p_des(3) pdy(3)], 'g--', 'LineWidth', 1.5);
+                    obj.LineHandles.des_frame_z = plot3(obj.AxesHandle, [p_des(1) pdz(1)], [p_des(2) pdz(2)], [p_des(3) pdz(3)], 'b--', 'LineWidth', 1.5);
+                end
+
+                if state.task_mode > 0 && ((state.task_mode == 1 && state.running_flag == 0) || (state.task_mode == 2 && (state.running_flag == 0 || state.trj_profile == 0)))
+                    if state.task_mode == 1
+                        T_ref = Tref_ini;
+                    else
+                        T_ref = Tref_fin;
+                    end
+                    p_ref = T_ref(1:3,4);
+                    prx = p_ref + ee_axes_length*T_ref(1:3,1);
+                    pry = p_ref + ee_axes_length*T_ref(1:3,2);
+                    prz = p_ref + ee_axes_length*T_ref(1:3,3);
+                    obj.LineHandles.ref_frame_x = plot3(obj.AxesHandle, [p_ref(1) prx(1)], [p_ref(2) prx(2)], [p_ref(3) prx(3)], 'r:', 'LineWidth', 3);
+                    obj.LineHandles.ref_frame_y = plot3(obj.AxesHandle, [p_ref(1) pry(1)], [p_ref(2) pry(2)], [p_ref(3) pry(3)], 'g:', 'LineWidth', 3);
+                    obj.LineHandles.ref_frame_z = plot3(obj.AxesHandle, [p_ref(1) prz(1)], [p_ref(2) prz(2)], [p_ref(3) prz(3)], 'b:', 'LineWidth', 3);
+                end
             end
         else
-            set(obj.LineHandles.act_link1, 'XData', DH_vec_act(1,1:state.kin.n+1), 'YData', DH_vec_act(2,1:state.kin.n+1), 'ZData', DH_vec_act(3,1:state.kin.n+1));
-            set(obj.LineHandles.act_link2, 'XData', DH_vec_act(1,state.kin.n+1:state.kin.n+2), 'YData', DH_vec_act(2,state.kin.n+1:state.kin.n+2), 'ZData', DH_vec_act(3,state.kin.n+1:state.kin.n+2));
-            set(obj.LineHandles.act_sc1, 'XData', DH_vec_act(1,2:state.kin.n+1), 'YData', DH_vec_act(2,2:state.kin.n+1), 'ZData', DH_vec_act(3,2:state.kin.n+1));
-            set(obj.LineHandles.act_sc2, 'XData', DH_vec_act(1,state.kin.n+2), 'YData', DH_vec_act(2,state.kin.n+2), 'ZData', DH_vec_act(3,state.kin.n+2));
-            if state.ghost_on == 1 && isfield(obj.LineHandles, 'des_link1') && isvalid(obj.LineHandles.des_link1)
-                set(obj.LineHandles.des_link1, 'XData', DH_vec_des(1,1:state.kin.n+1), 'YData', DH_vec_des(2,1:state.kin.n+1), 'ZData', DH_vec_des(3,1:state.kin.n+1));
-                set(obj.LineHandles.des_link2, 'XData', DH_vec_des(1,state.kin.n+1:state.kin.n+2), 'YData', DH_vec_des(2,state.kin.n+1:state.kin.n+2), 'ZData', DH_vec_des(3,state.kin.n+1:state.kin.n+2));
-                set(obj.LineHandles.des_sc1, 'XData', DH_vec_des(1,2:state.kin.n+1), 'YData', DH_vec_des(2,2:state.kin.n+1), 'ZData', DH_vec_des(3,2:state.kin.n+1));
-                set(obj.LineHandles.des_sc2, 'XData', DH_vec_des(1,state.kin.n+2), 'YData', DH_vec_des(2,state.kin.n+2), 'ZData', DH_vec_des(3,state.kin.n+2));
+            set(obj.LineHandles.act_link, 'XData', DH_vec_act(1,:), 'YData', DH_vec_act(2,:), 'ZData', DH_vec_act(3,:));
+            if state.ghost_on == 1 && isfield(obj.LineHandles, 'des_link') && isvalid(obj.LineHandles.des_link)
+                set(obj.LineHandles.des_link, 'XData', DH_vec_des(1,:), 'YData', DH_vec_des(2,:), 'ZData', DH_vec_des(3,:));
             end
-            if state.coord_frame_on == 1 && isfield(obj.LineHandles, 'q_act_x') && isvalid(obj.LineHandles.q_act_x)
-                set(obj.LineHandles.q_act_x, 'XData', six_act(1,1), 'YData', six_act(2,1), 'ZData', six_act(3,1), 'UData', six_act(1,2), 'VData', six_act(2,2), 'WData', six_act(3,2));
-                set(obj.LineHandles.q_act_y, 'XData', siy_act(1,1), 'YData', siy_act(2,1), 'ZData', siy_act(3,1), 'UData', siy_act(1,2), 'VData', siy_act(2,2), 'WData', siy_act(3,2));
-                set(obj.LineHandles.q_act_z, 'XData', siz_act(1,1), 'YData', siz_act(2,1), 'ZData', siz_act(3,1), 'UData', siz_act(1,2), 'VData', siz_act(2,2), 'WData', siz_act(3,2));
-                set(obj.LineHandles.q_des_x, 'XData', six_des(1,1), 'YData', six_des(2,1), 'ZData', six_des(3,1), 'UData', six_des(1,2), 'VData', six_des(2,2), 'WData', six_des(3,2));
-                set(obj.LineHandles.q_des_y, 'XData', siy_des(1,1), 'YData', siy_des(2,1), 'ZData', siy_des(3,1), 'UData', siy_des(1,2), 'VData', siy_des(2,2), 'WData', siy_des(3,2));
-                set(obj.LineHandles.q_des_z, 'XData', siz_des(1,1), 'YData', siz_des(2,1), 'ZData', siz_des(3,1), 'UData', siz_des(1,2), 'VData', siz_des(2,2), 'WData', siz_des(3,2));
+            if state.coord_frame_on == 1
+                if isfield(obj.LineHandles, 'frame_x') && isvalid(obj.LineHandles.frame_x)
+                    p_ee = TactI_h(1:3,4,end);
+                    px = p_ee + ee_axes_length*TactI_h(1:3,1,end);
+                    py = p_ee + ee_axes_length*TactI_h(1:3,2,end);
+                    pz = p_ee + ee_axes_length*TactI_h(1:3,3,end);
+                    set(obj.LineHandles.frame_x, 'XData', [p_ee(1) px(1)], 'YData', [p_ee(2) px(2)], 'ZData', [p_ee(3) px(3)]);
+                    set(obj.LineHandles.frame_y, 'XData', [p_ee(1) py(1)], 'YData', [p_ee(2) py(2)], 'ZData', [p_ee(3) py(3)]);
+                    set(obj.LineHandles.frame_z, 'XData', [p_ee(1) pz(1)], 'YData', [p_ee(2) pz(2)], 'ZData', [p_ee(3) pz(3)]);
+                end
+                if state.ghost_on == 1 && isfield(obj.LineHandles, 'des_frame_x') && isvalid(obj.LineHandles.des_frame_x)
+                    p_des = TdesI_h(1:3,4,end);
+                    pdx = p_des + ee_axes_length*TdesI_h(1:3,1,end);
+                    pdy = p_des + ee_axes_length*TdesI_h(1:3,2,end);
+                    pdz = p_des + ee_axes_length*TdesI_h(1:3,3,end);
+                    set(obj.LineHandles.des_frame_x, 'XData', [p_des(1) pdx(1)], 'YData', [p_des(2) pdx(2)], 'ZData', [p_des(3) pdz(3)]);
+                    set(obj.LineHandles.des_frame_y, 'XData', [p_des(1) pdy(1)], 'YData', [p_des(2) pdy(2)], 'ZData', [p_des(3) pdy(3)]);
+                    set(obj.LineHandles.des_frame_z, 'XData', [p_des(1) pdz(1)], 'YData', [p_des(2) pdz(2)], 'ZData', [p_des(3) pdz(3)]);
+                end
+                if isfield(obj.LineHandles, 'ref_frame_x') && isvalid(obj.LineHandles.ref_frame_x)
+                    if state.task_mode > 0 && ((state.task_mode == 1 && state.running_flag == 0) || (state.task_mode == 2 && (state.running_flag == 0 || state.trj_profile == 0)))
+                        if state.task_mode == 1
+                            T_ref = Tref_ini;
+                        else
+                            T_ref = Tref_fin;
+                        end
+                        p_ref = T_ref(1:3,4);
+                        prx = p_ref + ee_axes_length*T_ref(1:3,1);
+                        pry = p_ref + ee_axes_length*T_ref(1:3,2);
+                        prz = p_ref + ee_axes_length*T_ref(1:3,3);
+                        set(obj.LineHandles.ref_frame_x, 'XData', [p_ref(1) prx(1)], 'YData', [p_ref(2) prx(2)], 'ZData', [p_ref(3) prx(3)], 'Visible', 'on');
+                        set(obj.LineHandles.ref_frame_y, 'XData', [p_ref(1) pry(1)], 'YData', [p_ref(2) pry(2)], 'ZData', [p_ref(3) pry(3)], 'Visible', 'on');
+                        set(obj.LineHandles.ref_frame_z, 'XData', [p_ref(1) prz(1)], 'YData', [p_ref(2) prz(2)], 'ZData', [p_ref(3) prz(3)], 'Visible', 'on');
+                    else
+                        set(obj.LineHandles.ref_frame_x, 'Visible', 'off');
+                        set(obj.LineHandles.ref_frame_y, 'Visible', 'off');
+                        set(obj.LineHandles.ref_frame_z, 'Visible', 'off');
+                    end
+                end
             end
         end
     end
 
     hold(obj.AxesHandle,'off')
 
-%     drawnow
     drawnow limitrate
 
     function output = rot_z(input)

@@ -10,21 +10,24 @@ classdef TestRobotModels < matlab.unittest.TestCase
             'robotics.models.StaubliRX160L', ...
             'robotics.models.CustomRobot'
         };
+        RobotIds = [1, 2, 3, 4, 5, 0];
     end
     
     methods(Test)
         
         function testRobotFactory(testCase)
             % Verify that robotics.models.RobotFactory returns the correct subclasses
-            for id = 1:6
+            for idx = 1:length(testCase.RobotIds)
+                id = testCase.RobotIds(idx);
                 robot = robotics.models.RobotFactory.create(id);
-                testCase.verifyClass(robot, testCase.ExpectedClasses{id});
+                testCase.verifyClass(robot, testCase.ExpectedClasses{idx});
             end
         end
         
         function testJointLimitsAndKinematics(testCase)
             % Verify that getJointLimits and getKinematicParameters return correctly shaped arrays
-            for id = 1:6
+            for idx = 1:length(testCase.RobotIds)
+                id = testCase.RobotIds(idx);
                 robot = robotics.models.RobotFactory.create(id);
                 kin = robot.getKinematicParameters(1); % Test with ee_att = 1
                 
@@ -47,7 +50,8 @@ classdef TestRobotModels < matlab.unittest.TestCase
         
         function testInertialParameters(testCase)
             % Verify that getInertialParameters returns correctly shaped structs
-            for id = 1:6
+            for idx = 1:length(testCase.RobotIds)
+                id = testCase.RobotIds(idx);
                 robot = robotics.models.RobotFactory.create(id);
                 dyn = robot.getInertialParameters();
                 

@@ -17,7 +17,7 @@ classdef SimulationModel < handle
         tfin_trj = 0;
         trj_profile = 3;
         trj_profile_text = 'Quintic';
-        time_const = 0.1;
+        time_const = 1.0;
         tfin = 0;
         
         % Kinematics and Dynamics Structs
@@ -34,7 +34,6 @@ classdef SimulationModel < handle
         fbk;
         ref;
         
-        % End Effector special properties
         % End Effector special properties
         qEIni = 0;
         qEDes = 0;
