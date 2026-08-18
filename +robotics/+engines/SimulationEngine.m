@@ -61,6 +61,8 @@ classdef SimulationEngine < handle
             fps_smoothed = target_fps;
             actual_rtf = speed_scale;
             
+            dyn_ws = robotics.engines.DynamicsEngine.createDynamicsWorkspace(obj.model.kin.n);
+            
             tic;
             for k = 0:total_steps
                 
@@ -79,8 +81,8 @@ classdef SimulationEngine < handle
                 
                 tau = robotics.engines.ControlEngine.computeTorque(obj.model.ctr, obj.model.kin, obj.model.dyn, obj.model.des, obj.model.fbk);
                 
-                % High frequency physics loop
-                obj.model.act.q_acc = robotics.engines.DynamicsEngine.forwardDynamics(obj.robot, obj.model.kin, obj.model.dyn, tau, obj.model.act.q_pos, obj.model.act.q_vel);
+                % High frequency physics loop (zero-allocation)
+                obj.model.act.q_acc = robotics.engines.DynamicsEngine.forwardDynamics(obj.robot, obj.model.kin, obj.model.dyn, tau, obj.model.act.q_pos, obj.model.act.q_vel, dyn_ws);
                 obj.model.act.q_vel = obj.model.act.q_vel + obj.model.act.q_acc*obj.model.tstp;
                 obj.model.act.q_pos = obj.model.act.q_pos + obj.model.act.q_vel*obj.model.tstp;
                 

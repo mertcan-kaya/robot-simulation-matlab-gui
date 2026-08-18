@@ -5,9 +5,30 @@ classdef DynamicsEngine
     %   Adaptive Newton-Euler (ANEA), and Analytical Gravity Compensation.
     
     methods (Static)
-        function q_acc = forwardDynamics(robot, kin, dyn, tau, q_pos, q_vel)
+        function ws = createDynamicsWorkspace(n)
+            % CREATEDYNAMICSWORKSPACE Allocates reusable workspace buffers for forwardDynamics.
+            %   ws = CREATEDYNAMICSWORKSPACE(N) allocates fixed memory buffers for an N-DoF
+            %   serial manipulator to eliminate heap allocation during high-frequency integration.
+            
+            ws.n = n;
+            ws.Rj_i = zeros(3,3,n);
+            ws.gammaj_j = zeros(6,1,n);
+            ws.betai_i = zeros(6,1,n+1);
+            ws.Gammai_i = zeros(6,6,n+1);
+            ws.H_j = zeros(n,1);
+            ws.Xj_i = zeros(6,6,n);
+            ws.betaSi_i = zeros(6,1,n+1);
+            ws.GammaSi_i = zeros(6,6,n+1);
+            ws.q_acc = zeros(n, 1);
+            ws.tau_spr_zero = zeros(n, 1);
+            ws.tau_frc_zero = zeros(n, 1);
+            ws.wi_i_zero = zeros(3, 1);
+            ws.ri_j = [];
+        end
+
+        function q_acc = forwardDynamics(robot, kin, dyn, tau, q_pos, q_vel, ws)
             % FORWARDDYNAMICS Computes joint accelerations from applied joint torques.
-            %   q_acc = FORWARDDYNAMICS(ROBOT, KIN, DYN, TAU, Q_POS, Q_VEL) solves the
+            %   q_acc = FORWARDDYNAMICS(ROBOT, KIN, DYN, TAU, Q_POS, Q_VEL, WS) solves the
             %   forward dynamics equation M(q)*q_acc + C(q,q_vel)*q_vel + G(q) = tau
             %   using the recursive articulated forward dynamics formulation (Featherstone / RNEA).
             %
@@ -18,40 +39,66 @@ classdef DynamicsEngine
             %       tau   - (Nx1) double: Actuator joint torques [N*m]
             %       q_pos - (Nx1) double: Current joint positions [rad or m]
             %       q_vel - (Nx1) double: Current joint velocities [rad/s or m/s]
+            %       ws    - (optional) struct: Reusable workspace buffers from createDynamicsWorkspace
             %
             %   Outputs:
             %       q_acc - (Nx1) double: Resulting joint accelerations [rad/s^2 or m/s^2]
             %
-            %   See also inverseDynamicsMNEA, getTauG.
+            %   See also createDynamicsWorkspace, inverseDynamicsMNEA, getTauG.
             
             n = kin.n;
+            persistent cached_ws
+            if nargin < 7 || isempty(ws)
+                if isempty(cached_ws) || cached_ws.n ~= n
+                    cached_ws = robotics.engines.DynamicsEngine.createDynamicsWorkspace(n);
+                end
+                ws = cached_ws;
+            end
+            
             Phij_j = [zeros(3,1); kin.zj_j];
         
             if isfield(dyn, 'spring_on') && dyn.spring_on == 1
                 tau_spr = robot.getSpringTorque(q_pos);
             else
-                tau_spr = zeros(n, 1);
+                tau_spr = ws.tau_spr_zero;
             end
         
             if isfield(dyn, 'friction_on') && dyn.friction_on == 1
                 tau_frc = robot.getFrictionTorque(q_vel);
             else
-                tau_frc = zeros(n, 1);
+                tau_frc = ws.tau_frc_zero;
             end
         
             tau_j = tau - (tau_spr + tau_frc);
+            
+            % Check if ri_j is pre-cached
+            if isfield(kin, 'ri_j') && ~isempty(kin.ri_j)
+                ri_j = kin.ri_j;
+            else
+                if isempty(ws.ri_j) || size(ws.ri_j, 3) < n
+                    ws.ri_j = zeros(3, 1, n);
+                    for j = 1:n
+                        ws.ri_j(:,:,j) = robotics.math.getri_j_vec(kin.alpha_j(j), kin.a_j(j), kin.d_j(j));
+                    end
+                end
+                ri_j = ws.ri_j;
+            end
         
             % i) First forward recursive computations for i = 1, ..., n
-            Rj_i        = zeros(3,3,n);
-            wi_i        = zeros(3,1);
-            gammaj_j    = zeros(6,1,n);
-            betai_i     = zeros(6,1,n+1);
-            Gammai_i    = zeros(6,6,n+1);
+            wi_i = ws.wi_i_zero;
             for j = 1:n
-                Rj_i(:,:,j) = robotics.math.getRi_j(kin.alpha_j(j), kin.theta_O_j(j) + q_pos(j))';
+                th = kin.theta_O_j(j) + q_pos(j);
+                ca = cos(kin.alpha_j(j)); sa = sin(kin.alpha_j(j));
+                ct = cos(th);             st = sin(th);
+                
+                % Direct SO(3) transpose Rj_i = (Rot_x(alpha) * Rot_z(theta))'
+                R_curr = [ ct,       st*ca,    st*sa;
+                          -st,       ct*ca,    ct*sa;
+                            0,      -sa,       ca   ];
+                ws.Rj_i(:,:,j) = R_curr;
                 
                 % Fast inlined analytical cross products
-                rij = robotics.math.getri_j_vec(kin.alpha_j(j), kin.a_j(j), kin.d_j(j));
+                rij = ri_j(:,:,j);
                 w_x_rij = [wi_i(2)*rij(3) - wi_i(3)*rij(2);
                            wi_i(3)*rij(1) - wi_i(1)*rij(3);
                            wi_i(1)*rij(2) - wi_i(2)*rij(1)];
@@ -59,13 +106,13 @@ classdef DynamicsEngine
                                wi_i(3)*w_x_rij(1) - wi_i(1)*w_x_rij(3);
                                wi_i(1)*w_x_rij(2) - wi_i(2)*w_x_rij(1)];
                 
-                Rwi = Rj_i(:,:,j)*wi_i;
-                qvz = q_vel(j)*kin.zj_j;
+                Rwi = R_curr * wi_i;
+                qvz = q_vel(j) * kin.zj_j;
                 Rwi_x_qvz = [Rwi(2)*qvz(3) - Rwi(3)*qvz(2);
                              Rwi(3)*qvz(1) - Rwi(1)*qvz(3);
                              Rwi(1)*qvz(2) - Rwi(2)*qvz(1)];
                 
-                gammaj_j(:,:,j) = [Rj_i(:,:,j)*w_x_w_x_rij; Rwi_x_qvz];
+                ws.gammaj_j(:,:,j) = [R_curr * w_x_w_x_rij; Rwi_x_qvz];
                 wi_i = Rwi + qvz;
                 
                 dj = dyn.dj_j(:,:,j);
@@ -76,55 +123,54 @@ classdef DynamicsEngine
                               wi_i(3)*w_x_dj(1) - wi_i(1)*w_x_dj(3);
                               wi_i(1)*w_x_dj(2) - wi_i(2)*w_x_dj(1)];
                 
-                Iw = dyn.Ij_j(:,:,j)*wi_i;
+                Iw = dyn.Ij_j(:,:,j) * wi_i;
                 w_x_Iw = [wi_i(2)*Iw(3) - wi_i(3)*Iw(2);
                           wi_i(3)*Iw(1) - wi_i(1)*Iw(3);
                           wi_i(1)*Iw(2) - wi_i(2)*Iw(1)];
                 
-                betai_i(:,:,j+1) = -[w_x_w_x_dj; w_x_Iw];
+                ws.betai_i(:,:,j+1) = -[w_x_w_x_dj; w_x_Iw];
                 
                 % Fast Gammai_i construction
                 Sdj = [ 0, -dj(3), dj(2); dj(3), 0, -dj(1); -dj(2), dj(1), 0 ];
-                Gammai_i(:,:,j+1) = [dyn.m_j(j)*eye(3), -Sdj; Sdj, dyn.Ij_j(:,:,j)];
+                ws.Gammai_i(:,:,j+1) = [dyn.m_j(j)*eye(3), -Sdj; Sdj, dyn.Ij_j(:,:,j)];
             end
         
             % ii) Backward recursive computations for i = n, ..., 1
-            H_j                 = zeros(n,1);
-            Xj_i                = zeros(6,6,n);
-            betaSi_i            = zeros(6,1,n+1);
-            betaSi_i(:,:,n+1)   = betai_i(:,:,n+1);
-            GammaSi_i           = zeros(6,6,n+1);
-            GammaSi_i(:,:,n+1)  = Gammai_i(:,:,n+1);
+            ws.betaSi_i(:,:,n+1)   = ws.betai_i(:,:,n+1);
+            ws.GammaSi_i(:,:,n+1)  = ws.Gammai_i(:,:,n+1);
             for j = n:-1:1
-                GammaS_j1 = GammaSi_i(:,:,j+1);
-                betaS_j1 = betaSi_i(:,:,j+1);
+                GammaS_j1 = ws.GammaSi_i(:,:,j+1);
+                betaS_j1 = ws.betaSi_i(:,:,j+1);
                 
-                H_j(j) = Phij_j'*GammaS_j1*Phij_j;
-                invH = 1.0 / H_j(j);
+                H_j_val = Phij_j'*GammaS_j1*Phij_j;
+                ws.H_j(j) = H_j_val;
+                invH = 1.0 / H_j_val;
                 
                 GammaS_Phi = GammaS_j1*Phij_j;
                 KKi_i = GammaS_j1 - (GammaS_Phi * (invH * GammaS_Phi'));
                 
-                alphaj_j = KKi_i*gammaj_j(:,:,j) + GammaS_Phi * (invH * (tau_j(j) + Phij_j'*betaS_j1)) - betaS_j1;
+                alphaj_j = KKi_i*ws.gammaj_j(:,:,j) + GammaS_Phi * (invH * (tau_j(j) + Phij_j'*betaS_j1)) - betaS_j1;
                 
-                Xj_i(:,:,j) = robotics.math.SO3R3_R66_twist(Rj_i(:,:,j), robotics.math.getrj_i_vec(kin.theta_O_j(j) + q_pos(j), kin.a_j(j), kin.d_j(j)));
-                X = Xj_i(:,:,j);
+                th = kin.theta_O_j(j) + q_pos(j);
+                rj_i = [-kin.a_j(j)*cos(th); kin.a_j(j)*sin(th); -kin.d_j(j)];
+                ws.Xj_i(:,:,j) = robotics.math.SO3R3_R66_twist(ws.Rj_i(:,:,j), rj_i);
+                X = ws.Xj_i(:,:,j);
                 
-                betaSi_i(:,:,j)     = betai_i(:,:,j) - X'*alphaj_j;
-                GammaSi_i(:,:,j)    = Gammai_i(:,:,j) + X'*KKi_i*X;
+                ws.betaSi_i(:,:,j)     = ws.betai_i(:,:,j) - X'*alphaj_j;
+                ws.GammaSi_i(:,:,j)    = ws.Gammai_i(:,:,j) + X'*KKi_i*X;
             end
         
             % iii) Second forward recursive computations for i = 1, ..., n
-            q_acc = zeros(n, 1);
+            q_acc = ws.q_acc;
             if ~isfield(kin, 'g0')
                 kin.g0 = -[0;0;9.81];
             end
-            aai_i = [-kin.g0; zeros(3,1)];
+            aai_i = [-kin.g0; ws.wi_i_zero];
             for j = 1:n
-                aaj_i       = Xj_i(:,:,j)*aai_i;
-                q_acc(j,1)  = (1/H_j(j))*(-Phij_j'*GammaSi_i(:,:,j+1)*(aaj_i ...
-                            + gammaj_j(:,:,j)) + tau_j(j) + Phij_j'*betaSi_i(:,:,j+1));
-                aai_i       = aaj_i + Phij_j*q_acc(j) + gammaj_j(:,:,j);
+                aaj_i       = ws.Xj_i(:,:,j)*aai_i;
+                q_acc(j,1)  = (1/ws.H_j(j))*(-Phij_j'*ws.GammaSi_i(:,:,j+1)*(aaj_i ...
+                            + ws.gammaj_j(:,:,j)) + tau_j(j) + Phij_j'*ws.betaSi_i(:,:,j+1));
+                aai_i       = aaj_i + Phij_j*q_acc(j) + ws.gammaj_j(:,:,j);
             end
         end
         
