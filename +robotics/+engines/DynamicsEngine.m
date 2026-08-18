@@ -48,13 +48,44 @@ classdef DynamicsEngine
             betai_i     = zeros(6,1,n+1);
             Gammai_i    = zeros(6,6,n+1);
             for j = 1:n
-                Rj_i(:,:,j)         = robotics.math.getRi_j(kin.alpha_j(j), kin.theta_O_j(j) + q_pos(j))';
-                gammaj_j(:,:,j)     = [Rj_i(:,:,j)*(cross(wi_i, cross(wi_i, robotics.math.getri_j_vec(kin.alpha_j(j), kin.a_j(j), kin.d_j(j)))));
-                                        cross(Rj_i(:,:,j)*wi_i, q_vel(j)*kin.zj_j)];
-                wi_i                = Rj_i(:,:,j)*wi_i + q_vel(j)*kin.zj_j;
-                betai_i(:,:,j+1)    = -[cross(wi_i, cross(wi_i, dyn.dj_j(:,:,j)));
-                                        cross(wi_i, dyn.Ij_j(:,:,j)*wi_i)];
-                Gammai_i(:,:,j+1)   = [dyn.m_j(j)*eye(3), -robotics.math.SkewSym(dyn.dj_j(:,:,j)); robotics.math.SkewSym(dyn.dj_j(:,:,j)), dyn.Ij_j(:,:,j)];
+                Rj_i(:,:,j) = robotics.math.getRi_j(kin.alpha_j(j), kin.theta_O_j(j) + q_pos(j))';
+                
+                % Fast inlined analytical cross products
+                rij = robotics.math.getri_j_vec(kin.alpha_j(j), kin.a_j(j), kin.d_j(j));
+                w_x_rij = [wi_i(2)*rij(3) - wi_i(3)*rij(2);
+                           wi_i(3)*rij(1) - wi_i(1)*rij(3);
+                           wi_i(1)*rij(2) - wi_i(2)*rij(1)];
+                w_x_w_x_rij = [wi_i(2)*w_x_rij(3) - wi_i(3)*w_x_rij(2);
+                               wi_i(3)*w_x_rij(1) - wi_i(1)*w_x_rij(3);
+                               wi_i(1)*w_x_rij(2) - wi_i(2)*w_x_rij(1)];
+                
+                Rwi = Rj_i(:,:,j)*wi_i;
+                qvz = q_vel(j)*kin.zj_j;
+                Rwi_x_qvz = [Rwi(2)*qvz(3) - Rwi(3)*qvz(2);
+                             Rwi(3)*qvz(1) - Rwi(1)*qvz(3);
+                             Rwi(1)*qvz(2) - Rwi(2)*qvz(1)];
+                
+                gammaj_j(:,:,j) = [Rj_i(:,:,j)*w_x_w_x_rij; Rwi_x_qvz];
+                wi_i = Rwi + qvz;
+                
+                dj = dyn.dj_j(:,:,j);
+                w_x_dj = [wi_i(2)*dj(3) - wi_i(3)*dj(2);
+                          wi_i(3)*dj(1) - wi_i(1)*dj(3);
+                          wi_i(1)*dj(2) - wi_i(2)*dj(1)];
+                w_x_w_x_dj = [wi_i(2)*w_x_dj(3) - wi_i(3)*w_x_dj(2);
+                              wi_i(3)*w_x_dj(1) - wi_i(1)*w_x_dj(3);
+                              wi_i(1)*w_x_dj(2) - wi_i(2)*w_x_dj(1)];
+                
+                Iw = dyn.Ij_j(:,:,j)*wi_i;
+                w_x_Iw = [wi_i(2)*Iw(3) - wi_i(3)*Iw(2);
+                          wi_i(3)*Iw(1) - wi_i(1)*Iw(3);
+                          wi_i(1)*Iw(2) - wi_i(2)*Iw(1)];
+                
+                betai_i(:,:,j+1) = -[w_x_w_x_dj; w_x_Iw];
+                
+                % Fast Gammai_i construction
+                Sdj = [ 0, -dj(3), dj(2); dj(3), 0, -dj(1); -dj(2), dj(1), 0 ];
+                Gammai_i(:,:,j+1) = [dyn.m_j(j)*eye(3), -Sdj; Sdj, dyn.Ij_j(:,:,j)];
             end
         
             % ii) Backward recursive computations for i = n, ..., 1
@@ -65,13 +96,22 @@ classdef DynamicsEngine
             GammaSi_i           = zeros(6,6,n+1);
             GammaSi_i(:,:,n+1)  = Gammai_i(:,:,n+1);
             for j = n:-1:1
-                H_j(j)              = Phij_j'*GammaSi_i(:,:,j+1)*Phij_j;
-                KKi_i               = GammaSi_i(:,:,j+1) - GammaSi_i(:,:,j+1)*Phij_j*(1/H_j(j))*Phij_j'*GammaSi_i(:,:,j+1);
-                alphaj_j            = KKi_i*gammaj_j(:,:,j) + GammaSi_i(:,:,j+1)*Phij_j*(1/H_j(j)) ...
-                                    *(tau_j(j) + Phij_j'*betaSi_i(:,:,j+1)) - betaSi_i(:,:,j+1);
-                Xj_i(:,:,j)         = robotics.math.SO3R3_R66_twist(Rj_i(:,:,j), robotics.math.getrj_i_vec(kin.theta_O_j(j) + q_pos(j), kin.a_j(j), kin.d_j(j)));
-                betaSi_i(:,:,j)     = betai_i(:,:,j) - Xj_i(:,:,j)'*alphaj_j;
-                GammaSi_i(:,:,j)    = Gammai_i(:,:,j) + Xj_i(:,:,j)'*KKi_i*Xj_i(:,:,j);
+                GammaS_j1 = GammaSi_i(:,:,j+1);
+                betaS_j1 = betaSi_i(:,:,j+1);
+                
+                H_j(j) = Phij_j'*GammaS_j1*Phij_j;
+                invH = 1.0 / H_j(j);
+                
+                GammaS_Phi = GammaS_j1*Phij_j;
+                KKi_i = GammaS_j1 - (GammaS_Phi * (invH * GammaS_Phi'));
+                
+                alphaj_j = KKi_i*gammaj_j(:,:,j) + GammaS_Phi * (invH * (tau_j(j) + Phij_j'*betaS_j1)) - betaS_j1;
+                
+                Xj_i(:,:,j) = robotics.math.SO3R3_R66_twist(Rj_i(:,:,j), robotics.math.getrj_i_vec(kin.theta_O_j(j) + q_pos(j), kin.a_j(j), kin.d_j(j)));
+                X = Xj_i(:,:,j);
+                
+                betaSi_i(:,:,j)     = betai_i(:,:,j) - X'*alphaj_j;
+                GammaSi_i(:,:,j)    = Gammai_i(:,:,j) + X'*KKi_i*X;
             end
         
             % iii) Second forward recursive computations for i = 1, ..., n
@@ -271,12 +311,27 @@ classdef DynamicsEngine
                 ri_j(:,:,j) = robotics.math.getri_j_vec(kin.alpha_j(j), kin.a_j(j), kin.d_j(j));
             end
             
-            % backward recursion recursion (link n to 1)
+            % backward recursion (link n to 1)
             fi_fi = zeros(3,1);
             ni_fi = zeros(3,1);
             for j = n:-1:1
-                ni_fi = -robotics.math.SkewSym(gi_i(:,:,j+1))*dj_j(:,:,j) + Rj_i(:,:,j+1)'*(robotics.math.SkewSym(Rj_i(:,:,j+1)*ri_j(:,:,j+1))*fi_fi+ni_fi);
-                fi_fi = gi_i(:,:,j+1)*m_j(j) + Rj_i(:,:,j+1)'*fi_fi;
+                R_next = Rj_i(:,:,j+1);
+                ri_next = ri_j(:,:,j+1);
+                R_ri = R_next * ri_next;
+                
+                % Fast inlined cross products
+                cross_R_ri_fi = [R_ri(2)*fi_fi(3) - R_ri(3)*fi_fi(2);
+                                 R_ri(3)*fi_fi(1) - R_ri(1)*fi_fi(3);
+                                 R_ri(1)*fi_fi(2) - R_ri(2)*fi_fi(1)];
+                
+                g_curr = gi_i(:,:,j+1);
+                dj_curr = dj_j(:,:,j);
+                cross_dj_g = [dj_curr(2)*g_curr(3) - dj_curr(3)*g_curr(2);
+                              dj_curr(3)*g_curr(1) - dj_curr(1)*g_curr(3);
+                              dj_curr(1)*g_curr(2) - dj_curr(2)*g_curr(1)];
+                
+                ni_fi = cross_dj_g + R_next'*(cross_R_ri_fi + ni_fi);
+                fi_fi = g_curr*m_j(j) + R_next'*fi_fi;
                 tau_gj(j) = kin.zj_j'*ni_fi;
             end
         end

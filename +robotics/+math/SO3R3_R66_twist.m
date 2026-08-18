@@ -15,5 +15,12 @@ function X = SO3R3_R66_twist(R, r)
 %
 %   See also SkewSym, SO3R3_SE3.
 
-    X = [R, robotics.math.SkewSym(r)*R; zeros(3), R];
+    X = zeros(6,6);
+    X(1:3, 1:3) = R;
+    X(4:6, 4:6) = R;
+    
+    % Analytical [r]_x * R
+    X(1, 4:6) = -r(3)*R(2,:) + r(2)*R(3,:);
+    X(2, 4:6) =  r(3)*R(1,:) - r(1)*R(3,:);
+    X(3, 4:6) = -r(2)*R(1,:) + r(1)*R(2,:);
 end

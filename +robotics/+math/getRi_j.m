@@ -13,18 +13,12 @@ function Ri_j = getRi_j(alpha, theta)
 %
 %   See also getri_j_vec, getMDHTransform.
 
-    Ri_j = rot_x(alpha)*rot_z(theta);
-
-    function output = rot_x(input)
-        output = [	1	0           0
-                    0	cos(input)  -sin(input)
-                    0	sin(input)	cos(input)];
-    end
+    ca = cos(alpha);
+    sa = sin(alpha);
+    ct = cos(theta);
+    st = sin(theta);
     
-    function output = rot_z(input)
-        output = [  cos(input)	-sin(input)	0
-                    sin(input)	 cos(input)	0
-                    0            0          1];
-    end
-
+    Ri_j = [ ct,       -st,        0;
+             st * ca,   ct * ca,  -sa;
+             st * sa,   ct * sa,   ca ];
 end
