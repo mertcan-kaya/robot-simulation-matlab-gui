@@ -69,15 +69,18 @@ classdef TestMainApp < matlab.uitest.TestCase
             % Test toggling between Kinematic and Dynamic simulation
             % Default is Kinematic
             testCase.verifyEqual(testCase.App.controller.model.tstp, 0.001);
+            testCase.verifyEqual(testCase.App.StepsEditField.Value, 0.001);
 
             % Switch to Dynamic mode
             testCase.choose(testCase.App.SimModeSwitch, 'Dynamic');
             testCase.verifyEqual(testCase.App.controller.model.tstp, 0.0001);
+            testCase.verifyEqual(testCase.App.StepsEditField.Value, 0.0001);
             testCase.verifyEqual(char(testCase.App.FinalsEditField.Enable), 'on');
 
             % Switch back to Kinematic mode
             testCase.choose(testCase.App.SimModeSwitch, 'Kinematic');
             testCase.verifyEqual(testCase.App.controller.model.tstp, 0.001);
+            testCase.verifyEqual(testCase.App.StepsEditField.Value, 0.001);
             testCase.verifyEqual(char(testCase.App.FinalsEditField.Enable), 'off');
         end
 
