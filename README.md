@@ -178,6 +178,12 @@ tau = robotics.engines.DynamicsEngine.inverseDynamicsMNEA(...
     kin, q_k, qd_k, qd_k, qdd_k, [0;0;-9.81], dyn.pj_j);
 ```
 
+### 3. High-Throughput Performance Benchmark ([`benchmark_dynamics_performance.m`](examples/benchmark_dynamics_performance.m))
+```matlab
+% Benchmark zero-allocation 10 kHz forward dynamics and vectorized kinematics
+benchmark_dynamics_performance
+```
+
 ---
 
 ## 📁 Repository Structure
@@ -198,6 +204,7 @@ robot-simulation-matlab-gui/
 │   ├── ARCHITECTURE.md   # Full Developer Architecture Specification
 │   └── screenshot.png    # GUI Preview Screenshot
 ├── examples/             # Standalone Headless Scripts
+│   ├── benchmark_dynamics_performance.m
 │   ├── demo_forward_kinematics.m
 │   └── demo_trajectory_and_control.m
 ├── meshes/               # CAD STL 3D models for link rendering

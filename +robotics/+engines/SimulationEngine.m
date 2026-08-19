@@ -51,10 +51,15 @@ classdef SimulationEngine < handle
             end
             
             target_fps = 100; % High-framerate rendering cap
-            dt_frame_real = 1.0 / target_fps;
-            dt_frame_sim = dt_frame_real * speed_scale;
-            steps_per_frame = max(1, round(dt_frame_sim / obj.model.tstp));
             total_steps = round(obj.model.tfin / obj.model.tstp);
+            
+            if isinf(speed_scale)
+                steps_per_frame = total_steps;
+            else
+                dt_frame_real = 1.0 / target_fps;
+                dt_frame_sim = dt_frame_real * speed_scale;
+                steps_per_frame = max(1, round(dt_frame_sim / obj.model.tstp));
+            end
             
             last_render_wall_time = -inf;
             last_label_wall_time = -inf;
@@ -102,12 +107,16 @@ classdef SimulationEngine < handle
                 % Render frame at frame boundary or completion
                 if rem(k, steps_per_frame) == 0 || k == total_steps
                     sim_time = k * obj.model.tstp;
-                    target_wall_time = sim_time / speed_scale;
-                    current_wall_time = toc;
                     
-                    wait_time = target_wall_time - current_wall_time;
-                    if wait_time > 0.001
-                        pause(wait_time);
+                    if ~isinf(speed_scale)
+                        target_wall_time = sim_time / speed_scale;
+                        current_wall_time = toc;
+                        wait_time = target_wall_time - current_wall_time;
+                        if wait_time > 0.001
+                            pause(wait_time);
+                            current_wall_time = toc;
+                        end
+                    else
                         current_wall_time = toc;
                     end
                     
@@ -156,10 +165,15 @@ classdef SimulationEngine < handle
             end
             
             target_fps = 100; % High-framerate rendering cap
-            dt_frame_real = 1.0 / target_fps;
-            dt_frame_sim = dt_frame_real * speed_scale;
-            steps_per_frame = max(1, round(dt_frame_sim / obj.model.tstp));
             total_steps = round(obj.model.tfin_trj / obj.model.tstp);
+            
+            if isinf(speed_scale)
+                steps_per_frame = total_steps;
+            else
+                dt_frame_real = 1.0 / target_fps;
+                dt_frame_sim = dt_frame_real * speed_scale;
+                steps_per_frame = max(1, round(dt_frame_sim / obj.model.tstp));
+            end
             
             last_render_wall_time = -inf;
             last_label_wall_time = -inf;
@@ -179,12 +193,16 @@ classdef SimulationEngine < handle
                 % Render frame at frame boundary or completion
                 if rem(k, steps_per_frame) == 0 || k == total_steps
                     sim_time = k * obj.model.tstp;
-                    target_wall_time = sim_time / speed_scale;
-                    current_wall_time = toc;
                     
-                    wait_time = target_wall_time - current_wall_time;
-                    if wait_time > 0.001
-                        pause(wait_time);
+                    if ~isinf(speed_scale)
+                        target_wall_time = sim_time / speed_scale;
+                        current_wall_time = toc;
+                        wait_time = target_wall_time - current_wall_time;
+                        if wait_time > 0.001
+                            pause(wait_time);
+                            current_wall_time = toc;
+                        end
+                    else
                         current_wall_time = toc;
                     end
                     
