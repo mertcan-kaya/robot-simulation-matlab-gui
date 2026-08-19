@@ -15,6 +15,7 @@ classdef SimulationModel < handle
         % Simulation Timing & Trajectory Space
         tstp = 0.001;
         tfin_trj = 0;
+        trj_on = 1;    % 1: Trajectory interpolation enabled, 0: Live reference tracking
         trj_profile = 3;
         trj_profile_text = 'Quintic';
         trj_space = 0; % 0: Joint Space, 1: Task Space

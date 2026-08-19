@@ -80,26 +80,34 @@ classdef SimulationEngine < handle
                     obj.model.fbk.q_vel = obj.model.act.q_vel;
                     obj.model.fbk.q_pos = obj.model.act.q_pos;
                     
-                    if obj.model.trj_space == 1
-                        invConfig.inv_geo_type = obj.model.inv_geo_type;
-                        invConfig.robot_model = obj.model.robot_model;
-                        invConfig.TI_0 = obj.model.TI_0;
-                        invConfig.inv_geo_trn = obj.model.inv_geo_trn;
-                        invConfig.kp_inv = obj.model.kp_inv;
-                        invConfig.kr_inv = obj.model.kr_inv;
-                        invConfig.kp_trn = obj.model.kp_trn;
-                        invConfig.kr_trn = obj.model.kr_trn;
-                        
-                        ini_x = [obj.model.ini.t_pos; obj.model.ini.r_pos];
-                        fin_x = [obj.model.fin.t_pos; obj.model.fin.r_pos];
-                        
-                        [obj.model.des.q_pos, obj.model.des.q_vel, obj.model.des.q_acc] = ...
-                            robotics.engines.TrajectoryEngine.generateTaskSpaceTrajectory(...
-                                trjConfig, obj.robot, invConfig, obj.model.kin, ini_x, fin_x, ...
-                                obj.model.fbk.q_pos, k, obj.model.eulerSet);
+                    if obj.model.trj_on == 0
+                        % Live reference tracking mode (no trajectory interpolation)
+                        obj.model.des.q_pos = obj.model.fin.q_pos;
+                        obj.model.des.q_vel = zeros(obj.model.kin.n, 1);
+                        obj.model.des.q_acc = zeros(obj.model.kin.n, 1);
                     else
-                        [obj.model.des.q_pos, obj.model.des.q_vel, obj.model.des.q_acc] = ...
-                            robotics.engines.TrajectoryEngine.generateTrajectory(trjConfig, obj.model.kin, obj.model.ini.q_pos, obj.model.fin.q_pos, k);
+                        % Trajectory interpolation mode (Joint vs Task)
+                        if obj.model.trj_space == 1
+                            invConfig.inv_geo_type = obj.model.inv_geo_type;
+                            invConfig.robot_model = obj.model.robot_model;
+                            invConfig.TI_0 = obj.model.TI_0;
+                            invConfig.inv_geo_trn = obj.model.inv_geo_trn;
+                            invConfig.kp_inv = obj.model.kp_inv;
+                            invConfig.kr_inv = obj.model.kr_inv;
+                            invConfig.kp_trn = obj.model.kp_trn;
+                            invConfig.kr_trn = obj.model.kr_trn;
+                            
+                            ini_x = [obj.model.ini.t_pos; obj.model.ini.r_pos];
+                            fin_x = [obj.model.fin.t_pos; obj.model.fin.r_pos];
+                            
+                            [obj.model.des.q_pos, obj.model.des.q_vel, obj.model.des.q_acc] = ...
+                                robotics.engines.TrajectoryEngine.generateTaskSpaceTrajectory(...
+                                    trjConfig, obj.robot, invConfig, obj.model.kin, ini_x, fin_x, ...
+                                    obj.model.fbk.q_pos, k, obj.model.eulerSet);
+                        else
+                            [obj.model.des.q_pos, obj.model.des.q_vel, obj.model.des.q_acc] = ...
+                                robotics.engines.TrajectoryEngine.generateTrajectory(trjConfig, obj.model.kin, obj.model.ini.q_pos, obj.model.fin.q_pos, k);
+                        end
                     end
                 end
                 

@@ -648,54 +648,82 @@ classdef MainApp < matlab.apps.AppBase
                 app.RunButton.Enable = "on";
                 app.StopButton.Enable = "off";
             end
-
             app.SimModeSwitchLabel.Enable = en;
             app.SimModeSwitch.Enable = en;
             app.SpeedxSpinnerLabel.Enable = en;
             app.SpeedxSpinner.Enable = en;
             app.StepsEditFieldLabel.Enable = en;
             app.StepsEditField.Enable = en;
-            if app.sim_mode == 1
+
+            % FinalsEditField is editable when in dynamic mode with trj_on == 0 and not running
+            if app.sim_mode == 1 && app.controller.model.trj_on == 0
                 app.FinalsEditFieldLabel.Enable = en;
                 app.FinalsEditField.Enable = en;
+            else
+                app.FinalsEditFieldLabel.Enable = 'off';
+                app.FinalsEditField.Enable = 'off';
+            end
+
+            % OnButton: Always off (disabled) in Kinematic mode, enabled in Dynamic when not running
+            if app.sim_mode == 0
+                app.OnButton.Value = true;
+                app.OnButton.Enable = 'off';
+                app.controller.model.trj_on = 1;
+            else
+                app.OnButton.Enable = en;
             end
 
             % Joint controls
             n = app.controller.model.kin.n;
             for j = 1:7
+                % Initial positions only editable when stopped
                 if ~running && j <= n
-                    s = 'on';
+                    s_ini = 'on';
                 else
-                    s = 'off';
+                    s_ini = 'off';
                 end
-                app.JointUI.ini.sliders(j).Enable  = s;
-                app.JointUI.ini.spinners(j).Enable = s;
-                app.JointUI.ini.labels(j).Enable   = s;
-                app.JointUI.fin.sliders(j).Enable  = s;
-                app.JointUI.fin.spinners(j).Enable = s;
-                app.JointUI.fin.labels(j).Enable   = s;
+                app.JointUI.ini.sliders(j).Enable  = s_ini;
+                app.JointUI.ini.spinners(j).Enable = s_ini;
+                app.JointUI.ini.labels(j).Enable   = s_ini;
+
+                % Final positions editable when stopped OR when running in dynamic mode with trj_on == 0
+                if j <= n && (~running || (app.sim_mode == 1 && app.controller.model.trj_on == 0))
+                    s_fin = 'on';
+                else
+                    s_fin = 'off';
+                end
+                app.JointUI.fin.sliders(j).Enable  = s_fin;
+                app.JointUI.fin.spinners(j).Enable = s_fin;
+                app.JointUI.fin.labels(j).Enable   = s_fin;
             end
 
             % Task space controls
-            taskControls = [app.XAxisInitialLabel, app.XAxisInitialSlider, app.XAxisInitialSpinner, ...
-                            app.YAxisInitialLabel, app.YAxisInitialSlider, app.YAxisInitialSpinner, ...
-                            app.ZAxisInitialLabel, app.ZAxisInitialSlider, app.ZAxisInitialSpinner, ...
-                            app.PhiInitialLabel, app.PhiInitialSlider, app.PhiInitialSpinner, ...
-                            app.ThetaInitialLabel, app.ThetaInitialSlider, app.ThetaInitialSpinner, ...
-                            app.PsiInitialLabel, app.PsiInitialSlider, app.PsiInitialSpinner, ...
-                            app.GripperTaskInitialLabel, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner];
-            if ~running || app.controller.model.trj_profile ~= 0
-                taskControlsFin = [app.XAxisFinalLabel, app.XAxisFinalSlider, app.XAxisFinalSpinner, ...
-                                   app.YAxisFinalLabel, app.YAxisFinalSlider, app.YAxisFinalSpinner, ...
-                                   app.ZAxisFinalLabel, app.ZAxisFinalSlider, app.ZAxisFinalSpinner, ...
-                                   app.PhiFinalLabel, app.PhiFinalSlider, app.PhiFinalSpinner, ...
-                                   app.ThetaFinalLabel, app.ThetaFinalSlider, app.ThetaFinalSpinner, ...
-                                   app.PsiFinalLabel, app.PsiFinalSlider, app.PsiFinalSpinner, ...
-                                   app.GripperTaskFinalLabel, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner];
-                taskControls = [taskControls, taskControlsFin];
+            taskControlsIni = [app.XAxisInitialLabel, app.XAxisInitialSlider, app.XAxisInitialSpinner, ...
+                               app.YAxisInitialLabel, app.YAxisInitialSlider, app.YAxisInitialSpinner, ...
+                               app.ZAxisInitialLabel, app.ZAxisInitialSlider, app.ZAxisInitialSpinner, ...
+                               app.PhiInitialLabel, app.PhiInitialSlider, app.PhiInitialSpinner, ...
+                               app.ThetaInitialLabel, app.ThetaInitialSlider, app.ThetaInitialSpinner, ...
+                               app.PsiInitialLabel, app.PsiInitialSlider, app.PsiInitialSpinner, ...
+                               app.GripperTaskInitialLabel, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner];
+            for k = 1:numel(taskControlsIni)
+                taskControlsIni(k).Enable = en;
             end
-            for k = 1:numel(taskControls)
-                taskControls(k).Enable = en;
+
+            taskControlsFin = [app.XAxisFinalLabel, app.XAxisFinalSlider, app.XAxisFinalSpinner, ...
+                               app.YAxisFinalLabel, app.YAxisFinalSlider, app.YAxisFinalSpinner, ...
+                               app.ZAxisFinalLabel, app.ZAxisFinalSlider, app.ZAxisFinalSpinner, ...
+                               app.PhiFinalLabel, app.PhiFinalSlider, app.PhiFinalSpinner, ...
+                               app.ThetaFinalLabel, app.ThetaFinalSlider, app.ThetaFinalSpinner, ...
+                               app.PsiFinalLabel, app.PsiFinalSlider, app.PsiFinalSpinner, ...
+                               app.GripperTaskFinalLabel, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner];
+            
+            if ~running || (app.sim_mode == 1 && app.controller.model.trj_on == 0)
+                s_task_fin = 'on';
+            else
+                s_task_fin = 'off';
+            end
+            for k = 1:numel(taskControlsFin)
+                taskControlsFin(k).Enable = s_task_fin;
             end
 
             if ~running && app.controller.model.ee_att == 1 && (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 3)
@@ -709,23 +737,37 @@ classdef MainApp < matlab.apps.AppBase
                 app.GripperInitialLabel.Enable = 'off';
                 app.GripperInitialSlider.Enable = 'off';
                 app.GripperInitialSpinner.Enable = 'off';
-                if running
+                if running && (app.sim_mode == 0 || app.controller.model.trj_on == 1)
                     app.GripperFinalLabel.Enable = 'off';
                     app.GripperFinalSlider.Enable = 'off';
                     app.GripperFinalSpinner.Enable = 'off';
                 end
             end
 
-            app.InterpolationLabel.Enable = en;
-            app.InterpolationDropDown.Enable = en;
-            app.LimitsLabel.Enable = en;
-            app.VelEditFieldLabel.Enable = en;
-            app.VelEditField.Enable = en;
-            app.VelPrcLabel.Enable = en;
-            if app.controller.model.trj_profile ~= 1
-                app.AccEditFieldLabel.Enable = en;
-                app.AccEditField.Enable = en;
-                app.AccPrcLabel.Enable = en;
+            % Trajectory sub-controls: enabled only when trj_on == 1 and not running
+            if app.controller.model.trj_on == 1
+                trj_en = en;
+            else
+                trj_en = 'off';
+            end
+
+            app.InterpolationLabel.Enable = trj_en;
+            app.InterpolationDropDown.Enable = trj_en;
+            app.TrajSpaceButtonGroup.Enable = trj_en;
+            app.JointButton.Enable = trj_en;
+            app.TaskButton.Enable = trj_en;
+            app.LimitsLabel.Enable = trj_en;
+            app.VelEditFieldLabel.Enable = trj_en;
+            app.VelEditField.Enable = trj_en;
+            app.VelPrcLabel.Enable = trj_en;
+            if app.controller.model.trj_profile ~= 1 && app.controller.model.trj_on == 1
+                app.AccEditFieldLabel.Enable = trj_en;
+                app.AccEditField.Enable = trj_en;
+                app.AccPrcLabel.Enable = trj_en;
+            else
+                app.AccEditFieldLabel.Enable = 'off';
+                app.AccEditField.Enable = 'off';
+                app.AccPrcLabel.Enable = 'off';
             end
             
             if (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 4 || app.controller.model.robot_model == 5) && app.controller.model.line_on == 0
@@ -759,26 +801,49 @@ classdef MainApp < matlab.apps.AppBase
             if strcmpi(app.SimModeSwitch.Value,'Kinematic') == 1
                 app.sim_mode = 0;
                 app.controller.model.tstp = 0.001;
+                app.OnButton.Value = true;
+                app.OnButton.Enable = "off";
+                app.controller.model.trj_on = 1;
                 app.FinalsEditField.Enable = "off";
                 app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
             else
                 app.sim_mode = 1;
                 app.controller.model.tstp = 0.0001;
-                app.FinalsEditField.Enable = "on";
-                app.InterpolationDropDown.Items = {'No interpolation', 'Linear', 'Cubic', 'Quintic'};
+                app.OnButton.Enable = "on";
+                app.controller.model.trj_on = double(app.OnButton.Value);
+                if app.controller.model.trj_on == 0
+                    app.FinalsEditField.Enable = "on";
+                else
+                    app.FinalsEditField.Enable = "off";
+                end
+                app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
             end
             
-            updateFinTimeTrj(app);
+            updateEnableState(app);
+            if app.controller.model.trj_on == 1
+                updateFinTimeTrj(app);
+            else
+                app.controller.model.tfin = app.FinalsEditField.Value;
+                updateRunButtonState(app);
+            end
             app.StepsEditField.Value = app.controller.model.tstp;
 
         end
 
         function updateRunButtonState(app)
 
-            if app.controller.model.tfin_trj < app.controller.model.tstp
-                app.RunButton.Enable = "off";
+            if app.controller.model.trj_on == 1
+                if app.controller.model.tfin_trj < app.controller.model.tstp
+                    app.RunButton.Enable = "off";
+                else
+                    app.RunButton.Enable = "on";
+                end
             else
-                app.RunButton.Enable = "on";
+                if app.FinalsEditField.Value <= 0
+                    app.RunButton.Enable = "off";
+                else
+                    app.RunButton.Enable = "on";
+                end
             end
             
         end
@@ -786,7 +851,7 @@ classdef MainApp < matlab.apps.AppBase
         function updateFinTimeTrj(app)
             app.controller.updateFinTimeTrj(app.prcnt);
             app.FinalsEditField.Value = app.controller.model.tfin_trj;
-            if app.sim_mode == 1
+            if app.sim_mode == 1 && app.controller.model.trj_on == 1
                 app.controller.model.tfin = app.controller.model.tfin_trj;
             end
         end
@@ -1354,6 +1419,11 @@ classdef MainApp < matlab.apps.AppBase
             else
                 app.controller.model.trj_space = 0;
             end
+            if app.sim_mode == 0
+                app.controller.model.trj_on = 1;
+            else
+                app.controller.model.trj_on = double(app.OnButton.Value);
+            end
             app.controller.model.eulerSet = app.eulerSet;
             
             app.controller.initRobot()
@@ -1364,7 +1434,11 @@ classdef MainApp < matlab.apps.AppBase
             app.q_actq1q2q3q4q5q6q7degLabel.Visible = "on";
 
             if app.sim_mode == 1
-                app.controller.model.tfin = app.FinalsEditField.Value;
+                if app.controller.model.trj_on == 1
+                    app.controller.model.tfin = app.controller.model.tfin_trj;
+                else
+                    app.controller.model.tfin = app.FinalsEditField.Value;
+                end
                 app.x1RealtimeLabel.Text = sprintf('(x%.1f Real-time)', app.controller.model.time_const);
                 app.controller.runSimulation()
             else
@@ -1903,8 +1977,20 @@ classdef MainApp < matlab.apps.AppBase
 
         % Value changed function: OnButton
         function OnButtonValueChanged(app, event)
-            value = app.OnButton.Value;
-            
+            if app.sim_mode == 0
+                app.OnButton.Value = true;
+                app.controller.model.trj_on = 1;
+            else
+                app.controller.model.trj_on = double(app.OnButton.Value);
+            end
+            updateEnableState(app);
+            if app.controller.model.trj_on == 1
+                updateFinTimeTrj(app);
+            else
+                app.FinalsEditField.Enable = "on";
+                app.controller.model.tfin = app.FinalsEditField.Value;
+                updateRunButtonState(app);
+            end
         end
 
         % Changes arrangement of the app based on UIFigure width
