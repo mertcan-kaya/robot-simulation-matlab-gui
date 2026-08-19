@@ -18,11 +18,12 @@ runner.addPlugin(DiagnosticsRecordingPlugin);
 result = runner.run(suite);
 
 disp('========================================');
-if all([result.Passed])
+hasFailures = any([result.Failed]) || any([result.Errored]);
+if ~hasFailures
     disp('   ALL TESTS PASSED SUCCESSFULLY!       ');
 else
     disp('   SOME TESTS FAILED!                   ');
-    assert(all([result.Passed]), 'One or more unit tests failed.');
+    assert(~hasFailures, 'One or more unit tests failed or errored.');
 end
 disp('========================================');
 

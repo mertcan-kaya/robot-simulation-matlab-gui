@@ -10,6 +10,13 @@ classdef TestMainApp < matlab.uitest.TestCase
 
     methods(TestMethodSetup)
         function launchApp(testCase)
+            % Ensure an active display exists for UI gestures on Linux
+            if isunix && ~ismac
+                displayEnv = getenv('DISPLAY');
+                testCase.assumeNotEmpty(displayEnv, ...
+                    'Skipping UI gesture tests: active DISPLAY is required for matlab.uitest gestures.');
+            end
+
             % Instantiate MainApp before each test
             testCase.App = MainApp;
             
