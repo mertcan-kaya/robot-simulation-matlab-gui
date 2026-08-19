@@ -11,6 +11,7 @@ classdef SimulationModel < handle
         coord_frame_on = 1;
         ghost_on = 1;
         line_on = 0;
+        sim_mode = 0; % 0: Kinematic, 1: Dynamic
         
         % Simulation Timing & Trajectory Space
         tstp = 0.001;

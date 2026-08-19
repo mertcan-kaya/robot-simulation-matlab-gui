@@ -845,6 +845,7 @@ classdef MainApp < matlab.apps.AppBase
                 app.sim_mode = 1;
                 app.controller.model.tstp = 0.0001;
             end
+            app.controller.model.sim_mode = app.sim_mode;
             app.StepsEditField.Value = app.controller.model.tstp;
             app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
             app.OnButtonValueChanged();

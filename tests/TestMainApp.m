@@ -215,5 +215,37 @@ classdef TestMainApp < matlab.uitest.TestCase
             testCase.verifyEqual(testCase.App.controller.model.task_mode, 0);
         end
 
+        function testSwitch3DModelWhileRunning(testCase)
+            % Set distinct initial and final joint configurations
+            testCase.choose(testCase.App.RightTabGroup, 1); % Initial Joint
+            testCase.type(testCase.App.Axis1InitialSpinner, -20);
+            testCase.choose(testCase.App.RightTabGroup, 2); % Final Joint
+            testCase.type(testCase.App.Axis1FinalSpinner, 45);
+
+            % Simulate running state with intermediate actual and target positions
+            testCase.App.controller.model.running_flag = 1;
+            testCase.App.controller.model.act.q_pos(1) = deg2rad(10);
+            testCase.App.controller.model.des.q_pos(1) = deg2rad(45);
+
+            % Toggle 3D Models switch while running
+            testCase.choose(testCase.App.DmodelsSwitch, 'Off');
+            testCase.App.DmodelsSwitchValueChanged();
+
+            % Verify that the target robot and active states are NOT corrupted or reset to ini
+            testCase.verifyEqual(rad2deg(testCase.App.controller.model.act.q_pos(1)), 10, 'AbsTol', 1e-2);
+            testCase.verifyEqual(rad2deg(testCase.App.controller.model.fin.q_pos(1)), 45, 'AbsTol', 1e-2);
+            testCase.verifyEqual(rad2deg(testCase.App.controller.model.des.q_pos(1)), 45, 'AbsTol', 1e-2);
+
+            % Toggle back to 3D CAD mode
+            testCase.choose(testCase.App.DmodelsSwitch, 'On');
+            testCase.App.DmodelsSwitchValueChanged();
+
+            testCase.verifyEqual(rad2deg(testCase.App.controller.model.act.q_pos(1)), 10, 'AbsTol', 1e-2);
+            testCase.verifyEqual(rad2deg(testCase.App.controller.model.fin.q_pos(1)), 45, 'AbsTol', 1e-2);
+            testCase.verifyEqual(rad2deg(testCase.App.controller.model.des.q_pos(1)), 45, 'AbsTol', 1e-2);
+
+            testCase.App.controller.model.running_flag = 0;
+        end
+
     end
 end

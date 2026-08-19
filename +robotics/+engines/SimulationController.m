@@ -189,32 +189,39 @@ classdef SimulationController < handle
                 obj.model.fin.q_pos = zeros(n, 1);
             end
             
-            obj.model.act.q_pos = obj.model.ini.q_pos;
-            obj.model.act.q_vel = zeros(n, 1);
-            obj.model.act.q_acc = zeros(n, 1);
-            
-            obj.model.des.q_pos = obj.model.ini.q_pos;
-            obj.model.des.q_vel = zeros(n, 1);
-            obj.model.des.q_acc = zeros(n, 1);
-            
-            obj.model.fbk.q_pos = obj.model.ini.q_pos;
-            obj.model.fbk.q_vel = zeros(n, 1);
+            % Only reset active dynamic states when NOT running
+            if obj.model.running_flag == 0
+                obj.model.act.q_pos = obj.model.ini.q_pos;
+                obj.model.act.q_vel = zeros(n, 1);
+                obj.model.act.q_acc = zeros(n, 1);
+                
+                obj.model.des.q_pos = obj.model.fin.q_pos;
+                obj.model.des.q_vel = zeros(n, 1);
+                obj.model.des.q_acc = zeros(n, 1);
+                
+                obj.model.fbk.q_pos = obj.model.ini.q_pos;
+                obj.model.fbk.q_vel = zeros(n, 1);
+            end
             
             % Initialize transformation matrices and orientations for ini and fin
             obj.updateForwardKinematics('ini', obj.model.eulerSet);
             obj.updateForwardKinematics('fin', obj.model.eulerSet);
             
-            % Update default control parameters from the robot object
-            if ~isfield(obj.model.ctr, 'algo')
-                obj.model.ctr.algo = 1;
-            end
-            algo = obj.model.ctr.algo;
-            default_ctr = obj.robot.getDefaultControlParams(algo);
-            
-            % Merge default_ctr into obj.model.ctr while keeping algo
-            fields = fieldnames(default_ctr);
-            for i = 1:length(fields)
-                obj.model.ctr.(fields{i}) = default_ctr.(fields{i});
+            % Update default control parameters from the robot object (when stopped)
+            if obj.model.running_flag == 0
+                if ~isfield(obj.model.ctr, 'algo')
+                    obj.model.ctr.algo = 1;
+                end
+                algo = obj.model.ctr.algo;
+                default_ctr = obj.robot.getDefaultControlParams(algo);
+                
+                % Merge default_ctr into obj.model.ctr while keeping algo
+                fields = fieldnames(default_ctr);
+                for i = 1:length(fields)
+                    if ~isfield(obj.model.ctr, fields{i}) || isempty(obj.model.ctr.(fields{i}))
+                        obj.model.ctr.(fields{i}) = default_ctr.(fields{i});
+                    end
+                end
             end
             
             obj.renderer.loadMeshes(obj.model.robot_model, ...

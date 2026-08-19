@@ -476,7 +476,11 @@ function updateView(obj, state)
 
     if state.running_flag == 1
         TactI_h = robotics.engines.KinematicsEngine.getTransMatrix(state.TI_0,state.kin.a_j,state.kin.alpha_j,state.kin.d_j,state.kin.theta_O_j,state.kin.j_type,state.act.q_pos);
-        TdesI_h = robotics.engines.KinematicsEngine.getTransMatrix(state.TI_0,state.kin.a_j,state.kin.alpha_j,state.kin.d_j,state.kin.theta_O_j,state.kin.j_type,state.des.q_pos);
+        if isfield(state, 'sim_mode') && state.sim_mode == 0
+            TdesI_h = state.fin.Ti;
+        else
+            TdesI_h = robotics.engines.KinematicsEngine.getTransMatrix(state.TI_0,state.kin.a_j,state.kin.alpha_j,state.kin.d_j,state.kin.theta_O_j,state.kin.j_type,state.des.q_pos);
+        end
     else
         TactI_h = state.ini.Ti;
         TdesI_h = state.fin.Ti;
