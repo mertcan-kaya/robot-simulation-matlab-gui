@@ -12,11 +12,13 @@ classdef SimulationModel < handle
         ghost_on = 1;
         line_on = 0;
         
-        % Simulation Timing
+        % Simulation Timing & Trajectory Space
         tstp = 0.001;
         tfin_trj = 0;
         trj_profile = 3;
         trj_profile_text = 'Quintic';
+        trj_space = 0; % 0: Joint Space, 1: Task Space
+        eulerSet = 1;  % 1: ZYZ, 2: ZYX, 3: XYZ, 4: ZXZ
         time_const = 1.0;
         tfin = 0;
         

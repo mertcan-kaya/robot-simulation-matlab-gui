@@ -72,10 +72,23 @@ classdef SimulationController < handle
             obj.model.notifyTargetUpdated();
         end
 
+        function setTrajSpace(obj, space)
+            obj.model.trj_space = space;
+            obj.model.notifyTargetUpdated();
+        end
+
         function updateFinTimeTrj(obj, prcnt)
-            obj.model.tfin_trj = robotics.engines.TrajectoryEngine.computeTime(...
-                obj.model.ini.q_pos, obj.model.fin.q_pos, prcnt, obj.model.trj_profile, ...
-                obj.model.kin.q_velLim, obj.model.kin.q_accLim);
+            if isfield(obj.model, 'trj_space') && obj.model.trj_space == 1
+                ini_x = [obj.model.ini.t_pos; obj.model.ini.r_pos];
+                fin_x = [obj.model.fin.t_pos; obj.model.fin.r_pos];
+                obj.model.tfin_trj = robotics.engines.TrajectoryEngine.computeTaskSpaceTime(...
+                    ini_x, fin_x, prcnt, obj.model.trj_profile, ...
+                    obj.model.kin.t_velLim, obj.model.kin.t_accLim);
+            else
+                obj.model.tfin_trj = robotics.engines.TrajectoryEngine.computeTime(...
+                    obj.model.ini.q_pos, obj.model.fin.q_pos, prcnt, obj.model.trj_profile, ...
+                    obj.model.kin.q_velLim, obj.model.kin.q_accLim);
+            end
             obj.model.notifyTargetUpdated();
         end
         

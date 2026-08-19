@@ -37,7 +37,7 @@ classdef MainApp < matlab.apps.AppBase
         LeftTabGroup                  matlab.ui.container.TabGroup
         KinematicsTab                 matlab.ui.container.Tab
         jLabel                        matlab.ui.control.Label
-        Panel                         matlab.ui.container.Panel
+        JointTypePanel                matlab.ui.container.Panel
         q_7ButtonGroup                matlab.ui.container.ButtonGroup
         q_7Label                      matlab.ui.control.Label
         Button2_7                     matlab.ui.control.RadioButton
@@ -92,14 +92,18 @@ classdef MainApp < matlab.apps.AppBase
         SpringCheckBox                matlab.ui.control.CheckBox
         AdditionalmodelsLabel         matlab.ui.control.Label
         ControlTab                    matlab.ui.container.Tab
+        ControlSpaceDropDown          matlab.ui.control.DropDown
+        ControlSpaceDropDownLabel     matlab.ui.control.Label
+        CompensationsPanel            matlab.ui.container.Panel
+        CompensationsLabel            matlab.ui.control.Label
+        CompGravityCheckBox           matlab.ui.control.CheckBox
+        CompFrictionCheckBox          matlab.ui.control.CheckBox
+        CompSpringCheckBox            matlab.ui.control.CheckBox
         ControlTypeDropDown           matlab.ui.control.DropDown
         ControlTypeDropDownLabel      matlab.ui.control.Label
         CycleEditField                matlab.ui.control.NumericEditField
         CycleEditFieldLabel           matlab.ui.control.Label
         secLabel_2                    matlab.ui.control.Label
-        CompGravityCheckBox           matlab.ui.control.CheckBox
-        CompFrictionCheckBox          matlab.ui.control.CheckBox
-        CompSpringCheckBox            matlab.ui.control.CheckBox
         GainTable                     matlab.ui.control.Table
         ControlGainsLabel             matlab.ui.control.Label
         CenterPanel                   matlab.ui.container.Panel
@@ -117,7 +121,7 @@ classdef MainApp < matlab.apps.AppBase
         UIAxes                        matlab.ui.control.UIAxes
         RightPanel                    matlab.ui.container.Panel
         TrajectoryPanel               matlab.ui.container.Panel
-        ButtonGroup_8                 matlab.ui.container.ButtonGroup
+        TrajSpaceButtonGroup          matlab.ui.container.ButtonGroup
         TaskButton                    matlab.ui.control.RadioButton
         JointButton                   matlab.ui.control.RadioButton
         VelEditField                  matlab.ui.control.NumericEditField
@@ -416,7 +420,7 @@ classdef MainApp < matlab.apps.AppBase
             C1 = table2cell(T);
             C = [T.Properties.RowNames, vertcat(C1{:})];
             app.DHTable.Data = C;
-            app.DHTable.ColumnName = {''; 'a_j'; [char(945) '_j']; 'd_j'; [char(952) '_j']};
+            app.DHTable.ColumnName = {''; 'a_j'; [char(945) '_j']; 'd_j'; [char(952) '_O_j']};
             app.DHTable.RowName = [];
             app.DHTable.ColumnWidth = {15, 55, 55, 55, 55};
             colStyle = uistyle('BackgroundColor', app.DHTable.BackgroundColor(2,:), 'FontWeight', 'bold'); 
@@ -540,6 +544,7 @@ classdef MainApp < matlab.apps.AppBase
                 end
                 vIni = min(max(vIni, lims(1)), lims(2));
                 vFin = min(max(vFin, lims(1)), lims(2));
+
                 app.GripperInitialLabel.Text     = unitText;
                 app.GripperFinalLabel.Text       = unitText;
                 app.GripperInitialSlider.Limits  = lims;
@@ -615,6 +620,7 @@ classdef MainApp < matlab.apps.AppBase
                 end
                 vIni = min(max(vIni, lims(1)), lims(2));
                 vFin = min(max(vFin, lims(1)), lims(2));
+
                 app.GripperTaskInitialLabel.Text     = unitText;
                 app.GripperTaskFinalLabel.Text       = unitText;
                 app.GripperTaskInitialSlider.Limits  = lims;
@@ -711,6 +717,9 @@ classdef MainApp < matlab.apps.AppBase
 
             app.InterpolationLabel.Enable = en;
             app.InterpolationDropDown.Enable = en;
+            app.TrajSpaceButtonGroup.Enable = en;
+            app.JointButton.Enable = en;
+            app.TaskButton.Enable = en;
             app.LimitsLabel.Enable = en;
             app.VelEditFieldLabel.Enable = en;
             app.VelEditField.Enable = en;
@@ -1416,8 +1425,6 @@ classdef MainApp < matlab.apps.AppBase
         % Value changed function: StepsEditField
         function StepsEditFieldValueChanged(app, event)
             app.controller.model.tstp = app.StepsEditField.Value;
-            updateFinTimeTrj(app);
-            updateRunButtonState(app);
         end
 
         % Value changed function: FinalsEditField
@@ -1872,6 +1879,24 @@ classdef MainApp < matlab.apps.AppBase
             app.controller.model.time_const = val;
         end
 
+        % Value changed function: ControlSpaceDropDown
+        function ControlSpaceDropDownValueChanged(app, event)
+            value = app.ControlSpaceDropDown.Value;
+            
+        end
+
+        % Selection changed function: TrajSpaceButtonGroup
+        function TrajSpaceButtonGroupSelectionChanged(app, event)
+            selectedButton = app.TrajSpaceButtonGroup.SelectedObject;
+            if selectedButton == app.TaskButton
+                app.controller.setTrajSpace(1);
+            else
+                app.controller.setTrajSpace(0);
+            end
+            updateFinTimeTrj(app);
+            app.FinalsEditField.Value = app.controller.model.tfin_trj;
+        end
+
         % Changes arrangement of the app based on UIFigure width
         function updateAppLayout(app, event)
             currentFigureWidth = app.UIFigure.Position(3);
@@ -2011,12 +2036,12 @@ classdef MainApp < matlab.apps.AppBase
             app.mmdegmmdegLabel.Position = [46 55 203 22];
             app.mmdegmmdegLabel.Text = '[mm]         [deg]         [mm]         [deg]';
 
-            % Create Panel
-            app.Panel = uipanel(app.KinematicsTab);
-            app.Panel.Position = [244 78 65 216];
+            % Create JointTypePanel
+            app.JointTypePanel = uipanel(app.KinematicsTab);
+            app.JointTypePanel.Position = [244 78 65 216];
 
             % Create q_jPanel
-            app.q_jPanel = uipanel(app.Panel);
+            app.q_jPanel = uipanel(app.JointTypePanel);
             app.q_jPanel.Position = [0 188 65 28];
 
             % Create q_jRPLabel
@@ -2026,7 +2051,7 @@ classdef MainApp < matlab.apps.AppBase
             app.q_jRPLabel.Text = 'q_j   R   P';
 
             % Create q_1ButtonGroup
-            app.q_1ButtonGroup = uibuttongroup(app.Panel);
+            app.q_1ButtonGroup = uibuttongroup(app.JointTypePanel);
             app.q_1ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_1ButtonGroupSelectionChanged, true);
             app.q_1ButtonGroup.Position = [0 165 65 24];
 
@@ -2047,7 +2072,7 @@ classdef MainApp < matlab.apps.AppBase
             app.q_1Label.Text = 'q_1';
 
             % Create q_2ButtonGroup
-            app.q_2ButtonGroup = uibuttongroup(app.Panel);
+            app.q_2ButtonGroup = uibuttongroup(app.JointTypePanel);
             app.q_2ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_2ButtonGroupSelectionChanged, true);
             app.q_2ButtonGroup.Position = [0 141 65 25];
 
@@ -2068,7 +2093,7 @@ classdef MainApp < matlab.apps.AppBase
             app.q_2Label.Text = 'q_2';
 
             % Create q_3ButtonGroup
-            app.q_3ButtonGroup = uibuttongroup(app.Panel);
+            app.q_3ButtonGroup = uibuttongroup(app.JointTypePanel);
             app.q_3ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_3ButtonGroupSelectionChanged, true);
             app.q_3ButtonGroup.Position = [0 118 65 24];
 
@@ -2089,7 +2114,7 @@ classdef MainApp < matlab.apps.AppBase
             app.q_3Label.Text = 'q_3';
 
             % Create q_4ButtonGroup
-            app.q_4ButtonGroup = uibuttongroup(app.Panel);
+            app.q_4ButtonGroup = uibuttongroup(app.JointTypePanel);
             app.q_4ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_4ButtonGroupSelectionChanged, true);
             app.q_4ButtonGroup.Position = [0 95 65 24];
 
@@ -2110,7 +2135,7 @@ classdef MainApp < matlab.apps.AppBase
             app.q_4Label.Text = 'q_4';
 
             % Create q_5ButtonGroup
-            app.q_5ButtonGroup = uibuttongroup(app.Panel);
+            app.q_5ButtonGroup = uibuttongroup(app.JointTypePanel);
             app.q_5ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_5ButtonGroupSelectionChanged, true);
             app.q_5ButtonGroup.Position = [0 72 65 24];
 
@@ -2131,7 +2156,7 @@ classdef MainApp < matlab.apps.AppBase
             app.q_5Label.Text = 'q_5';
 
             % Create q_6ButtonGroup
-            app.q_6ButtonGroup = uibuttongroup(app.Panel);
+            app.q_6ButtonGroup = uibuttongroup(app.JointTypePanel);
             app.q_6ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_6ButtonGroupSelectionChanged, true);
             app.q_6ButtonGroup.Position = [0 48 65 25];
 
@@ -2152,7 +2177,7 @@ classdef MainApp < matlab.apps.AppBase
             app.q_6Label.Text = 'q_6';
 
             % Create q_7ButtonGroup
-            app.q_7ButtonGroup = uibuttongroup(app.Panel);
+            app.q_7ButtonGroup = uibuttongroup(app.JointTypePanel);
             app.q_7ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_7ButtonGroupSelectionChanged, true);
             app.q_7ButtonGroup.Position = [0 25 65 24];
 
@@ -2292,7 +2317,7 @@ classdef MainApp < matlab.apps.AppBase
 
             % Create ControlGainsLabel
             app.ControlGainsLabel = uilabel(app.ControlTab);
-            app.ControlGainsLabel.Position = [41 267 78 22];
+            app.ControlGainsLabel.Position = [41 247 78 22];
             app.ControlGainsLabel.Text = 'Control Gains';
 
             % Create GainTable
@@ -2300,43 +2325,25 @@ classdef MainApp < matlab.apps.AppBase
             app.GainTable.ColumnName = {'Kp'; 'Ki'; 'Kd'};
             app.GainTable.RowName = {'1'; '2'; '3'; '4'; '5'; '6'};
             app.GainTable.CellEditCallback = createCallbackFcn(app, @GainTableCellEdit, true);
-            app.GainTable.Position = [40 72 237 192];
-
-            % Create CompSpringCheckBox
-            app.CompSpringCheckBox = uicheckbox(app.ControlTab);
-            app.CompSpringCheckBox.Enable = 'off';
-            app.CompSpringCheckBox.Text = 'Spring';
-            app.CompSpringCheckBox.Position = [134 40 57 22];
-
-            % Create CompFrictionCheckBox
-            app.CompFrictionCheckBox = uicheckbox(app.ControlTab);
-            app.CompFrictionCheckBox.Enable = 'off';
-            app.CompFrictionCheckBox.Text = 'Friction';
-            app.CompFrictionCheckBox.Position = [213 40 61 22];
-
-            % Create CompGravityCheckBox
-            app.CompGravityCheckBox = uicheckbox(app.ControlTab);
-            app.CompGravityCheckBox.ValueChangedFcn = createCallbackFcn(app, @CompGravityCheckBoxValueChanged, true);
-            app.CompGravityCheckBox.Text = 'Gravity';
-            app.CompGravityCheckBox.Position = [53 40 60 22];
+            app.GainTable.Position = [40 52 237 192];
 
             % Create secLabel_2
             app.secLabel_2 = uilabel(app.ControlTab);
             app.secLabel_2.Enable = 'off';
-            app.secLabel_2.Position = [288 299 25 22];
+            app.secLabel_2.Position = [287 260 25 22];
             app.secLabel_2.Text = 'sec';
 
             % Create CycleEditFieldLabel
             app.CycleEditFieldLabel = uilabel(app.ControlTab);
             app.CycleEditFieldLabel.HorizontalAlignment = 'center';
-            app.CycleEditFieldLabel.Position = [200 299 36 22];
+            app.CycleEditFieldLabel.Position = [199 260 36 22];
             app.CycleEditFieldLabel.Text = 'Cycle';
 
             % Create CycleEditField
             app.CycleEditField = uieditfield(app.ControlTab, 'numeric');
             app.CycleEditField.Limits = [1e-05 1];
             app.CycleEditField.ValueChangedFcn = createCallbackFcn(app, @CycleEditFieldValueChanged, true);
-            app.CycleEditField.Position = [238 299 46 22];
+            app.CycleEditField.Position = [237 260 46 22];
             app.CycleEditField.Value = 0.004;
 
             % Create ControlTypeDropDownLabel
@@ -2350,6 +2357,45 @@ classdef MainApp < matlab.apps.AppBase
             app.ControlTypeDropDown.ValueChangedFcn = createCallbackFcn(app, @ControlTypeDropDownValueChanged, true);
             app.ControlTypeDropDown.Position = [83 299 60 22];
             app.ControlTypeDropDown.Value = 'PID';
+
+            % Create CompensationsPanel
+            app.CompensationsPanel = uipanel(app.ControlTab);
+            app.CompensationsPanel.Position = [6 6 307 40];
+
+            % Create CompSpringCheckBox
+            app.CompSpringCheckBox = uicheckbox(app.CompensationsPanel);
+            app.CompSpringCheckBox.Enable = 'off';
+            app.CompSpringCheckBox.Text = 'Spring';
+            app.CompSpringCheckBox.Position = [173 9 57 22];
+
+            % Create CompFrictionCheckBox
+            app.CompFrictionCheckBox = uicheckbox(app.CompensationsPanel);
+            app.CompFrictionCheckBox.Enable = 'off';
+            app.CompFrictionCheckBox.Text = 'Friction';
+            app.CompFrictionCheckBox.Position = [240 9 61 22];
+
+            % Create CompGravityCheckBox
+            app.CompGravityCheckBox = uicheckbox(app.CompensationsPanel);
+            app.CompGravityCheckBox.ValueChangedFcn = createCallbackFcn(app, @CompGravityCheckBoxValueChanged, true);
+            app.CompGravityCheckBox.Text = 'Gravity';
+            app.CompGravityCheckBox.Position = [101 9 60 22];
+
+            % Create CompensationsLabel
+            app.CompensationsLabel = uilabel(app.CompensationsPanel);
+            app.CompensationsLabel.Position = [5 8 92 22];
+            app.CompensationsLabel.Text = 'Compensations:';
+
+            % Create ControlSpaceDropDownLabel
+            app.ControlSpaceDropDownLabel = uilabel(app.ControlTab);
+            app.ControlSpaceDropDownLabel.Position = [166 299 81 22];
+            app.ControlSpaceDropDownLabel.Text = 'Control Space';
+
+            % Create ControlSpaceDropDown
+            app.ControlSpaceDropDown = uidropdown(app.ControlTab);
+            app.ControlSpaceDropDown.Items = {'Joint', 'Task'};
+            app.ControlSpaceDropDown.ValueChangedFcn = createCallbackFcn(app, @ControlSpaceDropDownValueChanged, true);
+            app.ControlSpaceDropDown.Position = [249 299 58 22];
+            app.ControlSpaceDropDown.Value = 'Joint';
 
             % Create SimulationPanel
             app.SimulationPanel = uipanel(app.LeftPanel);
@@ -3168,7 +3214,7 @@ classdef MainApp < matlab.apps.AppBase
 
             % Create InterpolationDropDown
             app.InterpolationDropDown = uidropdown(app.TrajectoryPanel);
-            app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
+            app.InterpolationDropDown.Items = {'None', 'Linear', 'Cubic', 'Quintic'};
             app.InterpolationDropDown.ValueChangedFcn = createCallbackFcn(app, @InterpolationDropDownValueChanged, true);
             app.InterpolationDropDown.Position = [90 39 130 22];
             app.InterpolationDropDown.Value = 'Quintic';
@@ -3199,21 +3245,20 @@ classdef MainApp < matlab.apps.AppBase
             app.VelEditField.Position = [89 8 30 22];
             app.VelEditField.Value = 10;
 
-            % Create ButtonGroup_8
-            app.ButtonGroup_8 = uibuttongroup(app.TrajectoryPanel);
-            app.ButtonGroup_8.BorderType = 'none';
-            app.ButtonGroup_8.Position = [229 8 100 45];
+            % Create TrajSpaceButtonGroup
+            app.TrajSpaceButtonGroup = uibuttongroup(app.TrajectoryPanel);
+            app.TrajSpaceButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @TrajSpaceButtonGroupSelectionChanged, true);
+            app.TrajSpaceButtonGroup.BorderType = 'none';
+            app.TrajSpaceButtonGroup.Position = [229 8 100 45];
 
             % Create JointButton
-            app.JointButton = uiradiobutton(app.ButtonGroup_8);
-            app.JointButton.Enable = 'off';
+            app.JointButton = uiradiobutton(app.TrajSpaceButtonGroup);
             app.JointButton.Text = 'Joint';
             app.JointButton.Position = [42 26 58 22];
             app.JointButton.Value = true;
 
             % Create TaskButton
-            app.TaskButton = uiradiobutton(app.ButtonGroup_8);
-            app.TaskButton.Enable = 'off';
+            app.TaskButton = uiradiobutton(app.TrajSpaceButtonGroup);
             app.TaskButton.Text = 'Task';
             app.TaskButton.Position = [42 4 58 22];
 

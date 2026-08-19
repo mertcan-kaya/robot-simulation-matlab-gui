@@ -103,5 +103,24 @@ classdef TestSpatialMath < matlab.unittest.TestCase
             testCase.verifyEqual(rj_i, [-a*cos(theta); a*sin(theta); -d], 'AbsTol', 1e-12);
         end
 
+        function testEulerJacobianMapping(testCase)
+            % Test E_R and E_Rinv consistency: E_R * E_Rinv == eye(3)
+            r_pos = [0.4; 0.6; -0.3];
+            r_vel = [0.1; -0.2; 0.15];
+
+            for seq = 1:4
+                E_R = robotics.math.getE_Rmatrix(r_pos, seq);
+                E_Rinv = robotics.math.getE_RinvMatrix(r_pos, seq);
+                E_RDot = robotics.math.getE_RDotMatrix(r_pos, r_vel, seq);
+
+                testCase.verifySize(E_R, [3, 3]);
+                testCase.verifySize(E_Rinv, [3, 3]);
+                testCase.verifySize(E_RDot, [3, 3]);
+
+                testCase.verifyEqual(E_R * E_Rinv, eye(3), 'AbsTol', 1e-8);
+                testCase.verifyEqual(E_Rinv * E_R, eye(3), 'AbsTol', 1e-8);
+            end
+        end
+
     end
 end
