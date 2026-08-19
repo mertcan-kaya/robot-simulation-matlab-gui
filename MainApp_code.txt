@@ -672,8 +672,13 @@ classdef MainApp < matlab.apps.AppBase
             end
             app.SimModeSwitchLabel.Enable = en;
             app.SimModeSwitch.Enable = en;
-            app.SpeedxSpinnerLabel.Enable = en;
-            app.SpeedxSpinner.Enable = en;
+            if app.sim_mode == 0 && app.controller.model.trj_on == 0
+                app.SpeedxSpinnerLabel.Enable = 'off';
+                app.SpeedxSpinner.Enable = 'off';
+            else
+                app.SpeedxSpinnerLabel.Enable = en;
+                app.SpeedxSpinner.Enable = en;
+            end
             app.StepsEditFieldLabel.Enable = en;
             app.StepsEditField.Enable = en;
 
@@ -853,6 +858,7 @@ classdef MainApp < matlab.apps.AppBase
                     app.controller.model.tfin = app.FinalsEditField.Value;
                 else
                     app.controller.model.tfin = 0;
+                    app.FinalsEditField.Value = 0;
                 end
                 updateRunButtonState(app);
             end
@@ -883,6 +889,9 @@ classdef MainApp < matlab.apps.AppBase
         end
 
         function updateFinTimeTrj(app)
+            if app.controller.model.trj_on == 0
+                return;
+            end
             app.controller.updateFinTimeTrj(app.prcnt);
             app.FinalsEditField.Value = app.controller.model.tfin_trj;
             if app.sim_mode == 1 && app.controller.model.trj_on == 1
@@ -2030,6 +2039,8 @@ classdef MainApp < matlab.apps.AppBase
                 if app.controller.model.trj_on == 0
                     app.controller.model.ghost_on = 0;
                     app.FinalsEditField.Enable = "off";
+                    app.FinalsEditField.Value = 0;
+                    app.controller.model.tfin = 0;
                 else
                     app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
                     app.FinalsEditField.Enable = "off";

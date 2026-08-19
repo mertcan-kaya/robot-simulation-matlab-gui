@@ -447,7 +447,7 @@ function loadMeshes(obj, robot_model, high_quality, ee_att, coord_frame_on, ghos
             end
         end
     
-        if coord_frame_on == 1
+        if coord_frame_on == 1 && ghost_on == 1
             obj.Pobj_d.pF = patch(obj.AxesHandle,'Faces', obj.ms.sF.F, 'Vertices', obj.ms.sF.V);
             set(obj.Pobj_d.pF, 'facec', 'flat');                % Set the face color flat
             set(obj.Pobj_d.pF, 'FaceVertexCData', obj.ms.sF.C);	% Set the color (from file)
@@ -742,7 +742,7 @@ function updateView(obj, state)
             end
         end
         if state.coord_frame_on == 1
-            if isfield(obj.Pobj_d, 'pF') && isvalid(obj.Pobj_d.pF)
+            if state.ghost_on == 1 && isfield(obj.Pobj_d, 'pF') && isvalid(obj.Pobj_d.pF)
                 set(obj.Pobj_d.pF,'Vertices',nvdF(:,1:3),'FaceAlpha',0.25)
             end
             if isfield(obj.Pobj_f, 'pF') && isvalid(obj.Pobj_f.pF)

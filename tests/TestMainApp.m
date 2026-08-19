@@ -101,16 +101,23 @@ classdef TestMainApp < matlab.uitest.TestCase
             testCase.verifyEqual(testCase.App.controller.model.trj_on, 0);
             testCase.verifyEqual(testCase.App.controller.model.ghost_on, 0);
             testCase.verifyEqual(char(testCase.App.RunButton.Enable), 'off');
+            testCase.verifyEqual(char(testCase.App.SpeedxSpinner.Enable), 'off');
+            testCase.verifyEqual(testCase.App.FinalsEditField.Value, 0);
             testCase.verifyEqual(char(testCase.App.InitialJointTab.Title), 'Joint');
             testCase.verifyEqual(char(testCase.App.InitialTaskTab.Title), 'Task');
             testCase.verifyEmpty(testCase.App.FinalJointTab.Parent);
             testCase.verifyEmpty(testCase.App.FinalTaskTab.Parent);
+
+            % Verify moving sliders does not calculate trajectory final time
+            testCase.type(testCase.App.Axis1InitialSpinner, 45);
+            testCase.verifyEqual(testCase.App.FinalsEditField.Value, 0);
 
             % Turn OnButton back ON
             testCase.App.OnButton.Value = true;
             testCase.App.OnButtonValueChanged();
 
             testCase.verifyEqual(testCase.App.controller.model.trj_on, 1);
+            testCase.verifyEqual(char(testCase.App.SpeedxSpinner.Enable), 'on');
             testCase.verifyEqual(char(testCase.App.InitialJointTab.Title), 'Initial Joint');
             testCase.verifyEqual(char(testCase.App.InitialTaskTab.Title), 'Initial Task');
             testCase.verifyNotEmpty(testCase.App.FinalJointTab.Parent);
