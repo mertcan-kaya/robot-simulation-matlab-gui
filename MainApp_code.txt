@@ -1239,6 +1239,7 @@ classdef MainApp < matlab.apps.AppBase
             app.StepsEditField.Value = app.controller.model.tstp;
             app.FinalsEditField.Value = app.controller.model.tfin;
             app.SpeedxSpinner.Value = app.controller.model.time_const;
+            app.OnButton.Value = true;
             
             updateRobotModel(app)
             updateEndEffectorModel(app)
@@ -3418,6 +3419,7 @@ classdef MainApp < matlab.apps.AppBase
             app.OnButton = uibutton(app.TrajectoryPanel, 'state');
             app.OnButton.ValueChangedFcn = createCallbackFcn(app, @OnButtonValueChanged, true);
             app.OnButton.Text = 'On';
+            app.OnButton.Value = true;
             app.OnButton.Position = [86 39 33 22];
 
             % Show the figure after all components are created

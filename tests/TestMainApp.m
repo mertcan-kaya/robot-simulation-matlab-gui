@@ -94,8 +94,7 @@ classdef TestMainApp < matlab.uitest.TestCase
         function testInteractiveKinematicDemoMode(testCase)
             % Test turning OnButton OFF in Kinematic mode
             testCase.choose(testCase.App.SimModeSwitch, 'Kinematic');
-            testCase.App.OnButton.Value = false;
-            testCase.App.OnButtonValueChanged();
+            testCase.press(testCase.App.OnButton);
 
             % Verify trajectory interpolation is OFF and single-robot demo mode is active
             testCase.verifyEqual(testCase.App.controller.model.trj_on, 0);
@@ -113,8 +112,7 @@ classdef TestMainApp < matlab.uitest.TestCase
             testCase.verifyEqual(testCase.App.FinalsEditField.Value, 0);
 
             % Turn OnButton back ON
-            testCase.App.OnButton.Value = true;
-            testCase.App.OnButtonValueChanged();
+            testCase.press(testCase.App.OnButton);
 
             testCase.verifyEqual(testCase.App.controller.model.trj_on, 1);
             testCase.verifyEqual(char(testCase.App.SpeedxSpinner.Enable), 'on');
@@ -127,8 +125,7 @@ classdef TestMainApp < matlab.uitest.TestCase
         function testInteractiveDynamicTrackingMode(testCase)
             % Test turning OnButton OFF in Dynamic mode
             testCase.choose(testCase.App.SimModeSwitch, 'Dynamic');
-            testCase.App.OnButton.Value = false;
-            testCase.App.OnButtonValueChanged();
+            testCase.press(testCase.App.OnButton);
 
             % Verify trajectory interpolation is OFF and dynamic target tracking mode is active
             testCase.verifyEqual(testCase.App.controller.model.trj_on, 0);
@@ -229,7 +226,6 @@ classdef TestMainApp < matlab.uitest.TestCase
 
             % Toggle 3D Models switch while running
             testCase.choose(testCase.App.DmodelsSwitch, 'Off');
-            testCase.App.DmodelsSwitchValueChanged();
 
             % Verify that the target robot and active states are NOT corrupted or reset to ini
             testCase.verifyEqual(rad2deg(testCase.App.controller.model.act.q_pos(1)), 10, 'AbsTol', 1e-2);
@@ -238,7 +234,6 @@ classdef TestMainApp < matlab.uitest.TestCase
 
             % Toggle back to 3D CAD mode
             testCase.choose(testCase.App.DmodelsSwitch, 'On');
-            testCase.App.DmodelsSwitchValueChanged();
 
             testCase.verifyEqual(rad2deg(testCase.App.controller.model.act.q_pos(1)), 10, 'AbsTol', 1e-2);
             testCase.verifyEqual(rad2deg(testCase.App.controller.model.fin.q_pos(1)), 45, 'AbsTol', 1e-2);
