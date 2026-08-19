@@ -124,6 +124,33 @@ classdef TestMainApp < matlab.uitest.TestCase
             testCase.verifyNotEmpty(testCase.App.FinalTaskTab.Parent);
         end
 
+        function testInteractiveDynamicTrackingMode(testCase)
+            % Test turning OnButton OFF in Dynamic mode
+            testCase.choose(testCase.App.SimModeSwitch, 'Dynamic');
+            testCase.App.OnButton.Value = false;
+            testCase.App.OnButtonValueChanged();
+
+            % Verify trajectory interpolation is OFF and dynamic target tracking mode is active
+            testCase.verifyEqual(testCase.App.controller.model.trj_on, 0);
+            testCase.verifyEqual(testCase.App.controller.model.ghost_on, 1);
+            testCase.verifyEqual(char(testCase.App.SpeedxSpinner.Enable), 'on');
+            testCase.verifyEqual(char(testCase.App.FinalsEditField.Enable), 'on');
+            testCase.verifyEqual(char(testCase.App.FinalJointTab.Title), 'Joint');
+            testCase.verifyEqual(char(testCase.App.FinalTaskTab.Title), 'Task');
+            testCase.verifyNotEmpty(testCase.App.FinalJointTab.Parent);
+            testCase.verifyNotEmpty(testCase.App.FinalTaskTab.Parent);
+            testCase.verifyEmpty(testCase.App.InitialJointTab.Parent);
+            testCase.verifyEmpty(testCase.App.InitialTaskTab.Parent);
+
+            % Verify modifying target sliders updates fin.q_pos and does not calculate trajectory time
+            testCase.type(testCase.App.Axis1FinalSpinner, 30);
+            testCase.verifyEqual(rad2deg(testCase.App.controller.model.fin.q_pos(1)), 30, 'AbsTol', 1e-2);
+
+            % Verify setting simulation duration enables RunButton
+            testCase.type(testCase.App.FinalsEditField, 5.0);
+            testCase.verifyEqual(char(testCase.App.RunButton.Enable), 'on');
+        end
+
         function testInterpolationProfileSelection(testCase)
             % Test trajectory profiles: Linear, Cubic, Quintic
             profiles = {'Linear', 1; 'Cubic', 2; 'Quintic', 3};

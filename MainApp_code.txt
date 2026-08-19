@@ -637,19 +637,39 @@ classdef MainApp < matlab.apps.AppBase
         end
         
         function updateTabGroupState(app)
-            if app.sim_mode == 0 && app.controller.model.trj_on == 0
-                % Interactive single-robot Forward & Inverse Kinematics demonstration mode
-                app.InitialJointTab.Title = 'Joint';
-                app.InitialTaskTab.Title = 'Task';
-                app.FinalJointTab.Parent = [];
-                app.FinalTaskTab.Parent = [];
-                app.InitialJointTab.Parent = app.RightTabGroup;
-                app.InitialTaskTab.Parent = app.RightTabGroup;
+            if app.controller.model.trj_on == 0
+                if app.sim_mode == 0
+                    % Interactive Kinematic Demo Mode: Actual robot only
+                    app.InitialJointTab.Title = 'Joint';
+                    app.InitialTaskTab.Title = 'Task';
+                    app.FinalJointTab.Parent = [];
+                    app.FinalTaskTab.Parent = [];
+                    app.InitialJointTab.Parent = app.RightTabGroup;
+                    app.InitialTaskTab.Parent = app.RightTabGroup;
+                    if app.RightTabGroup.SelectedTab == app.InitialTaskTab
+                        app.handleTabSelection(1);
+                    else
+                        app.handleTabSelection(0);
+                    end
+                else
+                    % Interactive Dynamic Mode: Target/reference robot tracking
+                    app.FinalJointTab.Title = 'Joint';
+                    app.FinalTaskTab.Title = 'Task';
+                    app.InitialJointTab.Parent = [];
+                    app.InitialTaskTab.Parent = [];
+                    app.FinalJointTab.Parent = app.RightTabGroup;
+                    app.FinalTaskTab.Parent = app.RightTabGroup;
+                    if app.RightTabGroup.SelectedTab == app.FinalTaskTab
+                        app.handleTabSelection(2);
+                    else
+                        app.handleTabSelection(0);
+                    end
+                end
             else
                 % Full initial and final trajectory planning mode
                 app.InitialJointTab.Title = 'Initial Joint';
-                app.InitialTaskTab.Title = 'Initial Task';
                 app.FinalJointTab.Title = 'Final Joint';
+                app.InitialTaskTab.Title = 'Initial Task';
                 app.FinalTaskTab.Title = 'Final Task';
                 app.InitialJointTab.Parent = app.RightTabGroup;
                 app.FinalJointTab.Parent = app.RightTabGroup;
