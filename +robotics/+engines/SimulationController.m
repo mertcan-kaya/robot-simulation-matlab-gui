@@ -45,16 +45,10 @@ classdef SimulationController < handle
         
         function updateForwardKinematics(obj, targetType, eulerSet)
             q_pos = obj.model.(targetType).q_pos;
-            
-            n = obj.model.kin.n;
-            Ti = zeros(4, 4, n + 2);
-            Ti(:,:,1) = eye(4);
-            for j = 1:n
-                Ti(:,:,j+1) = Ti(:,:,j) * robotics.math.SO3R3_SE3(robotics.math.getRi_j(obj.model.kin.alpha_j(j), obj.model.kin.theta_O_j(j)+q_pos(j)), obj.model.kin.ri_j(:,:,j));
-            end
-            Ti(:,:,n+2) = Ti(:,:,n+1) * robotics.math.SO3R3_SE3(robotics.math.getRi_j(obj.model.kin.alpha_j(n+1), obj.model.kin.theta_O_j(n+1)), obj.model.kin.ri_j(:,:,n+1));
-            
-            [Re, t_pos] = robotics.math.SE3_SO3R3(Ti(:,:,n+2));
+            Ti = robotics.engines.KinematicsEngine.getTransMatrix(...
+                obj.model.TI_0, obj.model.kin.a_j, obj.model.kin.alpha_j, ...
+                obj.model.kin.d_j, obj.model.kin.theta_O_j, obj.model.kin.j_type, q_pos);
+            [Re, t_pos] = robotics.math.SE3_SO3R3(Ti(:,:,end));
             r_pos = robotics.math.getEulerPosVec(Re, eulerSet);
             
             obj.model.(targetType).Ti = Ti;
@@ -207,13 +201,8 @@ classdef SimulationController < handle
             obj.model.fbk.q_vel = zeros(n, 1);
             
             % Initialize transformation matrices and orientations for ini and fin
-            obj.model.ini.Ti = robotics.engines.KinematicsEngine.getTransMatrix(obj.model.TI_0, obj.model.kin.a_j, obj.model.kin.alpha_j, obj.model.kin.d_j, obj.model.kin.theta_O_j, obj.model.kin.j_type, obj.model.ini.q_pos);
-            [obj.model.ini.Re, obj.model.ini.t_pos] = robotics.math.SE3_SO3R3(obj.model.ini.Ti(:,:,n+2));
-            obj.model.ini.r_pos = robotics.math.getEulerPosVec(obj.model.ini.Re, obj.model.eulerSet);
-            
-            obj.model.fin.Ti = robotics.engines.KinematicsEngine.getTransMatrix(obj.model.TI_0, obj.model.kin.a_j, obj.model.kin.alpha_j, obj.model.kin.d_j, obj.model.kin.theta_O_j, obj.model.kin.j_type, obj.model.fin.q_pos);
-            [obj.model.fin.Re, obj.model.fin.t_pos] = robotics.math.SE3_SO3R3(obj.model.fin.Ti(:,:,n+2));
-            obj.model.fin.r_pos = robotics.math.getEulerPosVec(obj.model.fin.Re, obj.model.eulerSet);
+            obj.updateForwardKinematics('ini', obj.model.eulerSet);
+            obj.updateForwardKinematics('fin', obj.model.eulerSet);
             
             % Update default control parameters from the robot object
             if ~isfield(obj.model.ctr, 'algo')

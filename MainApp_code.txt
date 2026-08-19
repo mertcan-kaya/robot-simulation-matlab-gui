@@ -639,42 +639,38 @@ classdef MainApp < matlab.apps.AppBase
         function updateTabGroupState(app)
             if app.controller.model.trj_on == 0
                 if app.sim_mode == 0
-                    % Interactive Kinematic Demo Mode: Actual robot only
-                    app.InitialJointTab.Title = 'Joint';
-                    app.InitialTaskTab.Title = 'Task';
-                    app.FinalJointTab.Parent = [];
-                    app.FinalTaskTab.Parent = [];
-                    app.InitialJointTab.Parent = app.RightTabGroup;
-                    app.InitialTaskTab.Parent = app.RightTabGroup;
-                    if app.RightTabGroup.SelectedTab == app.InitialTaskTab
-                        app.handleTabSelection(1);
-                    else
-                        app.handleTabSelection(0);
-                    end
+                    activeJoint = app.InitialJointTab;
+                    activeTask  = app.InitialTaskTab;
+                    hiddenJoint = app.FinalJointTab;
+                    hiddenTask  = app.FinalTaskTab;
+                    taskTarget  = 1;
                 else
-                    % Interactive Dynamic Mode: Target/reference robot tracking
-                    app.FinalJointTab.Title = 'Joint';
-                    app.FinalTaskTab.Title = 'Task';
-                    app.InitialJointTab.Parent = [];
-                    app.InitialTaskTab.Parent = [];
-                    app.FinalJointTab.Parent = app.RightTabGroup;
-                    app.FinalTaskTab.Parent = app.RightTabGroup;
-                    if app.RightTabGroup.SelectedTab == app.FinalTaskTab
-                        app.handleTabSelection(2);
-                    else
-                        app.handleTabSelection(0);
-                    end
+                    activeJoint = app.FinalJointTab;
+                    activeTask  = app.FinalTaskTab;
+                    hiddenJoint = app.InitialJointTab;
+                    hiddenTask  = app.InitialTaskTab;
+                    taskTarget  = 2;
+                end
+                activeJoint.Title = 'Joint';
+                activeTask.Title  = 'Task';
+                hiddenJoint.Parent = [];
+                hiddenTask.Parent  = [];
+                activeJoint.Parent = app.RightTabGroup;
+                activeTask.Parent  = app.RightTabGroup;
+                if app.RightTabGroup.SelectedTab == activeTask
+                    app.handleTabSelection(taskTarget);
+                else
+                    app.handleTabSelection(0);
                 end
             else
-                % Full initial and final trajectory planning mode
                 app.InitialJointTab.Title = 'Initial Joint';
-                app.FinalJointTab.Title = 'Final Joint';
-                app.InitialTaskTab.Title = 'Initial Task';
-                app.FinalTaskTab.Title = 'Final Task';
+                app.FinalJointTab.Title   = 'Final Joint';
+                app.InitialTaskTab.Title  = 'Initial Task';
+                app.FinalTaskTab.Title    = 'Final Task';
                 app.InitialJointTab.Parent = app.RightTabGroup;
-                app.FinalJointTab.Parent = app.RightTabGroup;
-                app.InitialTaskTab.Parent = app.RightTabGroup;
-                app.FinalTaskTab.Parent = app.RightTabGroup;
+                app.FinalJointTab.Parent   = app.RightTabGroup;
+                app.InitialTaskTab.Parent  = app.RightTabGroup;
+                app.FinalTaskTab.Parent    = app.RightTabGroup;
             end
         end
 
@@ -842,50 +838,16 @@ classdef MainApp < matlab.apps.AppBase
         end
         
         function updateSimMode(app)
-
-            if strcmpi(app.SimModeSwitch.Value,'Kinematic') == 1
+            if strcmpi(app.SimModeSwitch.Value, 'Kinematic') == 1
                 app.sim_mode = 0;
                 app.controller.model.tstp = 0.001;
-                app.OnButton.Enable = "on";
-                app.controller.model.trj_on = double(app.OnButton.Value);
-                if app.controller.model.trj_on == 0
-                    app.controller.model.ghost_on = 0;
-                else
-                    app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
-                end
-                app.FinalsEditField.Enable = "off";
-                app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
             else
                 app.sim_mode = 1;
                 app.controller.model.tstp = 0.0001;
-                app.OnButton.Enable = "on";
-                app.controller.model.trj_on = double(app.OnButton.Value);
-                app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
-                if app.controller.model.trj_on == 0
-                    app.FinalsEditField.Enable = "on";
-                else
-                    app.FinalsEditField.Enable = "off";
-                end
-                app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
-            end
-            
-            app.updateTabGroupState();
-            updateEnableState(app);
-            if app.controller.model.trj_on == 1
-                updateFinTimeTrj(app);
-            else
-                if app.sim_mode == 1
-                    app.controller.model.tfin = app.FinalsEditField.Value;
-                else
-                    app.controller.model.tfin = 0;
-                    app.FinalsEditField.Value = 0;
-                end
-                updateRunButtonState(app);
             end
             app.StepsEditField.Value = app.controller.model.tstp;
-            app.controller.initRobot();
-            app.controller.updateView();
-
+            app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
+            app.OnButtonValueChanged();
         end
 
         function updateRunButtonState(app)
@@ -914,7 +876,7 @@ classdef MainApp < matlab.apps.AppBase
             end
             app.controller.updateFinTimeTrj(app.prcnt);
             app.FinalsEditField.Value = app.controller.model.tfin_trj;
-            if app.sim_mode == 1 && app.controller.model.trj_on == 1
+            if app.sim_mode == 1
                 app.controller.model.tfin = app.controller.model.tfin_trj;
             end
         end
