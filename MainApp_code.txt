@@ -636,6 +636,28 @@ classdef MainApp < matlab.apps.AppBase
 
         end
         
+        function updateTabGroupState(app)
+            if app.sim_mode == 0 && app.controller.model.trj_on == 0
+                % Interactive single-robot Forward & Inverse Kinematics demonstration mode
+                app.InitialJointTab.Title = 'Joint';
+                app.InitialTaskTab.Title = 'Task';
+                app.FinalJointTab.Parent = [];
+                app.FinalTaskTab.Parent = [];
+                app.InitialJointTab.Parent = app.RightTabGroup;
+                app.InitialTaskTab.Parent = app.RightTabGroup;
+            else
+                % Full initial and final trajectory planning mode
+                app.InitialJointTab.Title = 'Initial Joint';
+                app.InitialTaskTab.Title = 'Initial Task';
+                app.FinalJointTab.Title = 'Final Joint';
+                app.FinalTaskTab.Title = 'Final Task';
+                app.InitialJointTab.Parent = app.RightTabGroup;
+                app.FinalJointTab.Parent = app.RightTabGroup;
+                app.InitialTaskTab.Parent = app.RightTabGroup;
+                app.FinalTaskTab.Parent = app.RightTabGroup;
+            end
+        end
+
         function updateEnableState(app)
             if app.controller.model.running_flag == 1
                 running = true;
@@ -656,21 +678,19 @@ classdef MainApp < matlab.apps.AppBase
             app.StepsEditField.Enable = en;
 
             % FinalsEditField is editable when in dynamic mode with trj_on == 0 and not running
-            if app.sim_mode == 1 && app.controller.model.trj_on == 0
-                app.FinalsEditFieldLabel.Enable = en;
-                app.FinalsEditField.Enable = en;
+            if app.sim_mode == 1 && app.controller.model.trj_on == 0 && ~running
+                app.FinalsEditFieldLabel.Enable = 'on';
+                app.FinalsEditField.Enable = 'on';
             else
                 app.FinalsEditFieldLabel.Enable = 'off';
                 app.FinalsEditField.Enable = 'off';
             end
 
-            % OnButton: Always off (disabled) in Kinematic mode, enabled in Dynamic when not running
-            if app.sim_mode == 0
-                app.OnButton.Value = true;
-                app.OnButton.Enable = 'off';
-                app.controller.model.trj_on = 1;
+            % OnButton: Enabled in both Kinematic and Dynamic mode when not running
+            if ~running
+                app.OnButton.Enable = 'on';
             else
-                app.OnButton.Enable = en;
+                app.OnButton.Enable = 'off';
             end
 
             % Joint controls
@@ -801,9 +821,13 @@ classdef MainApp < matlab.apps.AppBase
             if strcmpi(app.SimModeSwitch.Value,'Kinematic') == 1
                 app.sim_mode = 0;
                 app.controller.model.tstp = 0.001;
-                app.OnButton.Value = true;
-                app.OnButton.Enable = "off";
-                app.controller.model.trj_on = 1;
+                app.OnButton.Enable = "on";
+                app.controller.model.trj_on = double(app.OnButton.Value);
+                if app.controller.model.trj_on == 0
+                    app.controller.model.ghost_on = 0;
+                else
+                    app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
+                end
                 app.FinalsEditField.Enable = "off";
                 app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
             else
@@ -811,6 +835,7 @@ classdef MainApp < matlab.apps.AppBase
                 app.controller.model.tstp = 0.0001;
                 app.OnButton.Enable = "on";
                 app.controller.model.trj_on = double(app.OnButton.Value);
+                app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
                 if app.controller.model.trj_on == 0
                     app.FinalsEditField.Enable = "on";
                 else
@@ -819,20 +844,29 @@ classdef MainApp < matlab.apps.AppBase
                 app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
             end
             
+            app.updateTabGroupState();
             updateEnableState(app);
             if app.controller.model.trj_on == 1
                 updateFinTimeTrj(app);
             else
-                app.controller.model.tfin = app.FinalsEditField.Value;
+                if app.sim_mode == 1
+                    app.controller.model.tfin = app.FinalsEditField.Value;
+                else
+                    app.controller.model.tfin = 0;
+                end
                 updateRunButtonState(app);
             end
             app.StepsEditField.Value = app.controller.model.tstp;
+            app.controller.initRobot();
+            app.controller.updateView();
 
         end
 
         function updateRunButtonState(app)
 
-            if app.controller.model.trj_on == 1
+            if app.sim_mode == 0 && app.controller.model.trj_on == 0
+                app.RunButton.Enable = "off";
+            elseif app.controller.model.trj_on == 1
                 if app.controller.model.tfin_trj < app.controller.model.tstp
                     app.RunButton.Enable = "off";
                 else
@@ -1476,12 +1510,14 @@ classdef MainApp < matlab.apps.AppBase
 
         % Menu selected function: EnableghostmodelsMenu
         function EnableghostmodelsMenuSelected(app, event)
-            if app.controller.model.ghost_on == 1
+            if strcmp(app.EnableghostmodelsMenu.Checked, 'on')
                 app.EnableghostmodelsMenu.Checked = 'off';
                 app.controller.model.ghost_on = 0;
             else
                 app.EnableghostmodelsMenu.Checked = 'on';
-                app.controller.model.ghost_on = 1;
+                if ~(app.sim_mode == 0 && app.controller.model.trj_on == 0)
+                    app.controller.model.ghost_on = 1;
+                end
             end
             app.controller.initRobot()
             app.controller.updateView()
@@ -1957,6 +1993,18 @@ classdef MainApp < matlab.apps.AppBase
             app.controller.model.time_const = val;
         end
 
+        % Selection changed function: RightTabGroup
+        function RightTabGroupSelectionChanged(app, event)
+            selectedTab = app.RightTabGroup.SelectedTab;
+            if selectedTab == app.InitialJointTab || selectedTab == app.FinalJointTab
+                app.handleTabSelection(0);
+            elseif selectedTab == app.InitialTaskTab
+                app.handleTabSelection(1);
+            elseif selectedTab == app.FinalTaskTab
+                app.handleTabSelection(2);
+            end
+        end
+
         % Value changed function: ControlSpaceDropDown
         function ControlSpaceDropDownValueChanged(app, event)
             value = app.ControlSpaceDropDown.Value;
@@ -1977,20 +2025,33 @@ classdef MainApp < matlab.apps.AppBase
 
         % Value changed function: OnButton
         function OnButtonValueChanged(app, event)
+            app.controller.model.trj_on = double(app.OnButton.Value);
             if app.sim_mode == 0
-                app.OnButton.Value = true;
-                app.controller.model.trj_on = 1;
+                if app.controller.model.trj_on == 0
+                    app.controller.model.ghost_on = 0;
+                    app.FinalsEditField.Enable = "off";
+                else
+                    app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
+                    app.FinalsEditField.Enable = "off";
+                end
             else
-                app.controller.model.trj_on = double(app.OnButton.Value);
+                app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
+                if app.controller.model.trj_on == 0
+                    app.FinalsEditField.Enable = "on";
+                    app.controller.model.tfin = app.FinalsEditField.Value;
+                else
+                    app.FinalsEditField.Enable = "off";
+                end
             end
+            app.updateTabGroupState();
             updateEnableState(app);
             if app.controller.model.trj_on == 1
                 updateFinTimeTrj(app);
             else
-                app.FinalsEditField.Enable = "on";
-                app.controller.model.tfin = app.FinalsEditField.Value;
                 updateRunButtonState(app);
             end
+            app.controller.initRobot();
+            app.controller.updateView();
         end
 
         % Changes arrangement of the app based on UIFigure width
@@ -2682,6 +2743,7 @@ classdef MainApp < matlab.apps.AppBase
 
             % Create RightTabGroup
             app.RightTabGroup = uitabgroup(app.RightPanel);
+            app.RightTabGroup.SelectionChangedFcn = createCallbackFcn(app, @RightTabGroupSelectionChanged, true);
             app.RightTabGroup.Position = [5 100 330 443];
 
             % Create InitialJointTab

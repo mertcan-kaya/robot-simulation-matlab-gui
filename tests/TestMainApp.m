@@ -74,21 +74,47 @@ classdef TestMainApp < matlab.uitest.TestCase
 
         function testSimModeSwitching(testCase)
             % Test toggling between Kinematic and Dynamic simulation
-            % Default is Kinematic
+            % Default is Kinematic with OnButton true (trj_on == 1)
             testCase.verifyEqual(testCase.App.controller.model.tstp, 0.001);
             testCase.verifyEqual(testCase.App.StepsEditField.Value, 0.001);
+            testCase.verifyEqual(char(testCase.App.OnButton.Enable), 'on');
 
             % Switch to Dynamic mode
             testCase.choose(testCase.App.SimModeSwitch, 'Dynamic');
             testCase.verifyEqual(testCase.App.controller.model.tstp, 0.0001);
             testCase.verifyEqual(testCase.App.StepsEditField.Value, 0.0001);
-            testCase.verifyEqual(char(testCase.App.FinalsEditField.Enable), 'on');
 
             % Switch back to Kinematic mode
             testCase.choose(testCase.App.SimModeSwitch, 'Kinematic');
             testCase.verifyEqual(testCase.App.controller.model.tstp, 0.001);
             testCase.verifyEqual(testCase.App.StepsEditField.Value, 0.001);
             testCase.verifyEqual(char(testCase.App.FinalsEditField.Enable), 'off');
+        end
+
+        function testInteractiveKinematicDemoMode(testCase)
+            % Test turning OnButton OFF in Kinematic mode
+            testCase.choose(testCase.App.SimModeSwitch, 'Kinematic');
+            testCase.App.OnButton.Value = false;
+            testCase.App.OnButtonValueChanged();
+
+            % Verify trajectory interpolation is OFF and single-robot demo mode is active
+            testCase.verifyEqual(testCase.App.controller.model.trj_on, 0);
+            testCase.verifyEqual(testCase.App.controller.model.ghost_on, 0);
+            testCase.verifyEqual(char(testCase.App.RunButton.Enable), 'off');
+            testCase.verifyEqual(char(testCase.App.InitialJointTab.Title), 'Joint');
+            testCase.verifyEqual(char(testCase.App.InitialTaskTab.Title), 'Task');
+            testCase.verifyEmpty(testCase.App.FinalJointTab.Parent);
+            testCase.verifyEmpty(testCase.App.FinalTaskTab.Parent);
+
+            % Turn OnButton back ON
+            testCase.App.OnButton.Value = true;
+            testCase.App.OnButtonValueChanged();
+
+            testCase.verifyEqual(testCase.App.controller.model.trj_on, 1);
+            testCase.verifyEqual(char(testCase.App.InitialJointTab.Title), 'Initial Joint');
+            testCase.verifyEqual(char(testCase.App.InitialTaskTab.Title), 'Initial Task');
+            testCase.verifyNotEmpty(testCase.App.FinalJointTab.Parent);
+            testCase.verifyNotEmpty(testCase.App.FinalTaskTab.Parent);
         end
 
         function testInterpolationProfileSelection(testCase)
