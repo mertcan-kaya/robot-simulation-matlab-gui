@@ -80,7 +80,7 @@ classdef SimulationEngine < handle
                     obj.model.fbk.q_vel = obj.model.act.q_vel;
                     obj.model.fbk.q_pos = obj.model.act.q_pos;
                     
-                    if isfield(obj.model, 'trj_space') && obj.model.trj_space == 1
+                    if obj.model.trj_space == 1
                         invConfig.inv_geo_type = obj.model.inv_geo_type;
                         invConfig.robot_model = obj.model.robot_model;
                         invConfig.TI_0 = obj.model.TI_0;
@@ -206,7 +206,7 @@ classdef SimulationEngine < handle
                 end
                 
                 % Trajectory generation updates actual state directly in kinematic mode
-                if isfield(obj.model, 'trj_space') && obj.model.trj_space == 1
+                if obj.model.trj_space == 1
                     invConfig.inv_geo_type = obj.model.inv_geo_type;
                     invConfig.robot_model = obj.model.robot_model;
                     invConfig.TI_0 = obj.model.TI_0;

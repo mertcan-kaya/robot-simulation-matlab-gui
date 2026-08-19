@@ -78,7 +78,7 @@ classdef SimulationController < handle
         end
 
         function updateFinTimeTrj(obj, prcnt)
-            if isfield(obj.model, 'trj_space') && obj.model.trj_space == 1
+            if obj.model.trj_space == 1
                 ini_x = [obj.model.ini.t_pos; obj.model.ini.r_pos];
                 fin_x = [obj.model.fin.t_pos; obj.model.fin.r_pos];
                 obj.model.tfin_trj = robotics.engines.TrajectoryEngine.computeTaskSpaceTime(...
@@ -209,11 +209,11 @@ classdef SimulationController < handle
             % Initialize transformation matrices and orientations for ini and fin
             obj.model.ini.Ti = robotics.engines.KinematicsEngine.getTransMatrix(obj.model.TI_0, obj.model.kin.a_j, obj.model.kin.alpha_j, obj.model.kin.d_j, obj.model.kin.theta_O_j, obj.model.kin.j_type, obj.model.ini.q_pos);
             [obj.model.ini.Re, obj.model.ini.t_pos] = robotics.math.SE3_SO3R3(obj.model.ini.Ti(:,:,n+2));
-            obj.model.ini.r_pos = robotics.math.getEulerPosVec(obj.model.ini.Re, 1); % Assume eulerSet 1 (ZYZ) by default
+            obj.model.ini.r_pos = robotics.math.getEulerPosVec(obj.model.ini.Re, obj.model.eulerSet);
             
             obj.model.fin.Ti = robotics.engines.KinematicsEngine.getTransMatrix(obj.model.TI_0, obj.model.kin.a_j, obj.model.kin.alpha_j, obj.model.kin.d_j, obj.model.kin.theta_O_j, obj.model.kin.j_type, obj.model.fin.q_pos);
             [obj.model.fin.Re, obj.model.fin.t_pos] = robotics.math.SE3_SO3R3(obj.model.fin.Ti(:,:,n+2));
-            obj.model.fin.r_pos = robotics.math.getEulerPosVec(obj.model.fin.Re, 1);
+            obj.model.fin.r_pos = robotics.math.getEulerPosVec(obj.model.fin.Re, obj.model.eulerSet);
             
             % Update default control parameters from the robot object
             if ~isfield(obj.model.ctr, 'algo')

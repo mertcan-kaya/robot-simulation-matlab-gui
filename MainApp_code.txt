@@ -121,6 +121,7 @@ classdef MainApp < matlab.apps.AppBase
         UIAxes                        matlab.ui.control.UIAxes
         RightPanel                    matlab.ui.container.Panel
         TrajectoryPanel               matlab.ui.container.Panel
+        OnButton                      matlab.ui.control.StateButton
         TrajSpaceButtonGroup          matlab.ui.container.ButtonGroup
         TaskButton                    matlab.ui.control.RadioButton
         JointButton                   matlab.ui.control.RadioButton
@@ -717,9 +718,6 @@ classdef MainApp < matlab.apps.AppBase
 
             app.InterpolationLabel.Enable = en;
             app.InterpolationDropDown.Enable = en;
-            app.TrajSpaceButtonGroup.Enable = en;
-            app.JointButton.Enable = en;
-            app.TaskButton.Enable = en;
             app.LimitsLabel.Enable = en;
             app.VelEditFieldLabel.Enable = en;
             app.VelEditField.Enable = en;
@@ -1351,6 +1349,12 @@ classdef MainApp < matlab.apps.AppBase
         function RunButtonPushed(app, event)
             
             app.controller.model.running_flag = 1;
+            if app.TrajSpaceButtonGroup.SelectedObject == app.TaskButton
+                app.controller.model.trj_space = 1;
+            else
+                app.controller.model.trj_space = 0;
+            end
+            app.controller.model.eulerSet = app.eulerSet;
             
             app.controller.initRobot()
             updateEnableState(app)
@@ -1895,6 +1899,12 @@ classdef MainApp < matlab.apps.AppBase
             end
             updateFinTimeTrj(app);
             app.FinalsEditField.Value = app.controller.model.tfin_trj;
+        end
+
+        % Value changed function: OnButton
+        function OnButtonValueChanged(app, event)
+            value = app.OnButton.Value;
+            
         end
 
         % Changes arrangement of the app based on UIFigure width
@@ -3214,9 +3224,9 @@ classdef MainApp < matlab.apps.AppBase
 
             % Create InterpolationDropDown
             app.InterpolationDropDown = uidropdown(app.TrajectoryPanel);
-            app.InterpolationDropDown.Items = {'None', 'Linear', 'Cubic', 'Quintic'};
+            app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
             app.InterpolationDropDown.ValueChangedFcn = createCallbackFcn(app, @InterpolationDropDownValueChanged, true);
-            app.InterpolationDropDown.Position = [90 39 130 22];
+            app.InterpolationDropDown.Position = [123 39 97 22];
             app.InterpolationDropDown.Value = 'Quintic';
 
             % Create AccEditFieldLabel
@@ -3249,18 +3259,24 @@ classdef MainApp < matlab.apps.AppBase
             app.TrajSpaceButtonGroup = uibuttongroup(app.TrajectoryPanel);
             app.TrajSpaceButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @TrajSpaceButtonGroupSelectionChanged, true);
             app.TrajSpaceButtonGroup.BorderType = 'none';
-            app.TrajSpaceButtonGroup.Position = [229 8 100 45];
+            app.TrajSpaceButtonGroup.Position = [226 8 100 44];
 
             % Create JointButton
             app.JointButton = uiradiobutton(app.TrajSpaceButtonGroup);
             app.JointButton.Text = 'Joint';
-            app.JointButton.Position = [42 26 58 22];
+            app.JointButton.Position = [40 21 58 22];
             app.JointButton.Value = true;
 
             % Create TaskButton
             app.TaskButton = uiradiobutton(app.TrajSpaceButtonGroup);
             app.TaskButton.Text = 'Task';
-            app.TaskButton.Position = [42 4 58 22];
+            app.TaskButton.Position = [40 -1 58 22];
+
+            % Create OnButton
+            app.OnButton = uibutton(app.TrajectoryPanel, 'state');
+            app.OnButton.ValueChangedFcn = createCallbackFcn(app, @OnButtonValueChanged, true);
+            app.OnButton.Text = 'On';
+            app.OnButton.Position = [86 39 33 22];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
