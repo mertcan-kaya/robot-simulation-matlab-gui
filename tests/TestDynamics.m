@@ -99,5 +99,29 @@ classdef TestDynamics < matlab.unittest.TestCase
             testCase.verifyFalse(any(isnan(phat_next)));
         end
 
+        function testMassMatrixAndKineticEnergy(testCase)
+            robot = robotics.models.RobotFactory.create(1); % Franka Emika
+            kin = robot.getKinematicParameters(0);
+            dyn = robot.getInertialParameters();
+
+            q = deg2rad([15; -30; 20; -60; 0; 45; -10]);
+            M = robotics.engines.DynamicsEngine.computeMassMatrix(kin, dyn, q);
+
+            % Mass matrix must be NxN, symmetric and positive definite
+            testCase.verifyEqual(size(M), [kin.n, kin.n]);
+            testCase.verifyEqual(M, M', 'AbsTol', 1e-10);
+            eigenvals = eig(M);
+            testCase.verifyTrue(all(eigenvals > 0), 'Mass matrix M(q) must be strictly positive-definite');
+
+            % Kinetic energy at non-zero velocity
+            q_vel = [0.5; -1.0; 0.2; 0.8; -0.4; 0.1; -0.3];
+            Ek = robotics.engines.DynamicsEngine.computeKineticEnergy(kin, dyn, q, q_vel);
+            testCase.verifyGreaterThan(Ek, 0);
+
+            % Kinetic energy at zero velocity
+            Ek_zero = robotics.engines.DynamicsEngine.computeKineticEnergy(kin, dyn, q, zeros(kin.n, 1));
+            testCase.verifyEqual(Ek_zero, 0, 'AbsTol', 1e-12);
+        end
+
     end
 end

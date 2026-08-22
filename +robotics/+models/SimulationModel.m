@@ -11,6 +11,7 @@ classdef SimulationModel < handle
         coord_frame_on = 1;
         ghost_on = 1;
         line_on = 0;
+        ellipsoid_on = 0;
         sim_mode = 0; % 0: Kinematic, 1: Dynamic
         
         % Simulation Timing & Trajectory Space
@@ -52,6 +53,9 @@ classdef SimulationModel < handle
         
         % Custom robot parameters
         customParams = [];
+        
+        % Simulation logging and telemetry dataset
+        logData = [];
     end
     events
         ModelUpdated
@@ -76,6 +80,10 @@ classdef SimulationModel < handle
             obj.des = struct();
             obj.fbk = struct();
             obj.ctr = struct();
+            obj.ctr.space = 0;
+            obj.ctr.algo = 0;
+            obj.ctr.comp_grv = 0;
+            obj.ctr.tcyc = 0.001;
             obj.ref = struct();
         end
         

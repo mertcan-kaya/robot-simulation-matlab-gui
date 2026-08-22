@@ -132,10 +132,10 @@ classdef UR3 < robotics.models.RobotModel
         end
         
         function ctr = getDefaultControlParams(obj, algo_id)
-            ctr.tcyc = 0.008;
-            ctr.Kp_jnt_pid = [100;100;100;60;50;25];
-            ctr.Ki_jnt_pid = [0;0;0;0;0;0];
-            ctr.Kd_jnt_pid = [10;10;10;10;7.5;5];
+            if nargin < 2
+                algo_id = 0;
+            end
+            ctr = robotics.engines.GainTuningEngine.computeOptimalGains(obj, algo_id, 0, 0.008);
         end
         
         function [q_pos, err] = computeAnalyticIK(obj, invGeoConfig, kin, RGoal, tGoal, qPrev)

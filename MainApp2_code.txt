@@ -1,0 +1,3764 @@
+classdef MainApp2 < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                     matlab.ui.Figure
+        FileMenu                     matlab.ui.container.Menu
+        ExitMenu                     matlab.ui.container.Menu
+        ViewMenu                     matlab.ui.container.Menu
+        PlotOptionsMenu              matlab.ui.container.Menu
+        EnablehighqualitymodelsMenu  matlab.ui.container.Menu
+        EnablecoordinateframeMenu    matlab.ui.container.Menu
+        EnableghostmodelsMenu        matlab.ui.container.Menu
+        EnablemanipulabilityellipsoidMenu  matlab.ui.container.Menu
+        ToolsMenu                    matlab.ui.container.Menu
+        WindowMenu                   matlab.ui.container.Menu
+        HelpMenu                     matlab.ui.container.Menu
+        AboutMenu                    matlab.ui.container.Menu
+        GridLayout                   matlab.ui.container.GridLayout
+        LeftPanel                    matlab.ui.container.Panel
+        DoFSpinner                   matlab.ui.control.Spinner
+        DoFSpinnerLabel              matlab.ui.control.Label
+        EditButton                   matlab.ui.control.StateButton
+        EndEffectorDropDown          matlab.ui.control.DropDown
+        EndEffectorDropDownLabel     matlab.ui.control.Label
+        RobotModelDropDown           matlab.ui.control.DropDown
+        RobotModelDropDownLabel      matlab.ui.control.Label
+        Panel                        matlab.ui.container.Panel
+        TimePanel                    matlab.ui.container.Panel
+        x1RealtimeLabel              matlab.ui.control.Label
+        secLabel                     matlab.ui.control.Label
+        TimeLabel                    matlab.ui.control.Label
+        SpeedxSpinner                matlab.ui.control.Spinner
+        SpeedxLabel                  matlab.ui.control.Label
+        StepsEditField               matlab.ui.control.NumericEditField
+        StepsLabel                   matlab.ui.control.Label
+        FinalsEditField              matlab.ui.control.NumericEditField
+        FinalsLabel                  matlab.ui.control.Label
+        StopButton                   matlab.ui.control.Button
+        SimModeSwitch                matlab.ui.control.Switch
+        SimulationModeSwitchLabel    matlab.ui.control.Label
+        RunButton                    matlab.ui.control.Button
+        LeftTabGroup                 matlab.ui.container.TabGroup
+        KinematicsTab                matlab.ui.container.Tab
+        jLabel                       matlab.ui.control.Label
+        JointTypePanel               matlab.ui.container.Panel
+        q_7ButtonGroup               matlab.ui.container.ButtonGroup
+        q_7Label                     matlab.ui.control.Label
+        Button2_7                    matlab.ui.control.RadioButton
+        Button_7                     matlab.ui.control.RadioButton
+        q_6ButtonGroup               matlab.ui.container.ButtonGroup
+        q_6Label                     matlab.ui.control.Label
+        Button2_6                    matlab.ui.control.RadioButton
+        Button_6                     matlab.ui.control.RadioButton
+        q_5ButtonGroup               matlab.ui.container.ButtonGroup
+        q_5Label                     matlab.ui.control.Label
+        Button2_5                    matlab.ui.control.RadioButton
+        Button_5                     matlab.ui.control.RadioButton
+        q_4ButtonGroup               matlab.ui.container.ButtonGroup
+        q_4Label                     matlab.ui.control.Label
+        Button2_4                    matlab.ui.control.RadioButton
+        Button_4                     matlab.ui.control.RadioButton
+        q_3ButtonGroup               matlab.ui.container.ButtonGroup
+        q_3Label                     matlab.ui.control.Label
+        Button2_3                    matlab.ui.control.RadioButton
+        Button_3                     matlab.ui.control.RadioButton
+        q_2ButtonGroup               matlab.ui.container.ButtonGroup
+        q_2Label                     matlab.ui.control.Label
+        Button2_2                    matlab.ui.control.RadioButton
+        Button_2                     matlab.ui.control.RadioButton
+        q_1ButtonGroup               matlab.ui.container.ButtonGroup
+        q_1Label                     matlab.ui.control.Label
+        Button2                      matlab.ui.control.RadioButton
+        Button                       matlab.ui.control.RadioButton
+        q_jPanel                     matlab.ui.container.Panel
+        q_jRPLabel                   matlab.ui.control.Label
+        mmdegmmdegLabel              matlab.ui.control.Label
+        DHTable                      matlab.ui.control.Table
+        DHTableLabel                 matlab.ui.control.Label
+        LimitsTab                    matlab.ui.container.Tab
+        JointAccMagdegsLabel         matlab.ui.control.Label
+        JointAccMagTable             matlab.ui.control.Table
+        JointVelMagdegsLabel         matlab.ui.control.Label
+        JointVelMagTable             matlab.ui.control.Table
+        JointPosMindegLabel          matlab.ui.control.Label
+        JointPosMinTable             matlab.ui.control.Table
+        JointPosMaxdegLabel          matlab.ui.control.Label
+        JointPosMaxTable             matlab.ui.control.Table
+        DynamicsTab                  matlab.ui.container.Tab
+        InertialParametersPanel      matlab.ui.container.Panel
+        CenterofMassTable_2          matlab.ui.control.Table
+        UniqueElementsVectorofInertiaTensorsmLabel  matlab.ui.control.Label
+        CenterofMassmLabel           matlab.ui.control.Label
+        CenterofMassTable            matlab.ui.control.Table
+        MasskgLabel                  matlab.ui.control.Label
+        MassTable                    matlab.ui.control.Table
+        FrictionCheckBox             matlab.ui.control.CheckBox
+        SpringCheckBox               matlab.ui.control.CheckBox
+        AdditionalmodelsLabel        matlab.ui.control.Label
+        ControlTab                   matlab.ui.container.Tab
+        ControlSpaceDropDown         matlab.ui.control.DropDown
+        ControlSpaceDropDownLabel    matlab.ui.control.Label
+        CompensationsPanel           matlab.ui.container.Panel
+        CompensationsLabel           matlab.ui.control.Label
+        CompGravityCheckBox          matlab.ui.control.CheckBox
+        CompFrictionCheckBox         matlab.ui.control.CheckBox
+        CompSpringCheckBox           matlab.ui.control.CheckBox
+        ControlTypeDropDown          matlab.ui.control.DropDown
+        ControlTypeDropDownLabel     matlab.ui.control.Label
+        CycleEditField               matlab.ui.control.NumericEditField
+        CycleEditFieldLabel          matlab.ui.control.Label
+        secLabel_2                   matlab.ui.control.Label
+        GainTable                    matlab.ui.control.Table
+        ControlGainsLabel            matlab.ui.control.Label
+        CenterPanel                  matlab.ui.container.Panel
+        TabGroup                     matlab.ui.container.TabGroup
+        DViewTab                     matlab.ui.container.Tab
+        HUDPanel                     matlab.ui.container.Panel
+        hudLayout                    matlab.ui.container.GridLayout
+        q_actLabel                   matlab.ui.control.Label
+        HUDLimitBadge                matlab.ui.control.Label
+        HUDLimitLabel                matlab.ui.control.Label
+        HUDSingularityBadge          matlab.ui.control.Label
+        HUDManipLabel                matlab.ui.control.Label
+        HUDEulerLabel                matlab.ui.control.Label
+        HUDPosLabel                  matlab.ui.control.Label
+        ModelPanel                   matlab.ui.container.Panel
+        EllipsoidCheckBox            matlab.ui.control.CheckBox
+        HDmodelsCheckBox             matlab.ui.control.CheckBox
+        DmodelsCheckBox              matlab.ui.control.CheckBox
+        HUDCheckBox                  matlab.ui.control.CheckBox
+        SlowerLabel                  matlab.ui.control.Label
+        UIAxes                       matlab.ui.control.UIAxes
+        ScopeTelemetryTab            matlab.ui.container.Tab
+        TabGroup2                    matlab.ui.container.TabGroup
+        JointTrackingErrorsTab       matlab.ui.container.Tab
+        ActuatorTorquesTab           matlab.ui.container.Tab
+        CartesianPathErrorTab        matlab.ui.container.Tab
+        PhasePortraitsTab            matlab.ui.container.Tab
+        RightPanel                   matlab.ui.container.Panel
+        TrajectoryPanel              matlab.ui.container.Panel
+        OnButton                     matlab.ui.control.StateButton
+        TrajSpaceButtonGroup         matlab.ui.container.ButtonGroup
+        TaskButton                   matlab.ui.control.RadioButton
+        JointButton                  matlab.ui.control.RadioButton
+        VelEditField                 matlab.ui.control.NumericEditField
+        VelEditFieldLabel            matlab.ui.control.Label
+        AccEditField                 matlab.ui.control.NumericEditField
+        AccEditFieldLabel            matlab.ui.control.Label
+        InterpolationDropDown        matlab.ui.control.DropDown
+        InterpolationLabel           matlab.ui.control.Label
+        AccPrcLabel                  matlab.ui.control.Label
+        VelPrcLabel                  matlab.ui.control.Label
+        LimitsLabel                  matlab.ui.control.Label
+        RightTabGroup                matlab.ui.container.TabGroup
+        InitialJointTab              matlab.ui.container.Tab
+        GripperInitialSpinner        matlab.ui.control.Spinner
+        Axis7InitialSpinner          matlab.ui.control.Spinner
+        Axis6InitialSpinner          matlab.ui.control.Spinner
+        Axis5InitialSpinner          matlab.ui.control.Spinner
+        Axis4InitialSpinner          matlab.ui.control.Spinner
+        Axis3InitialSpinner          matlab.ui.control.Spinner
+        Axis2InitialSpinner          matlab.ui.control.Spinner
+        Axis1InitialSpinner          matlab.ui.control.Spinner
+        GripperInitialSlider         matlab.ui.control.Slider
+        GripperInitialLabel          matlab.ui.control.Label
+        Axis7InitialSlider           matlab.ui.control.Slider
+        Axis7InitialLabel            matlab.ui.control.Label
+        Axis6InitialSlider           matlab.ui.control.Slider
+        Axis6InitialLabel            matlab.ui.control.Label
+        Axis5InitialSlider           matlab.ui.control.Slider
+        Axis5InitialLabel            matlab.ui.control.Label
+        Axis4InitialSlider           matlab.ui.control.Slider
+        Axis4InitialLabel            matlab.ui.control.Label
+        Axis3InitialSlider           matlab.ui.control.Slider
+        Axis3InitialLabel            matlab.ui.control.Label
+        Axis2InitialSlider           matlab.ui.control.Slider
+        Axis2InitialLabel            matlab.ui.control.Label
+        Axis1InitialSlider           matlab.ui.control.Slider
+        Axis1InitialLabel            matlab.ui.control.Label
+        FinalJointTab                matlab.ui.container.Tab
+        GripperFinalSlider           matlab.ui.control.Slider
+        GripperFinalLabel            matlab.ui.control.Label
+        Axis7FinalSlider             matlab.ui.control.Slider
+        Axis7FinalLabel              matlab.ui.control.Label
+        Axis6FinalSlider             matlab.ui.control.Slider
+        Axis6FinalLabel              matlab.ui.control.Label
+        Axis5FinalSlider             matlab.ui.control.Slider
+        Axis5FinalLabel              matlab.ui.control.Label
+        Axis4FinalSlider             matlab.ui.control.Slider
+        Axis4FinalLabel              matlab.ui.control.Label
+        Axis3FinalSlider             matlab.ui.control.Slider
+        Axis3FinalLabel              matlab.ui.control.Label
+        Axis2FinalSlider             matlab.ui.control.Slider
+        Axis2FinalLabel              matlab.ui.control.Label
+        Axis1FinalSlider             matlab.ui.control.Slider
+        Axis1FinalLabel              matlab.ui.control.Label
+        GripperFinalSpinner          matlab.ui.control.Spinner
+        Axis7FinalSpinner            matlab.ui.control.Spinner
+        Axis6FinalSpinner            matlab.ui.control.Spinner
+        Axis5FinalSpinner            matlab.ui.control.Spinner
+        Axis4FinalSpinner            matlab.ui.control.Spinner
+        Axis3FinalSpinner            matlab.ui.control.Spinner
+        Axis2FinalSpinner            matlab.ui.control.Spinner
+        Axis1FinalSpinner            matlab.ui.control.Spinner
+        InitialTaskTab               matlab.ui.container.Tab
+        GripperTaskInitialSlider     matlab.ui.control.Slider
+        GripperTaskInitialLabel      matlab.ui.control.Label
+        Axis7InitialSlider_2         matlab.ui.control.Slider
+        Axis7InitialLabel_2          matlab.ui.control.Label
+        PsiInitialSlider             matlab.ui.control.Slider
+        PsiInitialLabel              matlab.ui.control.Label
+        ThetaInitialSlider           matlab.ui.control.Slider
+        ThetaInitialLabel            matlab.ui.control.Label
+        PhiInitialSlider             matlab.ui.control.Slider
+        PhiInitialLabel              matlab.ui.control.Label
+        ZAxisInitialSlider           matlab.ui.control.Slider
+        ZAxisInitialLabel            matlab.ui.control.Label
+        YAxisInitialSlider           matlab.ui.control.Slider
+        YAxisInitialLabel            matlab.ui.control.Label
+        XAxisInitialSlider           matlab.ui.control.Slider
+        XAxisInitialLabel            matlab.ui.control.Label
+        GripperTaskInitialSpinner    matlab.ui.control.Spinner
+        Axis7InitialSpinner_2        matlab.ui.control.Spinner
+        PsiInitialSpinner            matlab.ui.control.Spinner
+        ThetaInitialSpinner          matlab.ui.control.Spinner
+        PhiInitialSpinner            matlab.ui.control.Spinner
+        ZAxisInitialSpinner          matlab.ui.control.Spinner
+        YAxisInitialSpinner          matlab.ui.control.Spinner
+        XAxisInitialSpinner          matlab.ui.control.Spinner
+        FinalTaskTab                 matlab.ui.container.Tab
+        GripperTaskFinalSlider       matlab.ui.control.Slider
+        GripperTaskFinalLabel        matlab.ui.control.Label
+        Axis7FinalSlider_2           matlab.ui.control.Slider
+        Axis7FinalLabel_2            matlab.ui.control.Label
+        PsiFinalSlider               matlab.ui.control.Slider
+        PsiFinalLabel                matlab.ui.control.Label
+        ThetaFinalSlider             matlab.ui.control.Slider
+        ThetaFinalLabel              matlab.ui.control.Label
+        PhiFinalSlider               matlab.ui.control.Slider
+        PhiFinalLabel                matlab.ui.control.Label
+        ZAxisFinalSlider             matlab.ui.control.Slider
+        ZAxisFinalLabel              matlab.ui.control.Label
+        YAxisFinalSlider             matlab.ui.control.Slider
+        YAxisFinalLabel              matlab.ui.control.Label
+        XAxisFinalSlider             matlab.ui.control.Slider
+        XAxisFinalLabel              matlab.ui.control.Label
+        GripperTaskFinalSpinner      matlab.ui.control.Spinner
+        Axis7FinalSpinner_2          matlab.ui.control.Spinner
+        PsiFinalSpinner              matlab.ui.control.Spinner
+        ThetaFinalSpinner            matlab.ui.control.Spinner
+        PhiFinalSpinner              matlab.ui.control.Spinner
+        ZAxisFinalSpinner            matlab.ui.control.Spinner
+        YAxisFinalSpinner            matlab.ui.control.Spinner
+        XAxisFinalSpinner            matlab.ui.control.Spinner
+    end
+
+    % Properties that correspond to apps with auto-reflow
+    properties (Access = private)
+        onePanelWidth = 576;
+        twoPanelWidth = 768;
+    end
+
+
+    properties (Access = private)
+        
+        prcnt = [0.1,0.1];
+        trj_profile_text = 'Quintic';
+
+        tini = 0; % Start time
+
+    end
+    
+    properties (Access = public)
+        
+        robot_name = [
+        "Franka Emika Robot"
+        "Universal Robots UR3"
+        "Unitree Z1"
+        "Stäubli RX160"
+        "Stäubli RX160L"
+        "Custom Robot"];
+
+        eulerSet = 1;
+        sim_mode = 0;
+        grip = 0;
+        exceeding = 0;
+
+        DH_custom;
+        n_custom;
+        m_j_custom;
+        rj_jcj_custom;
+        Ij_cj_custom;
+        j_type_custom;
+        
+        controller;
+        viewModel;
+        JointUI = struct();
+
+    end
+    
+    methods (Access = public)
+        
+        function updateRobotModel(app)
+            robotId = find(strcmp(app.robot_name, app.RobotModelDropDown.Value));
+            
+            if robotId == size(app.robot_name, 1) % Custom Robot
+                robotId = 0;
+                % Pack custom params
+                customParams.kin.a_j = app.DH_custom(1:app.n_custom+1,1);
+                customParams.kin.alpha_j = app.DH_custom(1:app.n_custom+1,2);
+                customParams.kin.d_j = app.DH_custom(1:app.n_custom+1,3);
+                customParams.kin.theta_O_j = app.DH_custom(1:app.n_custom+1,4);
+                customParams.kin.n = app.n_custom;
+                customParams.kin.j_type = app.j_type_custom(1:app.n_custom,1);
+                customParams.m_j = app.m_j_custom(1:app.n_custom,1);
+                customParams.rj_jcj = app.rj_jcj_custom(:,:,1:app.n_custom);
+                customParams.Ij_cj = app.Ij_cj_custom(:,:,1:app.n_custom);
+                
+                app.controller.setRobotModel(robotId, app.controller.model.ee_att, customParams);
+                
+                app.setCustomControlsState(true, app.EditButton.Value, app.n_custom);
+                app.DmodelsCheckBox.Visible = "off";
+                app.EndEffectorDropDown.Visible = "off";
+            else
+                app.controller.setRobotModel(robotId, app.controller.model.ee_att);
+                
+                app.setCustomControlsState(false, false);
+                app.DmodelsCheckBox.Visible = "on";
+                app.EndEffectorDropDown.Visible = "on";
+            end
+
+            app.refreshUI();
+        end
+
+        function refreshUI(app)
+            n = app.controller.model.kin.n;
+            pMax = zeros(n, 1);
+            pMin = zeros(n, 1);
+            vMag = zeros(n, 1);
+            aMag = zeros(n, 1);
+            for j = 1:n
+                if app.controller.model.kin.j_type(j,1) == 1
+                    pMax(j,1) = round(rad2deg(app.controller.model.kin.q_posLim(j,2)), 2);
+                    pMin(j,1) = round(rad2deg(app.controller.model.kin.q_posLim(j,1)), 2);
+                    vMag(j,1) = round(rad2deg(app.controller.model.kin.q_velLim(j,2)), 2);
+                    aMag(j,1) = round(rad2deg(app.controller.model.kin.q_accLim(j,2)), 2);
+                else
+                    pMax(j,1) = round(1e3*app.controller.model.kin.q_posLim(j,2), 2);
+                    pMin(j,1) = round(1e3*app.controller.model.kin.q_posLim(j,1), 2);
+                    vMag(j,1) = round(1e3*app.controller.model.kin.q_velLim(j,2), 2);
+                    aMag(j,1) = round(1e3*app.controller.model.kin.q_accLim(j,2), 2);
+                end
+            end
+
+            app.controller.model.kin.r_posLim = [-pi pi; -pi pi; -pi pi];
+            app.controller.model.kin.r_velLim = [-pi/4 pi/4];
+            app.controller.model.kin.r_accLim = [-pi/8 pi/8];
+
+            app.DoFSpinner.Value = n;
+
+            % 1. Build DH Table Data dynamically for any n
+            TableData = cell(n + 1, 4);
+            for j = 1:n
+                TableData{j, 1} = num2str(app.controller.model.kin.a_j(j)*1e3);
+                TableData{j, 2} = num2str(rad2deg(app.controller.model.kin.alpha_j(j)));
+                TableData{j, 3} = num2str(app.controller.model.kin.d_j(j)*1e3);
+                TableData{j, 4} = num2str(round(rad2deg(app.controller.model.kin.theta_O_j(j))));
+            end
+            TableData{n+1, 1} = num2str(app.controller.model.kin.a_j(n+1)*1e3);
+            TableData{n+1, 2} = num2str(rad2deg(app.controller.model.kin.alpha_j(n+1)));
+            TableData{n+1, 3} = num2str(app.controller.model.kin.d_j(n+1)*1e3);
+            TableData{n+1, 4} = num2str(round(rad2deg(app.controller.model.kin.theta_O_j(n+1))));
+
+            LinkNames = cell(n + 1, 1);
+            for j = 1:n
+                LinkNames{j} = num2str(j);
+            end
+            LinkNames{n+1} = 'E';
+
+            % 2. Build Joint Limit Tables Data
+            posMaxRow = cell(1, n);
+            posMinRow = cell(1, n);
+            velMagRow = cell(1, n);
+            accMagRow = cell(1, n);
+            for j = 1:n
+                posMaxRow{j} = num2str(round(pMax(j,1), 1));
+                posMinRow{j} = num2str(round(pMin(j,1), 1));
+                velMagRow{j} = num2str(round(vMag(j,1), 1));
+                accMagRow{j} = num2str(round(aMag(j,1), 1));
+            end
+            app.JointPosMaxTable.Data = posMaxRow;
+            app.JointPosMinTable.Data = posMinRow;
+            app.JointVelMagTable.Data = velMagRow;
+            app.JointAccMagTable.Data = accMagRow;
+            app.JointPosMaxTable.ColumnWidth = repmat({40}, 1, n);
+            app.JointPosMinTable.ColumnWidth = repmat({40}, 1, n);
+            app.JointVelMagTable.ColumnWidth = repmat({40}, 1, n);
+            app.JointAccMagTable.ColumnWidth = repmat({40}, 1, n);
+
+            % 3. Dynamics Tables Data (Mass, CoM, Inertia)
+            colWidthsDyn = repmat({36}, 1, n);
+            massRow = cell(1, n);
+            comTable = cell(3, n);
+            inertiaTable = cell(6, n);
+            for j = 1:n
+                massRow{j} = num2str(round(app.controller.model.dyn.m_j(j), 2));
+                for r = 1:3
+                    comTable{r, j} = num2str(round(app.controller.model.dyn.rj_jcj(r, 1, j), 2));
+                end
+                inertiaTable{1, j} = num2str(round(app.controller.model.dyn.Ij_cj(1,1,j), 2));
+                inertiaTable{2, j} = num2str(round(app.controller.model.dyn.Ij_cj(1,2,j), 2));
+                inertiaTable{3, j} = num2str(round(app.controller.model.dyn.Ij_cj(1,3,j), 2));
+                inertiaTable{4, j} = num2str(round(app.controller.model.dyn.Ij_cj(2,2,j), 2));
+                inertiaTable{5, j} = num2str(round(app.controller.model.dyn.Ij_cj(2,3,j), 2));
+                inertiaTable{6, j} = num2str(round(app.controller.model.dyn.Ij_cj(3,3,j), 2));
+            end
+            app.MassTable.Data = massRow;
+            app.MassTable.ColumnWidth = colWidthsDyn;
+            app.CenterofMassTable.Data = comTable;
+            app.CenterofMassTable.ColumnWidth = colWidthsDyn;
+            app.CenterofMassTable_2.Data = inertiaTable;
+            app.CenterofMassTable_2.ColumnWidth = colWidthsDyn;
+
+            % 4. Joint Type Radio Buttons (Button 1..7) and ButtonGroups (q_1..7)
+            buttons = {app.Button, app.Button_2, app.Button_3, app.Button_4, app.Button_5, app.Button_6, app.Button_7};
+            buttonGroups = {app.q_1ButtonGroup, app.q_2ButtonGroup, app.q_3ButtonGroup, app.q_4ButtonGroup, ...
+                            app.q_5ButtonGroup, app.q_6ButtonGroup, app.q_7ButtonGroup};
+            for j = 1:7
+                if j <= n
+                    buttons{j}.Value = app.controller.model.kin.j_type(j, 1);
+                    buttonGroups{j}.Visible = "on";
+                else
+                    buttonGroups{j}.Visible = "off";
+                end
+            end
+
+            T = table(TableData, 'RowNames', LinkNames);
+            C1 = table2cell(T);
+            C = [T.Properties.RowNames, vertcat(C1{:})];
+            app.DHTable.Data = C;
+            app.DHTable.ColumnName = {''; 'a_j'; [char(945) '_j']; 'd_j'; [char(952) '_O_j']};
+            app.DHTable.RowName = [];
+            app.DHTable.ColumnWidth = {15, 55, 55, 55, 55};
+            colStyle = uistyle('BackgroundColor', app.DHTable.BackgroundColor(2,:), 'FontWeight', 'bold'); 
+            addStyle(app.DHTable, colStyle, 'column', 1);
+            addStyle(app.DHTable, uistyle('HorizontalAlignment', 'right'), 'table', '');
+
+            updateControlParams(app);
+        end
+
+        function updateEndEffectorModel(app)
+            
+            if app.controller.model.robot_model ~= 0
+                % app.DHTable.Enable = "off";
+                if app.controller.model.robot_model == 4 || app.controller.model.robot_model == 5
+                    app.EndEffectorDropDown.Items = {'None', 'F/T Sensor', 'F/T Sensor + Gripper', 'F/T Sensor + Ball&Spring'};
+                    if app.grip == 1
+                        app.EndEffectorDropDown.Value = 'F/T Sensor + Gripper';
+                        app.controller.model.ee_att = 2;
+                        app.grip = 0;
+                        updateRobotModel(app)
+                    end
+                else
+                    app.EndEffectorDropDown.Items = {'None', 'Gripper'};
+                    if app.exceeding == 1
+                        app.EndEffectorDropDown.Value = 'Gripper';
+                        app.controller.model.ee_att = 1;
+                        app.exceeding = 0;
+                        updateRobotModel(app)
+                    end
+                end
+                
+                if app.controller.model.ee_att == 1
+                    if app.controller.model.robot_model == 3
+                        app.controller.model.qEIni = app.controller.model.kin.qELim(1);
+                        app.controller.model.qEDes = app.controller.model.kin.qELim(1);
+                    elseif app.controller.model.robot_model == 1
+                        app.controller.model.qEIni = app.controller.model.kin.qELim(2);
+                        app.controller.model.qEDes = app.controller.model.kin.qELim(2);
+                    end
+                    isVis = (app.controller.model.robot_model ~= 4 && app.controller.model.robot_model ~= 5);
+                    isEn  = (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 3);
+                    setGripperControlsState(app, char(matlab.lang.OnOffSwitchState(isVis)), char(matlab.lang.OnOffSwitchState(isEn)));
+                elseif app.controller.model.ee_att == 2
+                    setGripperControlsState(app, 'on', 'off');
+                else
+                    setGripperControlsState(app, 'off', 'off');
+                end
+            else
+                setGripperControlsState(app, 'off', 'off');
+            end
+        end
+
+        function resetJointValues(app)
+            midQ = mean(app.controller.model.kin.q_posLim, 2);
+            app.controller.model.ini.q_pos = midQ;
+            app.controller.model.fin.q_pos = midQ;
+        end
+
+        function updateSliderSpinnerValues(app)
+            n = app.controller.model.kin.n;
+            for j = 1:7
+                if j <= n
+                    if app.controller.model.kin.j_type(j,1) == 1
+                        unitStr = ' (deg)  ';
+                        lims = rad2deg(app.controller.model.kin.q_posLim(j,:));
+                        valIni = rad2deg(app.controller.model.ini.q_pos(j));
+                        valFin = rad2deg(app.controller.model.fin.q_pos(j));
+                    else
+                        unitStr = ' (mm)  ';
+                        lims = 1e3 * app.controller.model.kin.q_posLim(j,:);
+                        valIni = 1e3 * app.controller.model.ini.q_pos(j);
+                        valFin = 1e3 * app.controller.model.fin.q_pos(j);
+                    end
+
+                    valIni = min(max(valIni, lims(1)), lims(2));
+                    valFin = min(max(valFin, lims(1)), lims(2));
+
+                    app.JointUI.ini.labels(j).Text = sprintf('Joint %d%s', j, unitStr);
+                    app.JointUI.ini.sliders(j).Limits = lims;
+                    app.JointUI.ini.spinners(j).Limits = lims;
+                    app.JointUI.ini.sliders(j).Value = valIni;
+                    app.JointUI.ini.spinners(j).Value = valIni;
+
+                    app.JointUI.fin.labels(j).Text = sprintf('Joint %d%s', j, unitStr);
+                    app.JointUI.fin.sliders(j).Limits = lims;
+                    app.JointUI.fin.spinners(j).Limits = lims;
+                    app.JointUI.fin.sliders(j).Value = valFin;
+                    app.JointUI.fin.spinners(j).Value = valFin;
+
+                    if j > 1
+                        app.JointUI.ini.labels(j).Visible = 'on';
+                        app.JointUI.ini.sliders(j).Visible = 'on';
+                        app.JointUI.ini.spinners(j).Visible = 'on';
+                        app.JointUI.fin.labels(j).Visible = 'on';
+                        app.JointUI.fin.sliders(j).Visible = 'on';
+                        app.JointUI.fin.spinners(j).Visible = 'on';
+                    end
+                else
+                    app.JointUI.ini.labels(j).Visible = 'off';
+                    app.JointUI.ini.sliders(j).Visible = 'off';
+                    app.JointUI.ini.spinners(j).Visible = 'off';
+                    app.JointUI.fin.labels(j).Visible = 'off';
+                    app.JointUI.fin.sliders(j).Visible = 'off';
+                    app.JointUI.fin.spinners(j).Visible = 'off';
+                end
+            end
+
+            if app.controller.model.ee_att == 1
+                if app.controller.model.robot_model == 1
+                    unitText = "Gripper (mm)  ";
+                    lims = app.controller.model.kin.qELim * 1e3;
+                    vIni = app.controller.model.qEIni * 1e3;
+                    vFin = app.controller.model.qEDes * 1e3;
+                elseif app.controller.model.robot_model == 3
+                    unitText = "Gripper (deg)  ";
+                    lims = rad2deg(app.controller.model.kin.qELim);
+                    vIni = rad2deg(app.controller.model.kin.qELim(1));
+                    vFin = rad2deg(app.controller.model.kin.qELim(1));
+                else
+                    return;
+                end
+                vIni = min(max(vIni, lims(1)), lims(2));
+                vFin = min(max(vFin, lims(1)), lims(2));
+
+                app.GripperInitialLabel.Text     = unitText;
+                app.GripperFinalLabel.Text       = unitText;
+                app.GripperInitialSlider.Limits  = lims;
+                app.GripperInitialSpinner.Limits = lims;
+                app.GripperFinalSlider.Limits    = lims;
+                app.GripperFinalSpinner.Limits   = lims;
+                app.GripperInitialSlider.Value   = vIni;
+                app.GripperInitialSpinner.Value  = vIni;
+                app.GripperFinalSlider.Value     = vFin;
+                app.GripperFinalSpinner.Value    = vFin;
+            end
+
+        end
+
+        function updateTaskInputValues(app)
+            app.controller.updateForwardKinematics('ini', app.eulerSet);
+            app.controller.updateForwardKinematics('fin', app.eulerSet);
+            
+            app.controller.model.ini.Re_ref = app.controller.model.ini.Re;
+            app.controller.model.ini.t_pos_ref = app.controller.model.ini.t_pos;
+            
+            app.controller.model.fin.Re_ref = app.controller.model.fin.Re;
+            app.controller.model.fin.t_pos_ref = app.controller.model.fin.t_pos;
+
+            posSliders = {[app.XAxisInitialSlider, app.YAxisInitialSlider, app.ZAxisInitialSlider], ...
+                          [app.XAxisFinalSlider,   app.YAxisFinalSlider,   app.ZAxisFinalSlider]};
+            posSpinners = {[app.XAxisInitialSpinner, app.YAxisInitialSpinner, app.ZAxisInitialSpinner], ...
+                           [app.XAxisFinalSpinner,   app.YAxisFinalSpinner,   app.ZAxisFinalSpinner]};
+            
+            rotSliders = {[app.PhiInitialSlider, app.ThetaInitialSlider, app.PsiInitialSlider], ...
+                          [app.PhiFinalSlider,   app.ThetaFinalSlider,   app.PsiFinalSlider]};
+            rotSpinners = {[app.PhiInitialSpinner, app.ThetaInitialSpinner, app.PsiInitialSpinner], ...
+                           [app.PhiFinalSpinner,   app.ThetaFinalSpinner,   app.PsiFinalSpinner]};
+
+            targets = {'ini', 'fin'};
+
+            for t = 1:2
+                targetName = targets{t};
+                for k = 1:3
+                    % Cartesian Position Limits & Values (scaled x1000 to mm)
+                    pLim = 1e3 * app.controller.model.kin.t_posLim(k,:);
+                    pVal = 1e3 * app.controller.model.(targetName).t_pos(k);
+                    pVal = min(max(pVal, pLim(1)), pLim(2));
+                    posSliders{t}(k).Limits  = pLim;
+                    posSpinners{t}(k).Limits = pLim;
+                    posSliders{t}(k).Value   = pVal;
+                    posSpinners{t}(k).Value  = pVal;
+
+                    % Euler Angles Limits & Values (scaled to degrees)
+                    rLim = rad2deg(app.controller.model.kin.r_posLim(k,:));
+                    rVal = rad2deg(app.controller.model.(targetName).r_pos(k));
+                    rVal = min(max(rVal, rLim(1)), rLim(2));
+                    rotSliders{t}(k).Limits  = rLim;
+                    rotSpinners{t}(k).Limits = rLim;
+                    rotSliders{t}(k).Value   = rVal;
+                    rotSpinners{t}(k).Value  = rVal;
+                end
+            end
+
+            if app.controller.model.ee_att == 1
+                if app.controller.model.robot_model == 1
+                    unitText = "Gripper (mm)  ";
+                    lims = app.controller.model.kin.qELim * 1e3;
+                    vIni = app.controller.model.qEIni * 1e3;
+                    vFin = app.controller.model.qEDes * 1e3;
+                elseif app.controller.model.robot_model == 3
+                    unitText = "Gripper (deg])  ";
+                    lims = rad2deg(app.controller.model.kin.qELim);
+                    vIni = rad2deg(app.controller.model.kin.qELim(1));
+                    vFin = rad2deg(app.controller.model.kin.qELim(1));
+                else
+                    return;
+                end
+                vIni = min(max(vIni, lims(1)), lims(2));
+                vFin = min(max(vFin, lims(1)), lims(2));
+
+                app.GripperTaskInitialLabel.Text     = unitText;
+                app.GripperTaskFinalLabel.Text       = unitText;
+                app.GripperTaskInitialSlider.Limits  = lims;
+                app.GripperTaskInitialSpinner.Limits = lims;
+                app.GripperTaskFinalSlider.Limits    = lims;
+                app.GripperTaskFinalSpinner.Limits   = lims;
+                app.GripperTaskInitialSlider.Value   = vIni;
+                app.GripperTaskInitialSpinner.Value  = vIni;
+                app.GripperTaskFinalSlider.Value     = vFin;
+                app.GripperTaskFinalSpinner.Value    = vFin;
+            end
+
+        end
+        
+        function updateTabGroupState(app)
+            % Detach all tabs first to guarantee strict insertion order
+            app.InitialJointTab.Parent = [];
+            app.FinalJointTab.Parent   = [];
+            app.InitialTaskTab.Parent  = [];
+            app.FinalTaskTab.Parent    = [];
+
+            if app.controller.model.trj_on == 0
+                if app.sim_mode == 0
+                    activeJoint = app.InitialJointTab;
+                    activeTask  = app.InitialTaskTab;
+                    taskTarget  = 1;
+                else
+                    activeJoint = app.FinalJointTab;
+                    activeTask  = app.FinalTaskTab;
+                    taskTarget  = 2;
+                end
+                activeJoint.Title = 'Joint';
+                activeTask.Title  = 'Task';
+
+                % Always Joint tab first, Task tab second
+                activeJoint.Parent = app.RightTabGroup;
+                activeTask.Parent  = app.RightTabGroup;
+
+                if app.RightTabGroup.SelectedTab == activeTask
+                    app.handleTabSelection(taskTarget);
+                else
+                    app.handleTabSelection(0);
+                end
+            else
+                app.InitialJointTab.Title = 'Initial Joint';
+                app.FinalJointTab.Title   = 'Final Joint';
+                app.InitialTaskTab.Title  = 'Initial Task';
+                app.FinalTaskTab.Title    = 'Final Task';
+
+                % Always Joint tabs first, Task tabs at the end
+                app.InitialJointTab.Parent = app.RightTabGroup;
+                app.FinalJointTab.Parent   = app.RightTabGroup;
+                app.InitialTaskTab.Parent  = app.RightTabGroup;
+                app.FinalTaskTab.Parent    = app.RightTabGroup;
+            end
+        end
+
+        function updateEnableState(app)
+            if app.controller.model.running_flag == 1
+                running = true;
+                en = 'off';
+                app.RunButton.Enable = "off";
+                app.StopButton.Enable = "on";
+            else
+                running = false;
+                en = 'on';
+                app.RunButton.Enable = "on";
+                app.StopButton.Enable = "off";
+            end
+            app.SimulationModeSwitchLabel.Enable = en;
+            app.SimModeSwitch.Enable = en;
+            if app.sim_mode == 0 && app.controller.model.trj_on == 0
+                app.SpeedxLabel.Enable = 'off';
+                app.SpeedxSpinner.Enable = 'off';
+            else
+                app.SpeedxLabel.Enable = en;
+                app.SpeedxSpinner.Enable = en;
+            end
+            app.StepsLabel.Enable = en;
+            app.StepsEditField.Enable = en;
+            
+            % FinalsEditField is editable when in dynamic mode with trj_on == 0 and not running
+            if app.sim_mode == 1 && app.controller.model.trj_on == 0 && ~running
+                app.FinalsLabel.Enable = 'on';
+                app.FinalsEditField.Enable = 'on';
+            else
+                app.FinalsLabel.Enable = 'off';
+                app.FinalsEditField.Enable = 'off';
+            end
+
+            % OnButton: Enabled in both Kinematic and Dynamic mode when not running
+            if ~running
+                app.OnButton.Enable = 'on';
+            else
+                app.OnButton.Enable = 'off';
+            end
+
+            % Joint controls
+            n = app.controller.model.kin.n;
+            for j = 1:7
+                % Initial positions only editable when stopped
+                if ~running && j <= n
+                    s_ini = 'on';
+                else
+                    s_ini = 'off';
+                end
+                app.JointUI.ini.sliders(j).Enable  = s_ini;
+                app.JointUI.ini.spinners(j).Enable = s_ini;
+                app.JointUI.ini.labels(j).Enable   = s_ini;
+
+                % Final positions editable when stopped OR when running in dynamic mode with trj_on == 0
+                if j <= n && (~running || (app.sim_mode == 1 && app.controller.model.trj_on == 0))
+                    s_fin = 'on';
+                else
+                    s_fin = 'off';
+                end
+                app.JointUI.fin.sliders(j).Enable  = s_fin;
+                app.JointUI.fin.spinners(j).Enable = s_fin;
+                app.JointUI.fin.labels(j).Enable   = s_fin;
+            end
+
+            % Task space controls
+            taskControlsIni = [app.XAxisInitialLabel, app.XAxisInitialSlider, app.XAxisInitialSpinner, ...
+                               app.YAxisInitialLabel, app.YAxisInitialSlider, app.YAxisInitialSpinner, ...
+                               app.ZAxisInitialLabel, app.ZAxisInitialSlider, app.ZAxisInitialSpinner, ...
+                               app.PhiInitialLabel, app.PhiInitialSlider, app.PhiInitialSpinner, ...
+                               app.ThetaInitialLabel, app.ThetaInitialSlider, app.ThetaInitialSpinner, ...
+                               app.PsiInitialLabel, app.PsiInitialSlider, app.PsiInitialSpinner, ...
+                               app.GripperTaskInitialLabel, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner];
+            for k = 1:numel(taskControlsIni)
+                taskControlsIni(k).Enable = en;
+            end
+
+            taskControlsFin = [app.XAxisFinalLabel, app.XAxisFinalSlider, app.XAxisFinalSpinner, ...
+                               app.YAxisFinalLabel, app.YAxisFinalSlider, app.YAxisFinalSpinner, ...
+                               app.ZAxisFinalLabel, app.ZAxisFinalSlider, app.ZAxisFinalSpinner, ...
+                               app.PhiFinalLabel, app.PhiFinalSlider, app.PhiFinalSpinner, ...
+                               app.ThetaFinalLabel, app.ThetaFinalSlider, app.ThetaFinalSpinner, ...
+                               app.PsiFinalLabel, app.PsiFinalSlider, app.PsiFinalSpinner, ...
+                               app.GripperTaskFinalLabel, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner];
+            
+            if ~running || (app.sim_mode == 1 && app.controller.model.trj_on == 0)
+                s_task_fin = 'on';
+            else
+                s_task_fin = 'off';
+            end
+            for k = 1:numel(taskControlsFin)
+                taskControlsFin(k).Enable = s_task_fin;
+            end
+
+            if ~running && app.controller.model.ee_att == 1 && (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 3)
+                app.GripperInitialLabel.Enable = 'on';
+                app.GripperInitialSlider.Enable = 'on';
+                app.GripperInitialSpinner.Enable = 'on';
+                app.GripperFinalLabel.Enable = 'on';
+                app.GripperFinalSlider.Enable = 'on';
+                app.GripperFinalSpinner.Enable = 'on';
+            else
+                app.GripperInitialLabel.Enable = 'off';
+                app.GripperInitialSlider.Enable = 'off';
+                app.GripperInitialSpinner.Enable = 'off';
+                if running && (app.sim_mode == 0 || app.controller.model.trj_on == 1)
+                    app.GripperFinalLabel.Enable = 'off';
+                    app.GripperFinalSlider.Enable = 'off';
+                    app.GripperFinalSpinner.Enable = 'off';
+                end
+            end
+
+            % Trajectory sub-controls: enabled only when trj_on == 1 and not running
+            if app.controller.model.trj_on == 1
+                trj_en = en;
+            else
+                trj_en = 'off';
+            end
+
+            app.InterpolationLabel.Enable = trj_en;
+            app.InterpolationDropDown.Enable = trj_en;
+            app.TrajSpaceButtonGroup.Enable = trj_en;
+            app.JointButton.Enable = trj_en;
+            app.TaskButton.Enable = trj_en;
+            app.LimitsLabel.Enable = trj_en;
+            app.VelEditFieldLabel.Enable = trj_en;
+            app.VelEditField.Enable = trj_en;
+            app.VelPrcLabel.Enable = trj_en;
+            if app.controller.model.trj_profile ~= 1 && app.controller.model.trj_on == 1
+                app.AccEditFieldLabel.Enable = trj_en;
+                app.AccEditField.Enable = trj_en;
+                app.AccPrcLabel.Enable = trj_en;
+            else
+                app.AccEditFieldLabel.Enable = 'off';
+                app.AccEditField.Enable = 'off';
+                app.AccPrcLabel.Enable = 'off';
+            end
+            
+            if (app.controller.model.robot_model == 1 || app.controller.model.robot_model == 4 || app.controller.model.robot_model == 5) && app.controller.model.line_on == 0
+                app.HDmodelsCheckBox.Enable = "on";
+                app.EnablehighqualitymodelsMenu.Enable = "on";
+                if isvalid(app.SlowerLabel), app.SlowerLabel.Enable = "on"; end
+            else
+                app.HDmodelsCheckBox.Enable = "off";
+                app.EnablehighqualitymodelsMenu.Enable = "off";
+                if isvalid(app.SlowerLabel), app.SlowerLabel.Enable = "off"; end
+            end
+
+            if app.controller.model.robot_model == 0
+                app.HDmodelsCheckBox.Visible = "off";
+                app.EnablehighqualitymodelsMenu.Visible = "off";
+                if isvalid(app.SlowerLabel), app.SlowerLabel.Visible = "off"; end
+            else
+                app.HDmodelsCheckBox.Visible = "on";
+                app.EnablehighqualitymodelsMenu.Visible = "on";
+                if isvalid(app.SlowerLabel), app.SlowerLabel.Visible = "on"; end
+            end
+
+        end
+        
+        function updateSimMode(app)
+            if strcmpi(app.SimModeSwitch.Value, 'Kinematic') == 1
+                app.sim_mode = 0;
+                app.controller.model.tstp = 0.001;
+            else
+                app.sim_mode = 1;
+                app.controller.model.tstp = 0.0001;
+            end
+            app.controller.model.sim_mode = app.sim_mode;
+            app.StepsEditField.Value = app.controller.model.tstp;
+            app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
+            app.OnButtonValueChanged();
+        end
+
+        function updateRunButtonState(app)
+
+            if app.sim_mode == 0 && app.controller.model.trj_on == 0
+                app.RunButton.Enable = "off";
+            elseif app.controller.model.trj_on == 1
+                if app.controller.model.tfin_trj < app.controller.model.tstp
+                    app.RunButton.Enable = "off";
+                else
+                    app.RunButton.Enable = "on";
+                end
+            else
+                if app.FinalsEditField.Value <= 0
+                    app.RunButton.Enable = "off";
+                else
+                    app.RunButton.Enable = "on";
+                end
+            end
+            
+        end
+
+        function updateFinTimeTrj(app)
+            if app.controller.model.trj_on == 0
+                return;
+            end            
+            app.controller.updateFinTimeTrj(app.prcnt);
+            app.FinalsEditField.Value = app.controller.model.tfin_trj;
+            if app.sim_mode == 1
+                app.controller.model.tfin = app.controller.model.tfin_trj;
+            end
+        end
+
+    end
+    
+    methods (Access = private)
+
+        function updateJointSpaceUI(app, targetType)
+            n = app.controller.model.kin.n;
+            q = app.controller.model.(targetType).q_pos;
+            for i = 1:n
+                if app.controller.model.kin.j_type(i) == 1
+                    val = rad2deg(q(i));
+                else
+                    val = 1e3 * q(i);
+                end
+                lims = app.JointUI.(targetType).sliders(i).Limits;
+                val = min(max(val, lims(1)), lims(2));
+                app.JointUI.(targetType).sliders(i).Value  = val;
+                app.JointUI.(targetType).spinners(i).Value = val;
+            end
+        end
+
+        function updateTaskSpaceUI(app, targetType)
+            t = app.controller.model.(targetType).t_pos * 1e3;
+            r = rad2deg(app.controller.model.(targetType).r_pos);
+
+            if strcmp(targetType, 'ini')
+                sX = app.XAxisInitialSlider; spX = app.XAxisInitialSpinner;
+                sY = app.YAxisInitialSlider; spY = app.YAxisInitialSpinner;
+                sZ = app.ZAxisInitialSlider; spZ = app.ZAxisInitialSpinner;
+                sPhi = app.PhiInitialSlider; spPhi = app.PhiInitialSpinner;
+                sTh = app.ThetaInitialSlider; spTh = app.ThetaInitialSpinner;
+                sPsi = app.PsiInitialSlider; spPsi = app.PsiInitialSpinner;
+            else
+                sX = app.XAxisFinalSlider; spX = app.XAxisFinalSpinner;
+                sY = app.YAxisFinalSlider; spY = app.YAxisFinalSpinner;
+                sZ = app.ZAxisFinalSlider; spZ = app.ZAxisFinalSpinner;
+                sPhi = app.PhiFinalSlider; spPhi = app.PhiFinalSpinner;
+                sTh = app.ThetaFinalSlider; spTh = app.ThetaFinalSpinner;
+                sPsi = app.PsiFinalSlider; spPsi = app.PsiFinalSpinner;
+            end
+
+            t(1) = min(max(t(1), sX.Limits(1)), sX.Limits(2));
+            t(2) = min(max(t(2), sY.Limits(1)), sY.Limits(2));
+            t(3) = min(max(t(3), sZ.Limits(1)), sZ.Limits(2));
+            r(1) = min(max(r(1), sPhi.Limits(1)), sPhi.Limits(2));
+            r(2) = min(max(r(2), sTh.Limits(1)), sTh.Limits(2));
+            r(3) = min(max(r(3), sPsi.Limits(1)), sPsi.Limits(2));
+
+            sX.Value = t(1); spX.Value = t(1);
+            sY.Value = t(2); spY.Value = t(2);
+            sZ.Value = t(3); spZ.Value = t(3);
+            sPhi.Value = r(1); spPhi.Value = r(1);
+            sTh.Value = r(2); spTh.Value = r(2);
+            sPsi.Value = r(3); spPsi.Value = r(3);
+        end
+
+        function updateSimulationLabels(app, varargin)
+            if numel(varargin) < 3
+                return;
+            end
+            time = varargin{1};
+            q_pos = varargin{2};
+            n = varargin{3};
+            
+            % Updates the simulation time label
+            app.secLabel.Text = sprintf('%.2f sec', time);
+            
+            % Updates the real-time & FPS label
+            if numel(varargin) >= 4 && ~isempty(varargin{4}) && isvalid(app.x1RealtimeLabel)
+                fps = varargin{4};
+                if numel(varargin) >= 5 && ~isempty(varargin{5})
+                    rtf = varargin{5};
+                    app.x1RealtimeLabel.Text = sprintf('(%.1fx Real-time | %d FPS)', rtf, round(fps));
+                elseif app.sim_mode == 1
+                    app.x1RealtimeLabel.Text = sprintf('(x%.1f Real-time | %d FPS)', app.controller.model.time_const, round(fps));
+                else
+                    app.x1RealtimeLabel.Text = sprintf('(x1 Real-time | %d FPS)', round(fps));
+                end
+            end
+            
+            % Updates the actual joint positions label
+            q_deg = rad2deg(q_pos(1:n));
+            app.q_actLabel.Text = ['qact=[' sprintf('%.0f,', q_deg(1:end-1)) sprintf('%.0f]deg', q_deg(end))];
+        
+            % Updates live HUD Telemetry Overlay
+            app.updateHUD(q_pos);
+        end
+
+        function updateHUD(app, q_pos)
+            if ~isprop(app, 'HUDPanel') || ~isvalid(app.HUDPanel) || strcmp(app.HUDPanel.Visible, 'off')
+                return;
+            end
+
+            if nargin < 2 || isempty(q_pos)
+                if app.controller.model.running_flag == 1
+                    q_pos = app.controller.model.act.q_pos;
+                elseif app.sim_mode == 0
+                    q_pos = app.controller.model.ini.q_pos;
+                else
+                    q_pos = app.controller.model.fin.q_pos;
+                end
+            end
+
+            if isempty(q_pos)
+                return;
+            end
+
+            TI_0 = app.controller.model.TI_0;
+            kin  = app.controller.model.kin;
+
+            % 1. End-effector Cartesian Pose
+            T_ee = robotics.engines.KinematicsEngine.forwardKinematics(TI_0, kin, q_pos);
+            pos_mm = T_ee(1:3, 4) * 1000;
+            R_ee = T_ee(1:3, 1:3);
+            eul_deg = rad2deg(robotics.math.getEulerPosVec(R_ee, app.eulerSet));
+
+            app.HUDPosLabel.Text = sprintf('XYZ: [%.1f, %.1f, %.1f] mm', pos_mm(1), pos_mm(2), pos_mm(3));
+            app.HUDEulerLabel.Text = sprintf('Euler: [%.1f°, %.1f°, %.1f°]', eul_deg(1), eul_deg(2), eul_deg(3));
+
+            % 2. Yoshikawa Manipulability Index & Singularity Badge
+            [w, status, col] = robotics.engines.KinematicsEngine.computeManipulability(TI_0, kin, q_pos);
+            app.HUDManipLabel.Text = sprintf('Manip (w): %.3f', w);
+            app.HUDSingularityBadge.Text = ['● ' status];
+            app.HUDSingularityBadge.FontColor = col;
+
+            % 3. Joint Limits Clearance & Dynamic Metrics
+            [minMarginDeg, closestJ] = robotics.engines.KinematicsEngine.computeLimitMargin(kin, q_pos);
+            app.HUDLimitLabel.Text = sprintf('Limit Margin: %.1f° (J%d)', minMarginDeg, closestJ);
+            if minMarginDeg < 5.0
+                app.HUDLimitBadge.Text = '● LIMIT WARNING';
+                app.HUDLimitBadge.FontColor = [0.85 0.15 0.15];
+            else
+                app.HUDLimitBadge.Text = '● LIMITS OK';
+                app.HUDLimitBadge.FontColor = [0.15 0.65 0.25];
+            end
+
+            % 4. Actual Joint Positions in HUD
+            q_deg = rad2deg(q_pos(1:kin.n));
+            if isprop(app, 'q_actLabel') && isvalid(app.q_actLabel)
+                app.q_actLabel.Text = ['q_act: [' sprintf('%.0f°, ', q_deg(1:end-1)) sprintf('%.0f°]', q_deg(end))];
+            end
+        end
+
+        function updateControlParams(app)
+            % Updates the GUI Table and edit fields from the Model's control state
+            if isfield(app.controller.model.ctr, 'space')
+                if app.controller.model.ctr.space == 1
+                    app.ControlSpaceDropDown.Value = 'Task';
+                    app.ControlGainsLabel.Text = 'Task Space Gains:';
+                else
+                    app.ControlSpaceDropDown.Value = 'Joint';
+                    app.ControlGainsLabel.Text = 'Joint Space Gains:';
+                end
+            end
+            if isfield(app.controller.model.ctr, 'algo')
+                if app.controller.model.ctr.algo == 1
+                    app.ControlTypeDropDown.Value = 'IDC';
+                    app.CompGravityCheckBox.Enable = "off";
+                else
+                    app.ControlTypeDropDown.Value = 'PID';
+                    app.CompGravityCheckBox.Enable = "on";
+                end
+            end
+            app.GainTable.Data = app.viewModel.getGainTableData();
+            app.GainTable.RowName = app.viewModel.getGainTableRowNames();
+            app.GainTable.ColumnEditable = logical([1 1 1]);
+            app.GainTable.ColumnWidth = {65, 65, 65};
+            app.CycleEditField.Value = app.controller.model.ctr.tcyc;
+            if isfield(app.controller.model.ctr, 'comp_grv')
+                app.CompGravityCheckBox.Value = app.controller.model.ctr.comp_grv;
+            end
+        end
+
+        function initUIComponentMaps(app)
+            % Initialize UI component arrays for fast iteration and clean synchronization
+            app.JointUI.ini.sliders  = [app.Axis1InitialSlider, app.Axis2InitialSlider, app.Axis3InitialSlider, ...
+                app.Axis4InitialSlider, app.Axis5InitialSlider, app.Axis6InitialSlider, app.Axis7InitialSlider];
+            app.JointUI.ini.spinners = [app.Axis1InitialSpinner, app.Axis2InitialSpinner, app.Axis3InitialSpinner, ...
+                app.Axis4InitialSpinner, app.Axis5InitialSpinner, app.Axis6InitialSpinner, app.Axis7InitialSpinner];
+            app.JointUI.ini.labels   = [app.Axis1InitialLabel, app.Axis2InitialLabel, app.Axis3InitialLabel, ...
+                app.Axis4InitialLabel, app.Axis5InitialLabel, app.Axis6InitialLabel, app.Axis7InitialLabel];
+
+            app.JointUI.fin.sliders  = [app.Axis1FinalSlider, app.Axis2FinalSlider, app.Axis3FinalSlider, ...
+                app.Axis4FinalSlider, app.Axis5FinalSlider, app.Axis6FinalSlider, app.Axis7FinalSlider];
+            app.JointUI.fin.spinners = [app.Axis1FinalSpinner, app.Axis2FinalSpinner, app.Axis3FinalSpinner, ...
+                app.Axis4FinalSpinner, app.Axis5FinalSpinner, app.Axis6FinalSpinner, app.Axis7FinalSpinner];
+            app.JointUI.fin.labels   = [app.Axis1FinalLabel, app.Axis2FinalLabel, app.Axis3FinalLabel, ...
+                app.Axis4FinalLabel, app.Axis5FinalLabel, app.Axis6FinalLabel, app.Axis7FinalLabel];
+        end
+
+        function handleJointInput(app, target, jointIdx, val, peerControl)
+            peerControl.Value = val;
+            if app.controller.model.kin.j_type(jointIdx)
+                pos = deg2rad(val);
+            else
+                pos = 1e-3 * val;
+            end
+            app.controller.setJointPosition(target, jointIdx, pos, app.eulerSet);
+            app.updateTaskSpaceUI(target);
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+            app.controller.updateView();
+            app.updateHUD();
+        end
+
+        function handleTaskPosInput(app, target, axisIdx, val, peerControl)
+            peerControl.Value = val;
+            if isfield(app.controller.model.(target), 't_pos_ref') && ~isempty(app.controller.model.(target).t_pos_ref)
+                t_ref = app.controller.model.(target).t_pos_ref;
+            else
+                t_ref = app.controller.model.(target).t_pos;
+            end
+            if isfield(app.controller.model.(target), 'r_pos_ref') && ~isempty(app.controller.model.(target).r_pos_ref)
+                r_ref = app.controller.model.(target).r_pos_ref;
+            else
+                r_ref = app.controller.model.(target).r_pos;
+            end
+            t_ref(axisIdx) = 1e-3 * val;
+            app.controller.setTargetPosition(target, t_ref, r_ref, app.eulerSet);
+            app.updateJointSpaceUI(target);
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+            app.controller.updateView();
+            app.updateHUD();
+        end
+
+        function handleTaskEulerInput(app, target, eulerIdx, val, peerControl)
+            peerControl.Value = val;
+            if isfield(app.controller.model.(target), 't_pos_ref') && ~isempty(app.controller.model.(target).t_pos_ref)
+                t_ref = app.controller.model.(target).t_pos_ref;
+            else
+                t_ref = app.controller.model.(target).t_pos;
+            end
+            if isfield(app.controller.model.(target), 'r_pos_ref') && ~isempty(app.controller.model.(target).r_pos_ref)
+                r_ref = app.controller.model.(target).r_pos_ref;
+            else
+                r_ref = app.controller.model.(target).r_pos;
+            end
+            r_ref(eulerIdx) = deg2rad(val);
+            app.controller.setTargetPosition(target, t_ref, r_ref, app.eulerSet);
+            app.updateJointSpaceUI(target);
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+            app.controller.updateView();
+            app.updateHUD();
+        end
+
+        function handleGripperInput(app, target, val, peerControls)
+            for i = 1:numel(peerControls)
+                peerControls(i).Value = val;
+            end
+            if app.controller.model.robot_model == 3
+                qE = deg2rad(val);
+            else
+                qE = val * 1e-3;
+            end
+            if strcmp(target, 'ini')
+                app.controller.model.qEIni = qE;
+            else
+                app.controller.model.qEDes = qE;
+            end
+            app.controller.updateView();
+        end
+
+        function setGripperControlsState(app, isVisible, isEnabled)
+            controls = [app.GripperInitialLabel, app.GripperInitialSlider, app.GripperInitialSpinner, ...
+                app.GripperFinalLabel, app.GripperFinalSlider, app.GripperFinalSpinner, ...
+                app.GripperTaskInitialLabel, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner, ...
+                app.GripperTaskFinalLabel, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner];
+            for k = 1:numel(controls)
+                controls(k).Visible = isVisible;
+                controls(k).Enable = isEnabled;
+            end
+        end
+
+        function handleTabSelection(app, targetMode)
+            app.controller.model.task_mode = targetMode;
+            if targetMode == 1
+                app.controller.model.ini.r_pos = robotics.math.getEulerPosVec(app.controller.model.ini.Re, app.eulerSet);
+                app.controller.model.ini.Re_ref = app.controller.model.ini.Re;
+                app.controller.model.ini.t_pos_ref = app.controller.model.ini.t_pos;
+                app.controller.model.ini.r_pos_ref = app.controller.model.ini.r_pos;
+            elseif targetMode == 2
+                app.controller.model.fin.r_pos = robotics.math.getEulerPosVec(app.controller.model.fin.Re, app.eulerSet);
+                app.controller.model.fin.Re_ref = app.controller.model.fin.Re;
+                app.controller.model.fin.t_pos_ref = app.controller.model.fin.t_pos;
+                app.controller.model.fin.r_pos_ref = app.controller.model.fin.r_pos;
+            end
+            app.controller.initRobot();
+            app.controller.updateView();
+        end
+
+        function handleCustomDHTableEdit(app, row, col, val)
+            if col == 2 || col == 4
+                valScaled = val * 1e-3;
+            else
+                valScaled = deg2rad(val);
+            end
+            app.DH_custom(row, col-1) = valScaled;
+            updateRobotModel(app);
+            app.controller.updateView();
+        end
+
+        function handleJointTypeChanged(app, jointIdx, val)
+            app.j_type_custom(jointIdx,:) = val;
+            updateRobotModel(app);
+            resetJointValues(app);
+            updateSliderSpinnerValues(app);
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+            app.controller.updateView();
+        end
+
+        function setJointControlsEnabled(app, n)
+            for j = 1:7
+                if j <= n
+                    s = 'on';
+                else
+                    s = 'off';
+                end
+                app.JointUI.ini.sliders(j).Enable  = s;
+                app.JointUI.ini.spinners(j).Enable = s;
+                app.JointUI.ini.labels(j).Enable   = s;
+                app.JointUI.fin.sliders(j).Enable  = s;
+                app.JointUI.fin.spinners(j).Enable = s;
+                app.JointUI.fin.labels(j).Enable   = s;
+            end
+        end
+
+        function setCustomControlsState(app, isCustom, isEditing, n)
+            if nargin < 4 || isempty(n)
+                if isfield(app.controller.model, 'kin') && isfield(app.controller.model.kin, 'n') && ~isempty(app.controller.model.kin.n)
+                    n = app.controller.model.kin.n;
+                else
+                    n = 7;
+                end
+            end
+            if isCustom
+                app.EditButton.Enable = "on";
+                if isEditing
+                    app.DHTable.ColumnEditable = logical([0 1 1 1 1]);
+                    app.DoFSpinner.Enable = "on";
+                    qGroups = [app.q_1ButtonGroup, app.q_2ButtonGroup, app.q_3ButtonGroup, ...
+                               app.q_4ButtonGroup, app.q_5ButtonGroup, app.q_6ButtonGroup, app.q_7ButtonGroup];
+                    for j = 1:7
+                        if j <= n
+                            qGroups(j).Enable = "on";
+                        else
+                            qGroups(j).Enable = "off";
+                        end
+                    end
+                else
+                    app.DHTable.ColumnEditable = logical([0 0 0 0 0]);
+                    app.DoFSpinner.Enable = "off";
+                    app.q_1ButtonGroup.Enable = "off";
+                    app.q_2ButtonGroup.Enable = "off";
+                    app.q_3ButtonGroup.Enable = "off";
+                    app.q_4ButtonGroup.Enable = "off";
+                    app.q_5ButtonGroup.Enable = "off";
+                    app.q_6ButtonGroup.Enable = "off";
+                    app.q_7ButtonGroup.Enable = "off";
+                end
+            else
+                app.EditButton.Enable = "off";
+                app.EditButton.Value = false;
+                app.DoFSpinner.Enable = "off";
+                app.DHTable.ColumnEditable = logical([0 0 0 0 0]);
+                app.q_1ButtonGroup.Enable = "off";
+                app.q_2ButtonGroup.Enable = "off";
+                app.q_3ButtonGroup.Enable = "off";
+                app.q_4ButtonGroup.Enable = "off";
+                app.q_5ButtonGroup.Enable = "off";
+                app.q_6ButtonGroup.Enable = "off";
+                app.q_7ButtonGroup.Enable = "off";
+            end
+        end
+
+        % Update all embedded scope tabs with latest simulation telemetry
+        function updateEmbeddedScope(app)
+            selectedTab = app.TabGroup2.SelectedTab;
+            if isempty(app.controller) || isempty(app.controller.model) || isempty(app.controller.model.logData) || ...
+               ~isfield(app.controller.model.logData, 'time') || isempty(app.controller.model.logData.time)
+                delete(selectedTab.Children);
+                grid = uigridlayout(selectedTab, [1, 1]);
+                uilabel(grid, 'Text', 'No simulation telemetry recorded yet. Please run a simulation first.', ...
+                        'HorizontalAlignment', 'center', 'FontSize', 13, 'FontColor', [0.4 0.4 0.4]);
+                return;
+            end
+            logData = app.controller.model.logData;
+            
+            if selectedTab == app.JointTrackingErrorsTab
+                robotics.graphics.SimulationPlotter.plotJointPositions(app.JointTrackingErrorsTab, logData);
+            elseif selectedTab == app.ActuatorTorquesTab
+                robotics.graphics.SimulationPlotter.plotTorques(app.ActuatorTorquesTab, logData);
+            elseif selectedTab == app.CartesianPathErrorTab
+                robotics.graphics.SimulationPlotter.plotCartesianPath(app.CartesianPathErrorTab, logData);
+            elseif selectedTab == app.PhasePortraitsTab
+                robotics.graphics.SimulationPlotter.plotPhasePortraits(app.PhasePortraitsTab, logData);
+            end
+        end
+    end
+
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Code that executes after component creation
+        function startupFcn(app)
+            
+            % Initialize UI Component Arrays
+            app.initUIComponentMaps();
+
+            % Initialize the Simulation Controller
+            app.controller = robotics.engines.SimulationController(app.UIAxes);
+            addlistener(app.controller.model, 'ModelUpdated', @(src, event) app.refreshUI());
+            app.viewModel = robotics.viewmodels.SimulationViewModel(app.controller.model);
+
+            % Register UI callback for live text updates during simulation
+            app.controller.onUpdateLabels = @(varargin) app.updateSimulationLabels(varargin{:});
+
+            % app.RobotModelDropDown.Items = {'Franka Emika Robot', 'Universal Robots UR3', 'Unitree Z1', 'St ubli RX160', 'St ubli RX160L'};
+            app.RobotModelDropDown.Items = cellstr(app.robot_name);
+            app.setCustomControlsState(false, false);
+            app.DoFSpinner.Limits = [1 7];
+
+            app.EnablehighqualitymodelsMenu.Checked = 'on';
+            app.HDmodelsCheckBox.Value = true;
+            app.controller.model.high_quality = 1;
+            app.EnablecoordinateframeMenu.Checked = 'on';
+            app.EnableghostmodelsMenu.Checked = 'on';
+            app.controller.model.coord_frame_on = 1;
+            app.DmodelsCheckBox.Value = true;
+
+            % app.DH_custom = zeros(8,4);
+            app.DH_custom = [0,0,0.1,0
+                             0,-pi/2,0.1,0
+                             0,pi/2,0.1,0
+                             0.1,pi/2,0.1,0
+                             -0.1,-pi/2,0.1,0
+                             0,pi/2,0.1,0
+                             0,pi/2,0.1,0
+                             0,0,0.1,0];
+            app.m_j_custom = ones(7,1);
+            app.rj_jcj_custom = zeros(3,1,7);
+            app.Ij_cj_custom = zeros(3,3,7);
+            app.j_type_custom = ones(7,1);
+            app.n_custom = 3;
+
+            app.controller.model.ctr.algo = 0;
+            app.controller.model.ctr.comp_grv = 0;
+
+            app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
+            app.InterpolationDropDown.Value = app.trj_profile_text;
+            
+            app.VelEditField.Value = app.prcnt(1)*100;
+            app.AccEditField.Value = app.prcnt(2)*100;
+
+            app.StepsEditField.Value = app.controller.model.tstp;
+            app.FinalsEditField.Value = app.controller.model.tfin;
+            app.SpeedxSpinner.Value = app.controller.model.time_const;
+            app.OnButton.Value = false;
+            
+            updateRobotModel(app)
+            updateEndEffectorModel(app)
+            resetJointValues(app)
+            updateSliderSpinnerValues(app)
+            updateTaskInputValues(app)
+            updateSimMode(app)
+            updateRunButtonState(app)
+
+            app.TimeLabel.Text = "Not running";
+            app.secLabel.Visible = "off";
+            app.x1RealtimeLabel.Visible = "off";
+
+            % Plot
+            view(app.UIAxes,3)  % Isometric view
+            
+            xlabel(app.UIAxes,'X')
+            ylabel(app.UIAxes,'Y')
+            zlabel(app.UIAxes,'Z')
+            grid(app.UIAxes,'on')
+
+            set(app.UIAxes,	'Projection','perspective', ...
+                            'PlotBoxAspectRatio',[1 1 1], ...
+                            'DataAspectRatio',[1 1 1]);
+            
+            app.UIAxes.Interactions = rotateInteraction;
+%             app.UIAxes.Interactions = [zoomInteraction regionZoomInteraction rulerPanInteraction];
+            app.UIAxes.Toolbar = [];
+%             zlim(app.UIAxes,[-0.6 inf])
+
+            app.controller.model.act.q_pos = app.controller.model.ini.q_pos;
+            app.controller.model.des.q_pos = app.controller.model.fin.q_pos;
+            
+            app.controller.initRobot()
+            app.controller.updateView()
+            app.updateHUD();
+
+        end
+
+        % Menu selected function: ExitMenu
+        function ExitMenuSelected(app, event)
+            delete(app);
+        end
+
+        % Menu selected function: AboutMenu
+        function AboutMenuSelected(app, event)
+            ver = '1.0.0-beta.3';
+            if exist('VERSION', 'file')
+                try
+                    ver = strtrim(fileread('VERSION'));
+                catch
+                end
+            end
+            message = sprintf('Robot Simulation Program (MATLAB GUI)\nVersion: %s\n\nModular 3D Robotics Kinematics & Dynamics Simulator.\nAuthor: Mertcan Kaya', ver);
+            uialert(app.UIFigure, message, 'About Robot Simulation GUI', 'Icon', 'info');
+        end
+
+        % Value changed function: RobotModelDropDown
+        function RobotModelDropDownValueChanged(app, event)
+            value = app.RobotModelDropDown.Value;
+            
+            oldModel = app.controller.model.robot_model;
+            isOldRX = (oldModel == 4 || oldModel == 5);
+
+            robotId = find(strcmp(app.robot_name, value), 1);
+            if robotId == size(app.robot_name, 1)
+                newModel = 0;
+            else
+                newModel = robotId;
+            end
+            app.controller.model.robot_model = newModel;
+
+            if (newModel == 1 || newModel == 2 || newModel == 3) && app.controller.model.ee_att > 1
+                app.exceeding = 1;
+            else
+                app.exceeding = 0;
+            end
+
+            if (newModel == 4 || newModel == 5) && app.controller.model.ee_att == 1
+                app.grip = ~isOldRX;
+            end
+
+            updateRobotModel(app)
+            updateEndEffectorModel(app)
+            resetJointValues(app)
+            updateSliderSpinnerValues(app)
+            updateTaskInputValues(app)
+            updateFinTimeTrj(app)
+            updateRunButtonState(app)
+            updateEnableState(app)
+            app.controller.initRobot()
+            app.controller.updateView()
+        end
+
+        % Value changed function: EndEffectorDropDown
+        function EndEffectorDropDownValueChanged(app, event)
+            value = app.EndEffectorDropDown.Value;
+            
+            switch value
+                case 'Gripper'
+                    app.controller.model.ee_att = 1;
+                case 'F/T Sensor'
+                    app.controller.model.ee_att = 1;
+                case 'F/T Sensor + Gripper'
+                    app.controller.model.ee_att = 2;
+                case 'F/T Sensor + Ball&Spring'
+                    app.controller.model.ee_att = 3;
+                otherwise
+                    app.controller.model.ee_att = 0;
+            end
+
+            updateRobotModel(app)
+            updateEndEffectorModel(app)
+            updateSliderSpinnerValues(app)
+            updateTaskInputValues(app)
+            updateFinTimeTrj(app)
+            updateRunButtonState(app)
+            app.controller.initRobot()
+            app.controller.updateView()
+        end
+
+        % Value changed function: HDmodelsCheckBox
+        function HDmodelsCheckBoxValueChanged(app, event)
+            value = app.HDmodelsCheckBox.Value;
+
+            if value
+                app.controller.model.high_quality = 1;
+                app.EnablehighqualitymodelsMenu.Checked = 'on';
+            else
+                app.controller.model.high_quality = 0;
+                app.EnablehighqualitymodelsMenu.Checked = 'off';
+            end
+
+            app.controller.initRobot()
+            app.controller.updateView()
+        end
+
+        % Menu selected function: EnablehighqualitymodelsMenu
+        function EnablehighqualitymodelsMenuSelected(app, event)
+            if app.controller.model.high_quality == 1
+                app.EnablehighqualitymodelsMenu.Checked = 'off';
+                app.HDmodelsCheckBox.Value = false;
+                app.controller.model.high_quality = 0;
+            else
+                app.EnablehighqualitymodelsMenu.Checked = 'on';
+                app.HDmodelsCheckBox.Value = true;
+                app.controller.model.high_quality = 1;
+            end
+
+            app.controller.initRobot()
+            app.controller.updateView()
+        end
+
+        % Menu selected function: EnablecoordinateframeMenu
+        function EnablecoordinateframeMenuSelected(app, event)
+            if app.controller.model.coord_frame_on == 1
+                app.EnablecoordinateframeMenu.Checked = 'off';
+                app.controller.model.coord_frame_on = 0;
+            else
+                app.EnablecoordinateframeMenu.Checked = 'on';
+                app.controller.model.coord_frame_on = 1;
+            end
+
+            app.controller.initRobot()
+            app.controller.updateView()
+        end
+
+        % Value changed function: InterpolationDropDown
+        function InterpolationDropDownValueChanged(app, event)
+            app.trj_profile_text = app.InterpolationDropDown.Value;
+            switch app.trj_profile_text
+                case 'Linear'
+                    app.controller.model.trj_profile = 1;
+                case 'Cubic'
+                    app.controller.model.trj_profile = 2;
+                case 'Quintic'
+                    app.controller.model.trj_profile = 3;
+                otherwise
+                    app.controller.model.trj_profile = 0;
+            end
+
+            p = app.controller.model.trj_profile;
+            showLimits = char(matlab.lang.OnOffSwitchState(p > 0));
+            showAcc    = char(matlab.lang.OnOffSwitchState(p >= 2));
+
+            app.LimitsLabel.Visible         = showLimits;
+            app.VelEditField.Visible        = showLimits;
+            app.VelEditFieldLabel.Visible   = showLimits;
+            app.VelPrcLabel.Visible         = showLimits;
+            app.AccEditField.Visible        = showAcc;
+            app.AccEditFieldLabel.Visible   = showAcc;
+            app.AccPrcLabel.Visible         = showAcc;
+
+            updateFinTimeTrj(app);
+            app.FinalsEditField.Value = app.controller.model.tfin_trj;
+        end
+
+        % Button pushed function: RunButton
+        function RunButtonPushed(app, event)
+            
+            app.controller.model.running_flag = 1;
+            if app.TrajSpaceButtonGroup.SelectedObject == app.TaskButton
+                app.controller.model.trj_space = 1;
+            else
+                app.controller.model.trj_space = 0;
+            end
+            if app.sim_mode == 0
+                app.controller.model.trj_on = 1;
+            else
+                app.controller.model.trj_on = double(app.OnButton.Value);
+            end
+            app.controller.model.eulerSet = app.eulerSet;
+            
+            app.controller.initRobot()
+            updateEnableState(app)
+            app.TimeLabel.Text = "Time:";
+            app.secLabel.Visible = "on";
+            app.x1RealtimeLabel.Visible = "on";
+
+            if app.sim_mode == 1
+                if app.controller.model.trj_on == 1
+                    app.controller.model.tfin = app.controller.model.tfin_trj;
+                else
+                    app.controller.model.tfin = app.FinalsEditField.Value;
+                end
+                app.x1RealtimeLabel.Text = sprintf('(x%.1f Real-time)', app.controller.model.time_const);
+                app.controller.runSimulation()
+            else
+                app.x1RealtimeLabel.Text = sprintf('(x%.1f Real-time)', app.controller.model.time_const);
+                app.controller.runKinematics()
+            end
+
+            app.controller.model.running_flag = 0;
+
+            app.controller.initRobot()
+            updateEnableState(app)
+            app.TimeLabel.Text = "Stopped";
+            app.secLabel.Visible = "off";
+            app.x1RealtimeLabel.Visible = "off";
+            app.controller.updateForwardKinematics('ini', app.eulerSet); % Update fwd geo ini
+            app.controller.updateForwardKinematics('fin', app.eulerSet); % Update fwd geo fin
+            app.controller.updateView()
+            app.updateHUD()
+
+            if app.TabGroup.SelectedTab == app.ScopeTelemetryTab
+                app.updateEmbeddedScope();
+            end
+        end
+
+        % Value changed function: VelEditField
+        function VelEditFieldValueChanged(app, event)
+            app.prcnt(1) = app.VelEditField.Value/100;
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+        end
+
+        % Value changed function: AccEditField
+        function AccEditFieldValueChanged(app, event)
+            app.prcnt(2) = app.AccEditField.Value/100;
+            updateFinTimeTrj(app);
+            updateRunButtonState(app);
+        end
+
+        % Menu selected function: EnableghostmodelsMenu
+        function EnableghostmodelsMenuSelected(app, event)
+            if strcmp(app.EnableghostmodelsMenu.Checked, 'on')
+                app.EnableghostmodelsMenu.Checked = 'off';
+                app.controller.model.ghost_on = 0;
+            else
+                app.EnableghostmodelsMenu.Checked = 'on';
+                if ~(app.sim_mode == 0 && app.controller.model.trj_on == 0)
+                    app.controller.model.ghost_on = 1;
+                end
+            end
+            app.controller.initRobot()
+            app.controller.updateView()
+        end
+
+        % Value changed function: SimModeSwitch
+        function SimModeSwitchValueChanged(app, event)
+            updateSimMode(app)
+        end
+
+        % Button pushed function: StopButton
+        function StopButtonPushed(app, event)
+            app.controller.model.running_flag = 0;
+            
+            updateEnableState(app);
+            app.controller.updateView()
+        end
+
+        % Value changed function: StepsEditField
+        function StepsEditFieldValueChanged(app, event)
+            app.controller.model.tstp = app.StepsEditField.Value;
+        end
+
+        % Value changed function: FinalsEditField
+        function FinalsEditFieldValueChanged(app, event)
+            app.controller.model.tfin = app.FinalsEditField.Value;
+            
+            if app.controller.model.tfin < app.controller.model.tstp
+                app.RunButton.Enable = "off";
+            else
+                app.RunButton.Enable = "on";
+            end
+        end
+
+        % Cell edit callback: GainTable
+        function GainTableCellEdit(app, event)
+            indices = event.Indices;
+            newData = event.NewData;
+            
+            isTask = isfield(app.controller.model.ctr, 'space') && app.controller.model.ctr.space == 1;
+            isIdc = isfield(app.controller.model.ctr, 'algo') && app.controller.model.ctr.algo == 1;
+            
+            if isTask
+                if isIdc
+                    prefix = '_tsk_idc';
+                else
+                    prefix = '_tsk_pid';
+                end
+            else
+                if isIdc
+                    prefix = '_jnt_idc';
+                else
+                    prefix = '_jnt_pid';
+                end
+            end
+            
+            kpName = ['Kp' prefix];
+            kiName = ['Ki' prefix];
+            kdName = ['Kd' prefix];
+
+            if indices(2) == 1
+                app.controller.model.ctr.(kpName)(indices(1)) = newData;
+            elseif indices(2) == 2
+                app.controller.model.ctr.(kiName)(indices(1)) = newData;
+            else
+                app.controller.model.ctr.(kdName)(indices(1)) = newData;
+            end
+        end
+
+        % Value changed function: CycleEditField
+        function CycleEditFieldValueChanged(app, event)
+            app.controller.model.ctr.tcyc = app.CycleEditField.Value;
+        end
+
+        % Value changed function: CompGravityCheckBox
+        function CompGravityCheckBoxValueChanged(app, event)
+            app.controller.model.ctr.comp_grv = app.CompGravityCheckBox.Value;
+        end
+
+        % Value changed function: DmodelsCheckBox
+        function DmodelsCheckBoxValueChanged(app, event)
+            value = app.DmodelsCheckBox.Value;
+
+            if value
+                app.controller.model.line_on = 0;
+                app.HDmodelsCheckBox.Enable = "on";
+            else
+                app.controller.model.line_on = 1;
+                app.HDmodelsCheckBox.Enable = "off";
+            end
+
+            app.controller.initRobot()
+            app.controller.updateView()
+        end
+
+        % Value changed function: EditButton
+        function EditButtonValueChanged(app, event)
+            app.setCustomControlsState(true, app.EditButton.Value, app.n_custom);
+        end
+
+        % Value changed function: DoFSpinner
+        function DoFSpinnerValueChanged(app, event)
+            app.n_custom = app.DoFSpinner.Value;
+            
+            updateRobotModel(app)
+            resetJointValues(app)
+            updateSliderSpinnerValues(app)
+            updateTaskInputValues(app)
+            updateFinTimeTrj(app)
+            updateRunButtonState(app)
+            app.setCustomControlsState(true, app.EditButton.Value, app.n_custom);
+            app.controller.updateView()
+        end
+
+        % Cell edit callback: DHTable
+        function DHTableCellEdit(app, event)
+            app.handleCustomDHTableEdit(event.Indices(1), event.Indices(2), str2double(event.NewData));
+        end
+
+        % Selection changed function: q_1ButtonGroup
+        function q_1ButtonGroupSelectionChanged(app, event)
+            app.handleJointTypeChanged(1, app.Button.Value);
+        end
+
+        % Selection changed function: q_2ButtonGroup
+        function q_2ButtonGroupSelectionChanged(app, event)
+            app.handleJointTypeChanged(2, app.Button_2.Value);
+        end
+
+        % Selection changed function: q_3ButtonGroup
+        function q_3ButtonGroupSelectionChanged(app, event)
+            app.handleJointTypeChanged(3, app.Button_3.Value);
+        end
+
+        % Selection changed function: q_4ButtonGroup
+        function q_4ButtonGroupSelectionChanged(app, event)
+            app.handleJointTypeChanged(4, app.Button_4.Value);
+        end
+
+        % Selection changed function: q_5ButtonGroup
+        function q_5ButtonGroupSelectionChanged(app, event)
+            app.handleJointTypeChanged(5, app.Button_5.Value);
+        end
+
+        % Selection changed function: q_6ButtonGroup
+        function q_6ButtonGroupSelectionChanged(app, event)
+            app.handleJointTypeChanged(6, app.Button_6.Value);
+        end
+
+        % Selection changed function: q_7ButtonGroup
+        function q_7ButtonGroupSelectionChanged(app, event)
+            app.handleJointTypeChanged(7, app.Button_7.Value);
+        end
+
+        % Value changed function: ControlTypeDropDown
+        function ControlTypeDropDownValueChanged(app, event)
+            if strcmp(app.ControlTypeDropDown.Value, 'IDC')
+                app.controller.model.ctr.algo = 1;
+                app.CompGravityCheckBox.Enable = "off";
+            else
+                app.controller.model.ctr.algo = 0;
+                app.CompGravityCheckBox.Enable = "on";
+            end
+            updateControlParams(app)
+        end
+
+        % Button down function: InitialJointTab
+        function InitialJointTabButtonDown(app, event)
+            app.handleTabSelection(0);
+        end
+
+        % Button down function: FinalJointTab
+        function FinalJointTabButtonDown(app, event)
+            app.handleTabSelection(0);
+        end
+
+        % Button down function: InitialTaskTab
+        function InitialTaskTabButtonDown(app, event)
+            app.handleTabSelection(1);
+        end
+
+        % Button down function: FinalTaskTab
+        function FinalTaskTabButtonDown(app, event)
+            app.handleTabSelection(2);
+        end
+
+        % Value changing function: Axis1InitialSlider
+        function Axis1InitialSliderValueChanging(app, event)
+            app.handleJointInput('ini', 1, event.Value, app.Axis1InitialSpinner);
+        end
+
+        % Value changing function: Axis1InitialSpinner
+        function Axis1InitialSpinnerValueChanging(app, event)
+            app.handleJointInput('ini', 1, event.Value, app.Axis1InitialSlider);
+        end
+
+        % Value changing function: Axis2InitialSlider
+        function Axis2InitialSliderValueChanging(app, event)
+            app.handleJointInput('ini', 2, event.Value, app.Axis2InitialSpinner);
+        end
+
+        % Value changing function: Axis2InitialSpinner
+        function Axis2InitialSpinnerValueChanging(app, event)
+            app.handleJointInput('ini', 2, event.Value, app.Axis2InitialSlider);
+        end
+
+        % Value changing function: Axis3InitialSlider
+        function Axis3InitialSliderValueChanging(app, event)
+            app.handleJointInput('ini', 3, event.Value, app.Axis3InitialSpinner);
+        end
+
+        % Value changing function: Axis3InitialSpinner
+        function Axis3InitialSpinnerValueChanging(app, event)
+            app.handleJointInput('ini', 3, event.Value, app.Axis3InitialSlider);
+        end
+
+        % Value changing function: Axis4InitialSlider
+        function Axis4InitialSliderValueChanging(app, event)
+            app.handleJointInput('ini', 4, event.Value, app.Axis4InitialSpinner);
+        end
+
+        % Value changing function: Axis4InitialSpinner
+        function Axis4InitialSpinnerValueChanging(app, event)
+            app.handleJointInput('ini', 4, event.Value, app.Axis4InitialSlider);
+        end
+
+        % Value changing function: Axis5InitialSlider
+        function Axis5InitialSliderValueChanging(app, event)
+            app.handleJointInput('ini', 5, event.Value, app.Axis5InitialSpinner);
+        end
+
+        % Value changing function: Axis5InitialSpinner
+        function Axis5InitialSpinnerValueChanging(app, event)
+            app.handleJointInput('ini', 5, event.Value, app.Axis5InitialSlider);
+        end
+
+        % Value changing function: Axis6InitialSlider
+        function Axis6InitialSliderValueChanging(app, event)
+            app.handleJointInput('ini', 6, event.Value, app.Axis6InitialSpinner);
+        end
+
+        % Value changing function: Axis6InitialSpinner
+        function Axis6InitialSpinnerValueChanging(app, event)
+            app.handleJointInput('ini', 6, event.Value, app.Axis6InitialSlider);
+        end
+
+        % Value changing function: Axis7InitialSlider
+        function Axis7InitialSliderValueChanging(app, event)
+            app.handleJointInput('ini', 7, event.Value, app.Axis7InitialSpinner);
+        end
+
+        % Value changing function: Axis7InitialSpinner
+        function Axis7InitialSpinnerValueChanging(app, event)
+            app.handleJointInput('ini', 7, event.Value, app.Axis7InitialSlider);
+        end
+
+        % Value changing function: GripperInitialSlider
+        function GripperInitialSliderValueChanging(app, event)
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSpinner, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner]);
+        end
+
+        % Value changing function: GripperInitialSpinner
+        function GripperInitialSpinnerValueChanging(app, event)
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSlider, app.GripperTaskInitialSlider, app.GripperTaskInitialSpinner]);
+        end
+
+        % Value changing function: Axis1FinalSlider
+        function Axis1FinalSliderValueChanging(app, event)
+            app.handleJointInput('fin', 1, event.Value, app.Axis1FinalSpinner);
+        end
+
+        % Value changing function: Axis1FinalSpinner
+        function Axis1FinalSpinnerValueChanging(app, event)
+            app.handleJointInput('fin', 1, event.Value, app.Axis1FinalSlider);
+        end
+
+        % Value changing function: Axis2FinalSlider
+        function Axis2FinalSliderValueChanging(app, event)
+            app.handleJointInput('fin', 2, event.Value, app.Axis2FinalSpinner);
+        end
+
+        % Value changing function: Axis2FinalSpinner
+        function Axis2FinalSpinnerValueChanging(app, event)
+            app.handleJointInput('fin', 2, event.Value, app.Axis2FinalSlider);
+        end
+
+        % Value changing function: Axis3FinalSlider
+        function Axis3FinalSliderValueChanging(app, event)
+            app.handleJointInput('fin', 3, event.Value, app.Axis3FinalSpinner);
+        end
+
+        % Value changing function: Axis3FinalSpinner
+        function Axis3FinalSpinnerValueChanging(app, event)
+            app.handleJointInput('fin', 3, event.Value, app.Axis3FinalSlider);
+        end
+
+        % Value changing function: Axis4FinalSlider
+        function Axis4FinalSliderValueChanging(app, event)
+            app.handleJointInput('fin', 4, event.Value, app.Axis4FinalSpinner);
+        end
+
+        % Value changing function: Axis4FinalSpinner
+        function Axis4FinalSpinnerValueChanging(app, event)
+            app.handleJointInput('fin', 4, event.Value, app.Axis4FinalSlider);
+        end
+
+        % Value changing function: Axis5FinalSlider
+        function Axis5FinalSliderValueChanging(app, event)
+            app.handleJointInput('fin', 5, event.Value, app.Axis5FinalSpinner);
+        end
+
+        % Value changing function: Axis5FinalSpinner
+        function Axis5FinalSpinnerValueChanging(app, event)
+            app.handleJointInput('fin', 5, event.Value, app.Axis5FinalSlider);
+        end
+
+        % Value changing function: Axis6FinalSlider
+        function Axis6FinalSliderValueChanging(app, event)
+            app.handleJointInput('fin', 6, event.Value, app.Axis6FinalSpinner);
+        end
+
+        % Value changing function: Axis6FinalSpinner
+        function Axis6FinalSpinnerValueChanging(app, event)
+            app.handleJointInput('fin', 6, event.Value, app.Axis6FinalSlider);
+        end
+
+        % Value changing function: Axis7FinalSlider
+        function Axis7FinalSliderValueChanging(app, event)
+            app.handleJointInput('fin', 7, event.Value, app.Axis7FinalSpinner);
+        end
+
+        % Value changing function: Axis7FinalSpinner
+        function Axis7FinalSpinnerValueChanging(app, event)
+            app.handleJointInput('fin', 7, event.Value, app.Axis7FinalSlider);
+        end
+
+        % Value changing function: GripperFinalSlider
+        function GripperFinalSliderValueChanging(app, event)
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSpinner, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner]);
+        end
+
+        % Value changing function: GripperFinalSpinner
+        function GripperFinalSpinnerValueChanging(app, event)
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSlider, app.GripperTaskFinalSlider, app.GripperTaskFinalSpinner]);
+        end
+
+        % Value changing function: XAxisInitialSlider
+        function XAxisInitialSliderValueChanging(app, event)
+            app.handleTaskPosInput('ini', 1, event.Value, app.XAxisInitialSpinner);
+        end
+
+        % Value changing function: XAxisInitialSpinner
+        function XAxisInitialSpinnerValueChanging(app, event)
+            app.handleTaskPosInput('ini', 1, event.Value, app.XAxisInitialSlider);
+        end
+
+        % Value changing function: YAxisInitialSlider
+        function YAxisInitialSliderValueChanging(app, event)
+            app.handleTaskPosInput('ini', 2, event.Value, app.YAxisInitialSpinner);
+        end
+
+        % Value changing function: YAxisInitialSpinner
+        function YAxisInitialSpinnerValueChanging(app, event)
+            app.handleTaskPosInput('ini', 2, event.Value, app.YAxisInitialSlider);
+        end
+
+        % Value changing function: ZAxisInitialSlider
+        function ZAxisInitialSliderValueChanging(app, event)
+            app.handleTaskPosInput('ini', 3, event.Value, app.ZAxisInitialSpinner);
+        end
+
+        % Value changing function: ZAxisInitialSpinner
+        function ZAxisInitialSpinnerValueChanging(app, event)
+            app.handleTaskPosInput('ini', 3, event.Value, app.ZAxisInitialSlider);
+        end
+
+        % Value changing function: PhiInitialSlider
+        function PhiInitialSliderValueChanging(app, event)
+            app.handleTaskEulerInput('ini', 1, event.Value, app.PhiInitialSpinner);
+        end
+
+        % Value changing function: PhiInitialSpinner
+        function PhiInitialSpinnerValueChanging(app, event)
+            app.handleTaskEulerInput('ini', 1, event.Value, app.PhiInitialSlider);
+        end
+
+        % Value changing function: ThetaInitialSlider
+        function ThetaInitialSliderValueChanging(app, event)
+            app.handleTaskEulerInput('ini', 2, event.Value, app.ThetaInitialSpinner);
+        end
+
+        % Value changing function: ThetaInitialSpinner
+        function ThetaInitialSpinnerValueChanging(app, event)
+            app.handleTaskEulerInput('ini', 2, event.Value, app.ThetaInitialSlider);
+        end
+
+        % Value changing function: PsiInitialSlider
+        function PsiInitialSliderValueChanging(app, event)
+            app.handleTaskEulerInput('ini', 3, event.Value, app.PsiInitialSpinner);
+        end
+
+        % Value changing function: PsiInitialSpinner
+        function PsiInitialSpinnerValueChanging(app, event)
+            app.handleTaskEulerInput('ini', 3, event.Value, app.PsiInitialSlider);
+        end
+
+        % Value changing function: GripperTaskInitialSlider
+        function GripperTaskInitialSliderValueChanging(app, event)
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSlider, app.GripperInitialSpinner, app.GripperTaskInitialSpinner]);
+        end
+
+        % Value changing function: GripperTaskInitialSpinner
+        function GripperTaskInitialSpinnerValueChanging(app, event)
+            app.handleGripperInput('ini', event.Value, [app.GripperInitialSlider, app.GripperInitialSpinner, app.GripperTaskInitialSlider]);
+        end
+
+        % Value changing function: XAxisFinalSlider
+        function XAxisFinalSliderValueChanging(app, event)
+            app.handleTaskPosInput('fin', 1, event.Value, app.XAxisFinalSpinner);
+        end
+
+        % Value changing function: XAxisFinalSpinner
+        function XAxisFinalSpinnerValueChanging(app, event)
+            app.handleTaskPosInput('fin', 1, event.Value, app.XAxisFinalSlider);
+        end
+
+        % Value changing function: YAxisFinalSlider
+        function YAxisFinalSliderValueChanging(app, event)
+            app.handleTaskPosInput('fin', 2, event.Value, app.YAxisFinalSpinner);
+        end
+
+        % Value changing function: YAxisFinalSpinner
+        function YAxisFinalSpinnerValueChanging(app, event)
+            app.handleTaskPosInput('fin', 2, event.Value, app.YAxisFinalSlider);
+        end
+
+        % Value changing function: ZAxisFinalSlider
+        function ZAxisFinalSliderValueChanging(app, event)
+            app.handleTaskPosInput('fin', 3, event.Value, app.ZAxisFinalSpinner);
+        end
+
+        % Value changing function: ZAxisFinalSpinner
+        function ZAxisFinalSpinnerValueChanging(app, event)
+            app.handleTaskPosInput('fin', 3, event.Value, app.ZAxisFinalSlider);
+        end
+
+        % Value changing function: PhiFinalSlider
+        function PhiFinalSliderValueChanging(app, event)
+            app.handleTaskEulerInput('fin', 1, event.Value, app.PhiFinalSpinner);
+        end
+
+        % Value changing function: PhiFinalSpinner
+        function PhiFinalSpinnerValueChanging(app, event)
+            app.handleTaskEulerInput('fin', 1, event.Value, app.PhiFinalSlider);
+        end
+
+        % Value changing function: ThetaFinalSlider
+        function ThetaFinalSliderValueChanging(app, event)
+            app.handleTaskEulerInput('fin', 2, event.Value, app.ThetaFinalSpinner);
+        end
+
+        % Value changing function: ThetaFinalSpinner
+        function ThetaFinalSpinnerValueChanging(app, event)
+            app.handleTaskEulerInput('fin', 2, event.Value, app.ThetaFinalSlider);
+        end
+
+        % Value changing function: PsiFinalSlider
+        function PsiFinalSliderValueChanging(app, event)
+            app.handleTaskEulerInput('fin', 3, event.Value, app.PsiFinalSpinner);
+        end
+
+        % Value changing function: PsiFinalSpinner
+        function PsiFinalSpinnerValueChanging(app, event)
+            app.handleTaskEulerInput('fin', 3, event.Value, app.PsiFinalSlider);
+        end
+
+        % Value changing function: GripperTaskFinalSlider
+        function GripperTaskFinalSliderValueChanging(app, event)
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSlider, app.GripperFinalSpinner, app.GripperTaskFinalSpinner]);
+        end
+
+        % Value changing function: GripperTaskFinalSpinner
+        function GripperTaskFinalSpinnerValueChanging(app, event)
+            app.handleGripperInput('fin', event.Value, [app.GripperFinalSlider, app.GripperFinalSpinner, app.GripperTaskFinalSlider]);
+        end
+
+        % Value changed function: SpeedxSpinner
+        function SpeedxSpinnerValueChanged(app, event)
+            val = app.SpeedxSpinner.Value;
+            if val <= 0
+                val = 1.0;
+                app.SpeedxSpinner.Value = 1.0;
+            end
+            app.controller.model.time_const = val;
+        end
+
+        % Selection change function: RightTabGroup
+        function RightTabGroupSelectionChanged(app, event)
+            selectedTab = app.RightTabGroup.SelectedTab;
+            if selectedTab == app.InitialJointTab || selectedTab == app.FinalJointTab
+                app.handleTabSelection(0);
+            elseif selectedTab == app.InitialTaskTab
+                app.handleTabSelection(1);
+            elseif selectedTab == app.FinalTaskTab
+                app.handleTabSelection(2);
+            end
+        end
+
+        % Value changed function: ControlSpaceDropDown
+        function ControlSpaceDropDownValueChanged(app, event)
+            if strcmp(app.ControlSpaceDropDown.Value, 'Task')
+                app.controller.model.ctr.space = 1;
+            else
+                app.controller.model.ctr.space = 0;
+            end
+            updateControlParams(app);
+        end
+
+        % Selection changed function: TrajSpaceButtonGroup
+        function TrajSpaceButtonGroupSelectionChanged(app, event)
+            selectedButton = app.TrajSpaceButtonGroup.SelectedObject;
+            if selectedButton == app.TaskButton
+                app.controller.setTrajSpace(1);
+            else
+                app.controller.setTrajSpace(0);
+            end
+            updateFinTimeTrj(app);
+            app.FinalsEditField.Value = app.controller.model.tfin_trj;
+        end
+
+        % Value changed function: OnButton
+        function OnButtonValueChanged(app, event)
+            app.controller.model.trj_on = double(app.OnButton.Value);
+            if app.sim_mode == 0
+                if app.controller.model.trj_on == 0
+                    app.controller.model.ghost_on = 0;
+                    app.FinalsEditField.Enable = "off";
+                    app.FinalsEditField.Value = 0;
+                    app.controller.model.tfin = 0;
+                else
+                    app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
+                    app.FinalsEditField.Enable = "off";
+                end
+            else
+                app.controller.model.ghost_on = double(strcmp(app.EnableghostmodelsMenu.Checked, 'on'));
+                if app.controller.model.trj_on == 0
+                    app.FinalsEditField.Enable = "on";
+                    app.controller.model.tfin = app.FinalsEditField.Value;
+                else
+                    app.FinalsEditField.Enable = "off";
+                end
+            end
+            app.updateTabGroupState();
+            updateEnableState(app);
+            if app.controller.model.trj_on == 1
+                updateFinTimeTrj(app);
+            else
+                updateRunButtonState(app);
+            end
+            app.controller.initRobot();
+            app.controller.updateView();
+        end
+
+        % Selection change function: TabGroup
+        function TabGroupSelectionChanged(app, event)
+            if app.TabGroup.SelectedTab == app.ScopeTelemetryTab
+                app.updateEmbeddedScope();
+            end
+        end
+
+        % Selection change function: TabGroup2
+        function TabGroup2SelectionChanged(app, event)
+            app.updateEmbeddedScope();
+        end
+
+        % Value changed function: HUDCheckBox
+        function HUDCheckBoxValueChanged(app, event)
+            if app.HUDCheckBox.Value
+                app.HUDPanel.Visible = 'on';
+                app.updateHUD();
+            else
+                app.HUDPanel.Visible = 'off';
+            end
+        end
+
+        % Value changed function: EllipsoidCheckBox
+        function EllipsoidCheckBoxValueChanged(app, event)
+            value = app.EllipsoidCheckBox.Value;
+            app.controller.setEllipsoidVisibility(value);
+            if isprop(app, 'EnablemanipulabilityellipsoidMenu') && isvalid(app.EnablemanipulabilityellipsoidMenu)
+                if value
+                    app.EnablemanipulabilityellipsoidMenu.Checked = 'on';
+                else
+                    app.EnablemanipulabilityellipsoidMenu.Checked = 'off';
+                end
+            end
+        end
+
+        % Menu selected function: EnablemanipulabilityellipsoidMenu
+        function EnablemanipulabilityellipsoidMenuSelected(app, event)
+            if strcmp(app.EnablemanipulabilityellipsoidMenu.Checked, 'on')
+                app.EnablemanipulabilityellipsoidMenu.Checked = 'off';
+                if isprop(app, 'EllipsoidCheckBox') && isvalid(app.EllipsoidCheckBox)
+                    app.EllipsoidCheckBox.Value = false;
+                end
+                app.controller.setEllipsoidVisibility(false);
+            else
+                app.EnablemanipulabilityellipsoidMenu.Checked = 'on';
+                if isprop(app, 'EllipsoidCheckBox') && isvalid(app.EllipsoidCheckBox)
+                    app.EllipsoidCheckBox.Value = true;
+                end
+                app.controller.setEllipsoidVisibility(true);
+            end
+        end
+
+        % Changes arrangement of the app based on UIFigure width
+        function updateAppLayout(app, event)
+            currentFigureWidth = app.UIFigure.Position(3);
+            if(currentFigureWidth <= app.onePanelWidth)
+                % Change to a 3x1 grid
+                app.GridLayout.RowHeight = {549, 549, 549};
+                app.GridLayout.ColumnWidth = {'1x'};
+                app.CenterPanel.Layout.Row = 1;
+                app.CenterPanel.Layout.Column = 1;
+                app.LeftPanel.Layout.Row = 2;
+                app.LeftPanel.Layout.Column = 1;
+                app.RightPanel.Layout.Row = 3;
+                app.RightPanel.Layout.Column = 1;
+            elseif (currentFigureWidth > app.onePanelWidth && currentFigureWidth <= app.twoPanelWidth)
+                % Change to a 2x2 grid
+                app.GridLayout.RowHeight = {549, 549};
+                app.GridLayout.ColumnWidth = {'1x', '1x'};
+                app.CenterPanel.Layout.Row = 1;
+                app.CenterPanel.Layout.Column = [1,2];
+                app.LeftPanel.Layout.Row = 2;
+                app.LeftPanel.Layout.Column = 1;
+                app.RightPanel.Layout.Row = 2;
+                app.RightPanel.Layout.Column = 2;
+            else
+                % Change to a 1x3 grid
+                app.GridLayout.RowHeight = {'1x'};
+                app.GridLayout.ColumnWidth = {328, '1x', 342};
+                app.LeftPanel.Layout.Row = 1;
+                app.LeftPanel.Layout.Column = 1;
+                app.CenterPanel.Layout.Row = 1;
+                app.CenterPanel.Layout.Column = 2;
+                app.RightPanel.Layout.Row = 1;
+                app.RightPanel.Layout.Column = 3;
+            end
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure and hide until all components are created
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.AutoResizeChildren = 'off';
+            app.UIFigure.Position = [100 100 1115 549];
+            app.UIFigure.Name = 'MATLAB App';
+            app.UIFigure.SizeChangedFcn = createCallbackFcn(app, @updateAppLayout, true);
+
+            % Create FileMenu
+            app.FileMenu = uimenu(app.UIFigure);
+            app.FileMenu.Text = 'File';
+
+            % Create ExitMenu
+            app.ExitMenu = uimenu(app.FileMenu);
+            app.ExitMenu.MenuSelectedFcn = createCallbackFcn(app, @ExitMenuSelected, true);
+            app.ExitMenu.Text = 'Exit';
+
+            % Create ViewMenu
+            app.ViewMenu = uimenu(app.UIFigure);
+            app.ViewMenu.Text = 'View';
+
+            % Create PlotOptionsMenu
+            app.PlotOptionsMenu = uimenu(app.ViewMenu);
+            app.PlotOptionsMenu.Text = 'Plot Options';
+
+            % Create EnablehighqualitymodelsMenu
+            app.EnablehighqualitymodelsMenu = uimenu(app.PlotOptionsMenu);
+            app.EnablehighqualitymodelsMenu.MenuSelectedFcn = createCallbackFcn(app, @EnablehighqualitymodelsMenuSelected, true);
+            app.EnablehighqualitymodelsMenu.Text = 'Enable high quality models';
+
+            % Create EnablecoordinateframeMenu
+            app.EnablecoordinateframeMenu = uimenu(app.PlotOptionsMenu);
+            app.EnablecoordinateframeMenu.MenuSelectedFcn = createCallbackFcn(app, @EnablecoordinateframeMenuSelected, true);
+            app.EnablecoordinateframeMenu.Text = 'Enable coordinate frame';
+
+            % Create EnableghostmodelsMenu
+            app.EnableghostmodelsMenu = uimenu(app.PlotOptionsMenu);
+            app.EnableghostmodelsMenu.MenuSelectedFcn = createCallbackFcn(app, @EnableghostmodelsMenuSelected, true);
+            app.EnableghostmodelsMenu.Text = 'Enable ghost models';
+
+            % Create EnablemanipulabilityellipsoidMenu
+            app.EnablemanipulabilityellipsoidMenu = uimenu(app.PlotOptionsMenu);
+            app.EnablemanipulabilityellipsoidMenu.MenuSelectedFcn = createCallbackFcn(app, @EnablemanipulabilityellipsoidMenuSelected, true);
+            app.EnablemanipulabilityellipsoidMenu.Text = 'Enable manipulability ellipsoid';
+
+            % Create ToolsMenu
+            app.ToolsMenu = uimenu(app.UIFigure);
+            app.ToolsMenu.Text = 'Tools';
+
+            % Create WindowMenu
+            app.WindowMenu = uimenu(app.UIFigure);
+            app.WindowMenu.Text = 'Window';
+
+            % Create HelpMenu
+            app.HelpMenu = uimenu(app.UIFigure);
+            app.HelpMenu.Text = 'Help';
+
+            % Create AboutMenu
+            app.AboutMenu = uimenu(app.HelpMenu);
+            app.AboutMenu.MenuSelectedFcn = createCallbackFcn(app, @AboutMenuSelected, true);
+            app.AboutMenu.Text = 'About';
+
+            % Create GridLayout
+            app.GridLayout = uigridlayout(app.UIFigure);
+            app.GridLayout.ColumnWidth = {328, '1x', 342};
+            app.GridLayout.RowHeight = {'1x'};
+            app.GridLayout.ColumnSpacing = 0;
+            app.GridLayout.RowSpacing = 0;
+            app.GridLayout.Padding = [0 0 0 0];
+            app.GridLayout.Scrollable = 'on';
+
+            % Create LeftPanel
+            app.LeftPanel = uipanel(app.GridLayout);
+            app.LeftPanel.Layout.Row = 1;
+            app.LeftPanel.Layout.Column = 1;
+
+            % Create LeftTabGroup
+            app.LeftTabGroup = uitabgroup(app.LeftPanel);
+            app.LeftTabGroup.Position = [5 117 316 354];
+
+            % Create KinematicsTab
+            app.KinematicsTab = uitab(app.LeftTabGroup);
+            app.KinematicsTab.Title = 'Kinematics';
+
+            % Create DHTableLabel
+            app.DHTableLabel = uilabel(app.KinematicsTab);
+            app.DHTableLabel.Position = [8 299 57 22];
+            app.DHTableLabel.Text = 'DH Table:';
+
+            % Create DHTable
+            app.DHTable = uitable(app.KinematicsTab);
+            app.DHTable.ColumnName = {'a_j'; 'alpha_j'; 'd_j'; 'theta_j'};
+            app.DHTable.ColumnWidth = {55, 55, 55, 55};
+            app.DHTable.RowName = {};
+            app.DHTable.CellEditCallback = createCallbackFcn(app, @DHTableCellEdit, true);
+            app.DHTable.Position = [8 78 237 216];
+
+            % Create mmdegmmdegLabel
+            app.mmdegmmdegLabel = uilabel(app.KinematicsTab);
+            app.mmdegmmdegLabel.Position = [46 55 208 22];
+            app.mmdegmmdegLabel.Text = '(mm)         (deg)         (mm)         (deg)';
+
+            % Create JointTypePanel
+            app.JointTypePanel = uipanel(app.KinematicsTab);
+            app.JointTypePanel.Position = [244 78 65 216];
+
+            % Create q_jPanel
+            app.q_jPanel = uipanel(app.JointTypePanel);
+            app.q_jPanel.Position = [0 188 65 28];
+
+            % Create q_jRPLabel
+            app.q_jRPLabel = uilabel(app.q_jPanel);
+            app.q_jRPLabel.FontWeight = 'bold';
+            app.q_jRPLabel.Position = [4 2 59 22];
+            app.q_jRPLabel.Text = 'q_j   R   P';
+
+            % Create q_1ButtonGroup
+            app.q_1ButtonGroup = uibuttongroup(app.JointTypePanel);
+            app.q_1ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_1ButtonGroupSelectionChanged, true);
+            app.q_1ButtonGroup.Position = [0 165 65 24];
+
+            % Create Button
+            app.Button = uiradiobutton(app.q_1ButtonGroup);
+            app.Button.Text = 'Button';
+            app.Button.Position = [28 0 15 22];
+            app.Button.Value = true;
+
+            % Create Button2
+            app.Button2 = uiradiobutton(app.q_1ButtonGroup);
+            app.Button2.Text = 'Button2';
+            app.Button2.Position = [47 0 15 22];
+
+            % Create q_1Label
+            app.q_1Label = uilabel(app.q_1ButtonGroup);
+            app.q_1Label.Position = [4 0 22 22];
+            app.q_1Label.Text = 'q_1';
+
+            % Create q_2ButtonGroup
+            app.q_2ButtonGroup = uibuttongroup(app.JointTypePanel);
+            app.q_2ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_2ButtonGroupSelectionChanged, true);
+            app.q_2ButtonGroup.Position = [0 141 65 25];
+
+            % Create Button_2
+            app.Button_2 = uiradiobutton(app.q_2ButtonGroup);
+            app.Button_2.Text = 'Button';
+            app.Button_2.Position = [28 1 15 22];
+            app.Button_2.Value = true;
+
+            % Create Button2_2
+            app.Button2_2 = uiradiobutton(app.q_2ButtonGroup);
+            app.Button2_2.Text = 'Button2';
+            app.Button2_2.Position = [47 1 15 22];
+
+            % Create q_2Label
+            app.q_2Label = uilabel(app.q_2ButtonGroup);
+            app.q_2Label.Position = [4 1 25 22];
+            app.q_2Label.Text = 'q_2';
+
+            % Create q_3ButtonGroup
+            app.q_3ButtonGroup = uibuttongroup(app.JointTypePanel);
+            app.q_3ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_3ButtonGroupSelectionChanged, true);
+            app.q_3ButtonGroup.Position = [0 118 65 24];
+
+            % Create Button_3
+            app.Button_3 = uiradiobutton(app.q_3ButtonGroup);
+            app.Button_3.Text = 'Button';
+            app.Button_3.Position = [28 0 15 22];
+            app.Button_3.Value = true;
+
+            % Create Button2_3
+            app.Button2_3 = uiradiobutton(app.q_3ButtonGroup);
+            app.Button2_3.Text = 'Button2';
+            app.Button2_3.Position = [47 0 15 22];
+
+            % Create q_3Label
+            app.q_3Label = uilabel(app.q_3ButtonGroup);
+            app.q_3Label.Position = [4 0 25 22];
+            app.q_3Label.Text = 'q_3';
+
+            % Create q_4ButtonGroup
+            app.q_4ButtonGroup = uibuttongroup(app.JointTypePanel);
+            app.q_4ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_4ButtonGroupSelectionChanged, true);
+            app.q_4ButtonGroup.Position = [0 95 65 24];
+
+            % Create Button_4
+            app.Button_4 = uiradiobutton(app.q_4ButtonGroup);
+            app.Button_4.Text = 'Button';
+            app.Button_4.Position = [28 0 15 22];
+            app.Button_4.Value = true;
+
+            % Create Button2_4
+            app.Button2_4 = uiradiobutton(app.q_4ButtonGroup);
+            app.Button2_4.Text = 'Button2';
+            app.Button2_4.Position = [47 0 15 22];
+
+            % Create q_4Label
+            app.q_4Label = uilabel(app.q_4ButtonGroup);
+            app.q_4Label.Position = [4 0 25 22];
+            app.q_4Label.Text = 'q_4';
+
+            % Create q_5ButtonGroup
+            app.q_5ButtonGroup = uibuttongroup(app.JointTypePanel);
+            app.q_5ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_5ButtonGroupSelectionChanged, true);
+            app.q_5ButtonGroup.Position = [0 72 65 24];
+
+            % Create Button_5
+            app.Button_5 = uiradiobutton(app.q_5ButtonGroup);
+            app.Button_5.Text = 'Button';
+            app.Button_5.Position = [28 0 15 22];
+            app.Button_5.Value = true;
+
+            % Create Button2_5
+            app.Button2_5 = uiradiobutton(app.q_5ButtonGroup);
+            app.Button2_5.Text = 'Button2';
+            app.Button2_5.Position = [47 0 15 22];
+
+            % Create q_5Label
+            app.q_5Label = uilabel(app.q_5ButtonGroup);
+            app.q_5Label.Position = [4 0 25 22];
+            app.q_5Label.Text = 'q_5';
+
+            % Create q_6ButtonGroup
+            app.q_6ButtonGroup = uibuttongroup(app.JointTypePanel);
+            app.q_6ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_6ButtonGroupSelectionChanged, true);
+            app.q_6ButtonGroup.Position = [0 48 65 25];
+
+            % Create Button_6
+            app.Button_6 = uiradiobutton(app.q_6ButtonGroup);
+            app.Button_6.Text = 'Button';
+            app.Button_6.Position = [28 1 15 22];
+            app.Button_6.Value = true;
+
+            % Create Button2_6
+            app.Button2_6 = uiradiobutton(app.q_6ButtonGroup);
+            app.Button2_6.Text = 'Button2';
+            app.Button2_6.Position = [47 1 15 22];
+
+            % Create q_6Label
+            app.q_6Label = uilabel(app.q_6ButtonGroup);
+            app.q_6Label.Position = [4 1 25 22];
+            app.q_6Label.Text = 'q_6';
+
+            % Create q_7ButtonGroup
+            app.q_7ButtonGroup = uibuttongroup(app.JointTypePanel);
+            app.q_7ButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @q_7ButtonGroupSelectionChanged, true);
+            app.q_7ButtonGroup.Position = [0 25 65 24];
+
+            % Create Button_7
+            app.Button_7 = uiradiobutton(app.q_7ButtonGroup);
+            app.Button_7.Text = 'Button';
+            app.Button_7.Position = [28 0 15 22];
+            app.Button_7.Value = true;
+
+            % Create Button2_7
+            app.Button2_7 = uiradiobutton(app.q_7ButtonGroup);
+            app.Button2_7.Text = 'Button2';
+            app.Button2_7.Position = [47 0 15 22];
+
+            % Create q_7Label
+            app.q_7Label = uilabel(app.q_7ButtonGroup);
+            app.q_7Label.Position = [4 0 25 22];
+            app.q_7Label.Text = 'q_7';
+
+            % Create jLabel
+            app.jLabel = uilabel(app.KinematicsTab);
+            app.jLabel.FontWeight = 'bold';
+            app.jLabel.Position = [16 268 14 22];
+            app.jLabel.Text = 'j';
+
+            % Create LimitsTab
+            app.LimitsTab = uitab(app.LeftTabGroup);
+            app.LimitsTab.Title = 'Limits';
+
+            % Create JointPosMaxTable
+            app.JointPosMaxTable = uitable(app.LimitsTab);
+            app.JointPosMaxTable.ColumnName = '';
+            app.JointPosMaxTable.RowName = {};
+            app.JointPosMaxTable.Position = [6 268 304 25];
+
+            % Create JointPosMaxdegLabel
+            app.JointPosMaxdegLabel = uilabel(app.LimitsTab);
+            app.JointPosMaxdegLabel.Position = [12 299 115 22];
+            app.JointPosMaxdegLabel.Text = 'Joint Pos Max (deg):';
+
+            % Create JointPosMinTable
+            app.JointPosMinTable = uitable(app.LimitsTab);
+            app.JointPosMinTable.ColumnName = '';
+            app.JointPosMinTable.RowName = {};
+            app.JointPosMinTable.Position = [6 204 304 25];
+
+            % Create JointPosMindegLabel
+            app.JointPosMindegLabel = uilabel(app.LimitsTab);
+            app.JointPosMindegLabel.Position = [12 235 112 22];
+            app.JointPosMindegLabel.Text = 'Joint Pos Min (deg):';
+
+            % Create JointVelMagTable
+            app.JointVelMagTable = uitable(app.LimitsTab);
+            app.JointVelMagTable.ColumnName = '';
+            app.JointVelMagTable.RowName = {};
+            app.JointVelMagTable.Position = [6 138 304 25];
+
+            % Create JointVelMagdegsLabel
+            app.JointVelMagdegsLabel = uilabel(app.LimitsTab);
+            app.JointVelMagdegsLabel.Position = [14 169 121 22];
+            app.JointVelMagdegsLabel.Text = 'Joint Vel Mag (deg/s):';
+
+            % Create JointAccMagTable
+            app.JointAccMagTable = uitable(app.LimitsTab);
+            app.JointAccMagTable.ColumnName = '';
+            app.JointAccMagTable.RowName = {};
+            app.JointAccMagTable.Position = [6 71 304 25];
+
+            % Create JointAccMagdegsLabel
+            app.JointAccMagdegsLabel = uilabel(app.LimitsTab);
+            app.JointAccMagdegsLabel.Position = [14 102 136 22];
+            app.JointAccMagdegsLabel.Text = 'Joint Acc Mag (deg/s^2):';
+
+            % Create DynamicsTab
+            app.DynamicsTab = uitab(app.LeftTabGroup);
+            app.DynamicsTab.Title = 'Dynamics';
+
+            % Create AdditionalmodelsLabel
+            app.AdditionalmodelsLabel = uilabel(app.DynamicsTab);
+            app.AdditionalmodelsLabel.Position = [8 6 104 22];
+            app.AdditionalmodelsLabel.Text = 'Additional models:';
+
+            % Create SpringCheckBox
+            app.SpringCheckBox = uicheckbox(app.DynamicsTab);
+            app.SpringCheckBox.Text = 'Spring';
+            app.SpringCheckBox.Position = [214 6 57 22];
+            app.SpringCheckBox.Value = true;
+
+            % Create FrictionCheckBox
+            app.FrictionCheckBox = uicheckbox(app.DynamicsTab);
+            app.FrictionCheckBox.Text = 'Friction';
+            app.FrictionCheckBox.Position = [134 6 61 22];
+            app.FrictionCheckBox.Value = true;
+
+            % Create InertialParametersPanel
+            app.InertialParametersPanel = uipanel(app.DynamicsTab);
+            app.InertialParametersPanel.Title = 'Inertial Parameters';
+            app.InertialParametersPanel.Scrollable = 'on';
+            app.InertialParametersPanel.Position = [7 36 301 288];
+
+            % Create MassTable
+            app.MassTable = uitable(app.InertialParametersPanel);
+            app.MassTable.ColumnName = '';
+            app.MassTable.RowName = {};
+            app.MassTable.Position = [8 218 256 26];
+
+            % Create MasskgLabel
+            app.MasskgLabel = uilabel(app.InertialParametersPanel);
+            app.MasskgLabel.Position = [9 242 60 22];
+            app.MasskgLabel.Text = 'Mass [kg]:';
+
+            % Create CenterofMassTable
+            app.CenterofMassTable = uitable(app.InertialParametersPanel);
+            app.CenterofMassTable.ColumnName = '';
+            app.CenterofMassTable.RowName = {};
+            app.CenterofMassTable.Position = [8 120 256 73];
+
+            % Create CenterofMassmLabel
+            app.CenterofMassmLabel = uilabel(app.InertialParametersPanel);
+            app.CenterofMassmLabel.Position = [9 191 110 22];
+            app.CenterofMassmLabel.Text = 'Center of Mass [m]:';
+
+            % Create UniqueElementsVectorofInertiaTensorsmLabel
+            app.UniqueElementsVectorofInertiaTensorsmLabel = uilabel(app.InertialParametersPanel);
+            app.UniqueElementsVectorofInertiaTensorsmLabel.Position = [10 91 254 22];
+            app.UniqueElementsVectorofInertiaTensorsmLabel.Text = 'Unique Elements Vector of Inertia Tensors [m]:';
+
+            % Create CenterofMassTable_2
+            app.CenterofMassTable_2 = uitable(app.InertialParametersPanel);
+            app.CenterofMassTable_2.ColumnName = '';
+            app.CenterofMassTable_2.RowName = {};
+            app.CenterofMassTable_2.Position = [9 9 270 84];
+
+            % Create ControlTab
+            app.ControlTab = uitab(app.LeftTabGroup);
+            app.ControlTab.Title = 'Control';
+
+            % Create ControlGainsLabel
+            app.ControlGainsLabel = uilabel(app.ControlTab);
+            app.ControlGainsLabel.Position = [41 247 78 22];
+            app.ControlGainsLabel.Text = 'Control Gains';
+
+            % Create GainTable
+            app.GainTable = uitable(app.ControlTab);
+            app.GainTable.ColumnName = {'Kp'; 'Ki'; 'Kd'};
+            app.GainTable.RowName = {'1'; '2'; '3'; '4'; '5'; '6'};
+            app.GainTable.CellEditCallback = createCallbackFcn(app, @GainTableCellEdit, true);
+            app.GainTable.Position = [40 52 237 192];
+
+            % Create secLabel_2
+            app.secLabel_2 = uilabel(app.ControlTab);
+            app.secLabel_2.Enable = 'off';
+            app.secLabel_2.Position = [287 260 25 22];
+            app.secLabel_2.Text = 'sec';
+
+            % Create CycleEditFieldLabel
+            app.CycleEditFieldLabel = uilabel(app.ControlTab);
+            app.CycleEditFieldLabel.HorizontalAlignment = 'center';
+            app.CycleEditFieldLabel.Position = [199 260 36 22];
+            app.CycleEditFieldLabel.Text = 'Cycle';
+
+            % Create CycleEditField
+            app.CycleEditField = uieditfield(app.ControlTab, 'numeric');
+            app.CycleEditField.Limits = [1e-05 1];
+            app.CycleEditField.ValueChangedFcn = createCallbackFcn(app, @CycleEditFieldValueChanged, true);
+            app.CycleEditField.Position = [237 260 46 22];
+            app.CycleEditField.Value = 0.004;
+
+            % Create ControlTypeDropDownLabel
+            app.ControlTypeDropDownLabel = uilabel(app.ControlTab);
+            app.ControlTypeDropDownLabel.Position = [8 299 74 22];
+            app.ControlTypeDropDownLabel.Text = 'Control Type';
+
+            % Create ControlTypeDropDown
+            app.ControlTypeDropDown = uidropdown(app.ControlTab);
+            app.ControlTypeDropDown.Items = {'PID', 'IDC'};
+            app.ControlTypeDropDown.ValueChangedFcn = createCallbackFcn(app, @ControlTypeDropDownValueChanged, true);
+            app.ControlTypeDropDown.Position = [83 299 60 22];
+            app.ControlTypeDropDown.Value = 'PID';
+
+            % Create CompensationsPanel
+            app.CompensationsPanel = uipanel(app.ControlTab);
+            app.CompensationsPanel.Position = [6 6 307 40];
+
+            % Create CompSpringCheckBox
+            app.CompSpringCheckBox = uicheckbox(app.CompensationsPanel);
+            app.CompSpringCheckBox.Enable = 'off';
+            app.CompSpringCheckBox.Text = 'Spring';
+            app.CompSpringCheckBox.Position = [173 9 57 22];
+
+            % Create CompFrictionCheckBox
+            app.CompFrictionCheckBox = uicheckbox(app.CompensationsPanel);
+            app.CompFrictionCheckBox.Enable = 'off';
+            app.CompFrictionCheckBox.Text = 'Friction';
+            app.CompFrictionCheckBox.Position = [240 9 61 22];
+
+            % Create CompGravityCheckBox
+            app.CompGravityCheckBox = uicheckbox(app.CompensationsPanel);
+            app.CompGravityCheckBox.ValueChangedFcn = createCallbackFcn(app, @CompGravityCheckBoxValueChanged, true);
+            app.CompGravityCheckBox.Text = 'Gravity';
+            app.CompGravityCheckBox.Position = [101 9 60 22];
+
+            % Create CompensationsLabel
+            app.CompensationsLabel = uilabel(app.CompensationsPanel);
+            app.CompensationsLabel.Position = [5 8 92 22];
+            app.CompensationsLabel.Text = 'Compensations:';
+
+            % Create ControlSpaceDropDownLabel
+            app.ControlSpaceDropDownLabel = uilabel(app.ControlTab);
+            app.ControlSpaceDropDownLabel.Position = [166 299 81 22];
+            app.ControlSpaceDropDownLabel.Text = 'Control Space';
+
+            % Create ControlSpaceDropDown
+            app.ControlSpaceDropDown = uidropdown(app.ControlTab);
+            app.ControlSpaceDropDown.Items = {'Joint', 'Task'};
+            app.ControlSpaceDropDown.ValueChangedFcn = createCallbackFcn(app, @ControlSpaceDropDownValueChanged, true);
+            app.ControlSpaceDropDown.Position = [249 299 58 22];
+            app.ControlSpaceDropDown.Value = 'Joint';
+
+            % Create Panel
+            app.Panel = uipanel(app.LeftPanel);
+            app.Panel.Position = [7 7 315 104];
+
+            % Create RunButton
+            app.RunButton = uibutton(app.Panel, 'push');
+            app.RunButton.ButtonPushedFcn = createCallbackFcn(app, @RunButtonPushed, true);
+            app.RunButton.Position = [7 27 73 22];
+            app.RunButton.Text = 'Run';
+
+            % Create SimulationModeSwitchLabel
+            app.SimulationModeSwitchLabel = uilabel(app.Panel);
+            app.SimulationModeSwitchLabel.HorizontalAlignment = 'center';
+            app.SimulationModeSwitchLabel.Position = [6 77 98 22];
+            app.SimulationModeSwitchLabel.Text = 'Simulation Mode:';
+
+            % Create SimModeSwitch
+            app.SimModeSwitch = uiswitch(app.Panel, 'slider');
+            app.SimModeSwitch.Items = {'Kinematic', 'Dynamic'};
+            app.SimModeSwitch.ValueChangedFcn = createCallbackFcn(app, @SimModeSwitchValueChanged, true);
+            app.SimModeSwitch.Position = [71 59 36 16];
+            app.SimModeSwitch.Value = 'Kinematic';
+
+            % Create StopButton
+            app.StopButton = uibutton(app.Panel, 'push');
+            app.StopButton.ButtonPushedFcn = createCallbackFcn(app, @StopButtonPushed, true);
+            app.StopButton.Enable = 'off';
+            app.StopButton.Position = [86 27 73 22];
+            app.StopButton.Text = 'Stop';
+
+            % Create FinalsLabel
+            app.FinalsLabel = uilabel(app.Panel);
+            app.FinalsLabel.HorizontalAlignment = 'center';
+            app.FinalsLabel.Position = [259 50 48 22];
+            app.FinalsLabel.Text = 'Final (s)';
+
+            % Create FinalsEditField
+            app.FinalsEditField = uieditfield(app.Panel, 'numeric');
+            app.FinalsEditField.Limits = [0 600];
+            app.FinalsEditField.ValueChangedFcn = createCallbackFcn(app, @FinalsEditFieldValueChanged, true);
+            app.FinalsEditField.Position = [259 27 51 22];
+            app.FinalsEditField.Value = 1;
+
+            % Create StepsLabel
+            app.StepsLabel = uilabel(app.Panel);
+            app.StepsLabel.HorizontalAlignment = 'center';
+            app.StepsLabel.Position = [198 50 47 22];
+            app.StepsLabel.Text = 'Step (s)';
+
+            % Create StepsEditField
+            app.StepsEditField = uieditfield(app.Panel, 'numeric');
+            app.StepsEditField.Limits = [1e-05 0.001];
+            app.StepsEditField.ValueChangedFcn = createCallbackFcn(app, @StepsEditFieldValueChanged, true);
+            app.StepsEditField.Position = [195 27 51 22];
+            app.StepsEditField.Value = 0.001;
+
+            % Create SpeedxLabel
+            app.SpeedxLabel = uilabel(app.Panel);
+            app.SpeedxLabel.HorizontalAlignment = 'right';
+            app.SpeedxLabel.Position = [188 77 57 22];
+            app.SpeedxLabel.Text = 'Speed (x)';
+
+            % Create SpeedxSpinner
+            app.SpeedxSpinner = uispinner(app.Panel);
+            app.SpeedxSpinner.Step = 0.1;
+            app.SpeedxSpinner.Limits = [0 10];
+            app.SpeedxSpinner.ValueChangedFcn = createCallbackFcn(app, @SpeedxSpinnerValueChanged, true);
+            app.SpeedxSpinner.Position = [260 77 50 22];
+            app.SpeedxSpinner.Value = 1;
+
+            % Create TimePanel
+            app.TimePanel = uipanel(app.Panel);
+            app.TimePanel.Position = [0 0 315 22];
+
+            % Create TimeLabel
+            app.TimeLabel = uilabel(app.TimePanel);
+            app.TimeLabel.Position = [6 2 96 18];
+            app.TimeLabel.Text = 'Time:';
+
+            % Create secLabel
+            app.secLabel = uilabel(app.TimePanel);
+            app.secLabel.Position = [40 2 62 18];
+            app.secLabel.Text = '0.00 sec';
+
+            % Create x1RealtimeLabel
+            app.x1RealtimeLabel = uilabel(app.TimePanel);
+            app.x1RealtimeLabel.HorizontalAlignment = 'right';
+            app.x1RealtimeLabel.Position = [165 2 145 18];
+            app.x1RealtimeLabel.Text = '(x1 Real-time)';
+
+            % Create RobotModelDropDownLabel
+            app.RobotModelDropDownLabel = uilabel(app.LeftPanel);
+            app.RobotModelDropDownLabel.HorizontalAlignment = 'right';
+            app.RobotModelDropDownLabel.Position = [9 515 73 22];
+            app.RobotModelDropDownLabel.Text = 'Robot Model';
+
+            % Create RobotModelDropDown
+            app.RobotModelDropDown = uidropdown(app.LeftPanel);
+            app.RobotModelDropDown.Items = {'Franka Emika Robot', 'Universal Robots UR3', 'Unitree Z1', 'Stäubli RX160', 'Stäubli RX160L'};
+            app.RobotModelDropDown.ValueChangedFcn = createCallbackFcn(app, @RobotModelDropDownValueChanged, true);
+            app.RobotModelDropDown.Position = [96 515 163 22];
+            app.RobotModelDropDown.Value = 'Franka Emika Robot';
+
+            % Create EndEffectorDropDownLabel
+            app.EndEffectorDropDownLabel = uilabel(app.LeftPanel);
+            app.EndEffectorDropDownLabel.HorizontalAlignment = 'right';
+            app.EndEffectorDropDownLabel.Position = [9 485 72 22];
+            app.EndEffectorDropDownLabel.Text = 'End-Effector';
+
+            % Create EndEffectorDropDown
+            app.EndEffectorDropDown = uidropdown(app.LeftPanel);
+            app.EndEffectorDropDown.Items = {'None', 'Gripper'};
+            app.EndEffectorDropDown.ValueChangedFcn = createCallbackFcn(app, @EndEffectorDropDownValueChanged, true);
+            app.EndEffectorDropDown.Position = [96 485 143 22];
+            app.EndEffectorDropDown.Value = 'Gripper';
+
+            % Create EditButton
+            app.EditButton = uibutton(app.LeftPanel, 'state');
+            app.EditButton.ValueChangedFcn = createCallbackFcn(app, @EditButtonValueChanged, true);
+            app.EditButton.Text = 'Edit';
+            app.EditButton.Position = [284 515 37 23];
+
+            % Create DoFSpinnerLabel
+            app.DoFSpinnerLabel = uilabel(app.LeftPanel);
+            app.DoFSpinnerLabel.HorizontalAlignment = 'right';
+            app.DoFSpinnerLabel.Position = [250 485 28 22];
+            app.DoFSpinnerLabel.Text = 'DoF';
+
+            % Create DoFSpinner
+            app.DoFSpinner = uispinner(app.LeftPanel);
+            app.DoFSpinner.ValueChangedFcn = createCallbackFcn(app, @DoFSpinnerValueChanged, true);
+            app.DoFSpinner.Position = [284 485 39 22];
+
+            % Create CenterPanel
+            app.CenterPanel = uipanel(app.GridLayout);
+            app.CenterPanel.Layout.Row = 1;
+            app.CenterPanel.Layout.Column = 2;
+
+            % Create TabGroup
+            app.TabGroup = uitabgroup(app.CenterPanel);
+            app.TabGroup.SelectionChangedFcn = createCallbackFcn(app, @TabGroupSelectionChanged, true);
+            app.TabGroup.Position = [6 7 432 536];
+
+            % Create DViewTab
+            app.DViewTab = uitab(app.TabGroup);
+            app.DViewTab.Title = '3D View';
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.DViewTab);
+            xlabel(app.UIAxes, 'X')
+            ylabel(app.UIAxes, 'Y')
+            zlabel(app.UIAxes, 'Z')
+            app.UIAxes.Position = [6 86 423 424];
+
+            % Create ModelPanel
+            app.ModelPanel = uipanel(app.DViewTab);
+            app.ModelPanel.Position = [4 4 426 30];
+
+            % Create SlowerLabel
+            app.SlowerLabel = uilabel(app.ModelPanel);
+            app.SlowerLabel.Position = [172 4 54 22];
+            app.SlowerLabel.Text = '(Slower!)';
+
+            % Create HUDCheckBox
+            app.HUDCheckBox = uicheckbox(app.ModelPanel);
+            app.HUDCheckBox.ValueChangedFcn = createCallbackFcn(app, @HUDCheckBoxValueChanged, true);
+            app.HUDCheckBox.Text = 'HUD';
+            app.HUDCheckBox.Position = [374 4 48 22];
+            app.HUDCheckBox.Value = true;
+
+            % Create DmodelsCheckBox
+            app.DmodelsCheckBox = uicheckbox(app.ModelPanel);
+            app.DmodelsCheckBox.ValueChangedFcn = createCallbackFcn(app, @DmodelsCheckBoxValueChanged, true);
+            app.DmodelsCheckBox.Text = '3D models';
+            app.DmodelsCheckBox.Position = [6 4 79 22];
+            app.DmodelsCheckBox.Value = true;
+
+            % Create HDmodelsCheckBox
+            app.HDmodelsCheckBox = uicheckbox(app.ModelPanel);
+            app.HDmodelsCheckBox.ValueChangedFcn = createCallbackFcn(app, @HDmodelsCheckBoxValueChanged, true);
+            app.HDmodelsCheckBox.Text = 'HD models';
+            app.HDmodelsCheckBox.Position = [92 4 81 22];
+            app.HDmodelsCheckBox.Value = true;
+
+            % Create EllipsoidCheckBox
+            app.EllipsoidCheckBox = uicheckbox(app.ModelPanel);
+            app.EllipsoidCheckBox.ValueChangedFcn = createCallbackFcn(app, @EllipsoidCheckBoxValueChanged, true);
+            app.EllipsoidCheckBox.Text = 'Ellipsoid';
+            app.EllipsoidCheckBox.Position = [230 4 67 22];
+
+            % Create HUDPanel
+            app.HUDPanel = uipanel(app.DViewTab);
+            app.HUDPanel.Title = 'LIVE HUD TELEMETRY';
+            app.HUDPanel.BackgroundColor = [0.949 0.9608 0.9804];
+            app.HUDPanel.FontWeight = 'bold';
+            app.HUDPanel.FontSize = 10;
+            app.HUDPanel.Position = [4 33 426 95];
+
+            % Create hudLayout
+            app.hudLayout = uigridlayout(app.HUDPanel);
+            app.hudLayout.ColumnWidth = {'1.3x', '1.1x', '1.1x'};
+            app.hudLayout.RowHeight = {'1x', '1x', '1x'};
+            app.hudLayout.ColumnSpacing = 6;
+            app.hudLayout.RowSpacing = 2;
+            app.hudLayout.Padding = [4 2 4 2];
+
+            % Create HUDPosLabel
+            app.HUDPosLabel = uilabel(app.hudLayout);
+            app.HUDPosLabel.FontSize = 9.5;
+            app.HUDPosLabel.FontWeight = 'bold';
+            app.HUDPosLabel.Layout.Row = 1;
+            app.HUDPosLabel.Layout.Column = 1;
+            app.HUDPosLabel.Text = 'XYZ: [0.0, 0.0, 0.0] mm';
+
+            % Create HUDEulerLabel
+            app.HUDEulerLabel = uilabel(app.hudLayout);
+            app.HUDEulerLabel.FontSize = 9;
+            app.HUDEulerLabel.Layout.Row = 2;
+            app.HUDEulerLabel.Layout.Column = 1;
+            app.HUDEulerLabel.Text = 'Euler: [0.0°, 0.0°, 0.0°]';
+
+            % Create HUDManipLabel
+            app.HUDManipLabel = uilabel(app.hudLayout);
+            app.HUDManipLabel.FontSize = 9.5;
+            app.HUDManipLabel.FontWeight = 'bold';
+            app.HUDManipLabel.Layout.Row = 1;
+            app.HUDManipLabel.Layout.Column = 2;
+            app.HUDManipLabel.Text = 'Manip (w): 0.000';
+
+            % Create HUDSingularityBadge
+            app.HUDSingularityBadge = uilabel(app.hudLayout);
+            app.HUDSingularityBadge.FontSize = 9;
+            app.HUDSingularityBadge.FontWeight = 'bold';
+            app.HUDSingularityBadge.FontColor = [0.149 0.651 0.251];
+            app.HUDSingularityBadge.Layout.Row = 2;
+            app.HUDSingularityBadge.Layout.Column = 2;
+            app.HUDSingularityBadge.Text = '● NOMINAL';
+
+            % Create HUDLimitLabel
+            app.HUDLimitLabel = uilabel(app.hudLayout);
+            app.HUDLimitLabel.FontSize = 9.5;
+            app.HUDLimitLabel.Layout.Row = 1;
+            app.HUDLimitLabel.Layout.Column = 3;
+            app.HUDLimitLabel.Text = 'Limit Margin: 0.0°';
+
+            % Create HUDLimitBadge
+            app.HUDLimitBadge = uilabel(app.hudLayout);
+            app.HUDLimitBadge.FontSize = 9;
+            app.HUDLimitBadge.FontWeight = 'bold';
+            app.HUDLimitBadge.FontColor = [0.149 0.651 0.251];
+            app.HUDLimitBadge.Layout.Row = 2;
+            app.HUDLimitBadge.Layout.Column = 3;
+            app.HUDLimitBadge.Text = '● LIMITS OK';
+
+            % Create q_actLabel
+            app.q_actLabel = uilabel(app.hudLayout);
+            app.q_actLabel.FontWeight = 'bold';
+            app.q_actLabel.Layout.Row = 3;
+            app.q_actLabel.Layout.Column = [1 3];
+            app.q_actLabel.Text = 'q_act: [0°, 0°, 0°, 0°, 0°, 0°, 0°]';
+
+            % Create ScopeTelemetryTab
+            app.ScopeTelemetryTab = uitab(app.TabGroup);
+            app.ScopeTelemetryTab.Title = 'Scope & Telemetry';
+
+            % Create TabGroup2
+            app.TabGroup2 = uitabgroup(app.ScopeTelemetryTab);
+            app.TabGroup2.SelectionChangedFcn = createCallbackFcn(app, @TabGroup2SelectionChanged, true);
+            app.TabGroup2.Position = [7 46 422 459];
+
+            % Create JointTrackingErrorsTab
+            app.JointTrackingErrorsTab = uitab(app.TabGroup2);
+            app.JointTrackingErrorsTab.Title = 'Joint Tracking & Errors';
+
+            % Create ActuatorTorquesTab
+            app.ActuatorTorquesTab = uitab(app.TabGroup2);
+            app.ActuatorTorquesTab.Title = 'Actuator Torques';
+
+            % Create CartesianPathErrorTab
+            app.CartesianPathErrorTab = uitab(app.TabGroup2);
+            app.CartesianPathErrorTab.Title = 'Cartesian Path & Error';
+
+            % Create PhasePortraitsTab
+            app.PhasePortraitsTab = uitab(app.TabGroup2);
+            app.PhasePortraitsTab.Title = 'Phase Portraits';
+
+            % Create RightPanel
+            app.RightPanel = uipanel(app.GridLayout);
+            app.RightPanel.Layout.Row = 1;
+            app.RightPanel.Layout.Column = 3;
+
+            % Create RightTabGroup
+            app.RightTabGroup = uitabgroup(app.RightPanel);
+            app.RightTabGroup.SelectionChangedFcn = createCallbackFcn(app, @RightTabGroupSelectionChanged, true);
+            app.RightTabGroup.Position = [5 100 330 443];
+
+            % Create InitialJointTab
+            app.InitialJointTab = uitab(app.RightTabGroup);
+            app.InitialJointTab.Title = 'Initial Joint';
+            app.InitialJointTab.ButtonDownFcn = createCallbackFcn(app, @InitialJointTabButtonDown, true);
+
+            % Create Axis1InitialLabel
+            app.Axis1InitialLabel = uilabel(app.InitialJointTab);
+            app.Axis1InitialLabel.HorizontalAlignment = 'right';
+            app.Axis1InitialLabel.WordWrap = 'on';
+            app.Axis1InitialLabel.Position = [6 374 40 30];
+            app.Axis1InitialLabel.Text = {'Joint 1'; '(deg)'};
+
+            % Create Axis1InitialSlider
+            app.Axis1InitialSlider = uislider(app.InitialJointTab);
+            app.Axis1InitialSlider.ValueChangingFcn = createCallbackFcn(app, @Axis1InitialSliderValueChanging, true);
+            app.Axis1InitialSlider.Position = [65 398 170 3];
+
+            % Create Axis2InitialLabel
+            app.Axis2InitialLabel = uilabel(app.InitialJointTab);
+            app.Axis2InitialLabel.HorizontalAlignment = 'right';
+            app.Axis2InitialLabel.WordWrap = 'on';
+            app.Axis2InitialLabel.Position = [7 323 40 30];
+            app.Axis2InitialLabel.Text = {'Joint 2'; '(deg)'};
+
+            % Create Axis2InitialSlider
+            app.Axis2InitialSlider = uislider(app.InitialJointTab);
+            app.Axis2InitialSlider.ValueChangingFcn = createCallbackFcn(app, @Axis2InitialSliderValueChanging, true);
+            app.Axis2InitialSlider.Position = [65 347 170 3];
+
+            % Create Axis3InitialLabel
+            app.Axis3InitialLabel = uilabel(app.InitialJointTab);
+            app.Axis3InitialLabel.HorizontalAlignment = 'right';
+            app.Axis3InitialLabel.WordWrap = 'on';
+            app.Axis3InitialLabel.Position = [8 272 40 30];
+            app.Axis3InitialLabel.Text = {'Joint 3'; '(deg)'};
+
+            % Create Axis3InitialSlider
+            app.Axis3InitialSlider = uislider(app.InitialJointTab);
+            app.Axis3InitialSlider.ValueChangingFcn = createCallbackFcn(app, @Axis3InitialSliderValueChanging, true);
+            app.Axis3InitialSlider.Position = [65 296 170 3];
+
+            % Create Axis4InitialLabel
+            app.Axis4InitialLabel = uilabel(app.InitialJointTab);
+            app.Axis4InitialLabel.HorizontalAlignment = 'right';
+            app.Axis4InitialLabel.WordWrap = 'on';
+            app.Axis4InitialLabel.Position = [9 223 40 30];
+            app.Axis4InitialLabel.Text = {'Joint 4'; '(deg)'};
+
+            % Create Axis4InitialSlider
+            app.Axis4InitialSlider = uislider(app.InitialJointTab);
+            app.Axis4InitialSlider.ValueChangingFcn = createCallbackFcn(app, @Axis4InitialSliderValueChanging, true);
+            app.Axis4InitialSlider.Position = [65 245 170 3];
+
+            % Create Axis5InitialLabel
+            app.Axis5InitialLabel = uilabel(app.InitialJointTab);
+            app.Axis5InitialLabel.HorizontalAlignment = 'right';
+            app.Axis5InitialLabel.WordWrap = 'on';
+            app.Axis5InitialLabel.Position = [9 170 40 30];
+            app.Axis5InitialLabel.Text = {'Joint 5'; '(deg)'};
+
+            % Create Axis5InitialSlider
+            app.Axis5InitialSlider = uislider(app.InitialJointTab);
+            app.Axis5InitialSlider.ValueChangingFcn = createCallbackFcn(app, @Axis5InitialSliderValueChanging, true);
+            app.Axis5InitialSlider.Position = [65 194 170 3];
+
+            % Create Axis6InitialLabel
+            app.Axis6InitialLabel = uilabel(app.InitialJointTab);
+            app.Axis6InitialLabel.HorizontalAlignment = 'right';
+            app.Axis6InitialLabel.WordWrap = 'on';
+            app.Axis6InitialLabel.Position = [10 119 40 30];
+            app.Axis6InitialLabel.Text = {'Joint 6'; '(deg)'};
+
+            % Create Axis6InitialSlider
+            app.Axis6InitialSlider = uislider(app.InitialJointTab);
+            app.Axis6InitialSlider.ValueChangingFcn = createCallbackFcn(app, @Axis6InitialSliderValueChanging, true);
+            app.Axis6InitialSlider.Position = [65 143 170 3];
+
+            % Create Axis7InitialLabel
+            app.Axis7InitialLabel = uilabel(app.InitialJointTab);
+            app.Axis7InitialLabel.HorizontalAlignment = 'right';
+            app.Axis7InitialLabel.WordWrap = 'on';
+            app.Axis7InitialLabel.Position = [10 66 40 30];
+            app.Axis7InitialLabel.Text = {'Joint 7'; '(deg)'};
+
+            % Create Axis7InitialSlider
+            app.Axis7InitialSlider = uislider(app.InitialJointTab);
+            app.Axis7InitialSlider.ValueChangingFcn = createCallbackFcn(app, @Axis7InitialSliderValueChanging, true);
+            app.Axis7InitialSlider.Position = [65 92 170 3];
+
+            % Create GripperInitialLabel
+            app.GripperInitialLabel = uilabel(app.InitialJointTab);
+            app.GripperInitialLabel.HorizontalAlignment = 'right';
+            app.GripperInitialLabel.WordWrap = 'on';
+            app.GripperInitialLabel.Position = [6 17 45 30];
+            app.GripperInitialLabel.Text = {'Gripper'; '(mm)'};
+
+            % Create GripperInitialSlider
+            app.GripperInitialSlider = uislider(app.InitialJointTab);
+            app.GripperInitialSlider.ValueChangingFcn = createCallbackFcn(app, @GripperInitialSliderValueChanging, true);
+            app.GripperInitialSlider.Position = [65 41 170 3];
+
+            % Create Axis1InitialSpinner
+            app.Axis1InitialSpinner = uispinner(app.InitialJointTab);
+            app.Axis1InitialSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis1InitialSpinnerValueChanging, true);
+            app.Axis1InitialSpinner.Limits = [-160 160];
+            app.Axis1InitialSpinner.Position = [251 389 73 22];
+
+            % Create Axis2InitialSpinner
+            app.Axis2InitialSpinner = uispinner(app.InitialJointTab);
+            app.Axis2InitialSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis2InitialSpinnerValueChanging, true);
+            app.Axis2InitialSpinner.Limits = [-137.5 137.5];
+            app.Axis2InitialSpinner.Position = [251 338 73 22];
+
+            % Create Axis3InitialSpinner
+            app.Axis3InitialSpinner = uispinner(app.InitialJointTab);
+            app.Axis3InitialSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis3InitialSpinnerValueChanging, true);
+            app.Axis3InitialSpinner.Limits = [-150 150];
+            app.Axis3InitialSpinner.Position = [251 286 73 22];
+
+            % Create Axis4InitialSpinner
+            app.Axis4InitialSpinner = uispinner(app.InitialJointTab);
+            app.Axis4InitialSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis4InitialSpinnerValueChanging, true);
+            app.Axis4InitialSpinner.Limits = [-270 270];
+            app.Axis4InitialSpinner.Position = [251 236 73 22];
+
+            % Create Axis5InitialSpinner
+            app.Axis5InitialSpinner = uispinner(app.InitialJointTab);
+            app.Axis5InitialSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis5InitialSpinnerValueChanging, true);
+            app.Axis5InitialSpinner.Limits = [-105 120];
+            app.Axis5InitialSpinner.Position = [251 185 73 22];
+
+            % Create Axis6InitialSpinner
+            app.Axis6InitialSpinner = uispinner(app.InitialJointTab);
+            app.Axis6InitialSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis6InitialSpinnerValueChanging, true);
+            app.Axis6InitialSpinner.Limits = [-270 270];
+            app.Axis6InitialSpinner.Position = [251 134 73 22];
+
+            % Create Axis7InitialSpinner
+            app.Axis7InitialSpinner = uispinner(app.InitialJointTab);
+            app.Axis7InitialSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis7InitialSpinnerValueChanging, true);
+            app.Axis7InitialSpinner.Limits = [-270 270];
+            app.Axis7InitialSpinner.Position = [251 83 73 22];
+
+            % Create GripperInitialSpinner
+            app.GripperInitialSpinner = uispinner(app.InitialJointTab);
+            app.GripperInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @GripperInitialSpinnerValueChanging, true);
+            app.GripperInitialSpinner.Limits = [-270 270];
+            app.GripperInitialSpinner.Position = [251 32 73 22];
+
+            % Create FinalJointTab
+            app.FinalJointTab = uitab(app.RightTabGroup);
+            app.FinalJointTab.Title = 'Final Joint';
+            app.FinalJointTab.ButtonDownFcn = createCallbackFcn(app, @FinalJointTabButtonDown, true);
+
+            % Create Axis1FinalSpinner
+            app.Axis1FinalSpinner = uispinner(app.FinalJointTab);
+            app.Axis1FinalSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis1FinalSpinnerValueChanging, true);
+            app.Axis1FinalSpinner.Limits = [-160 160];
+            app.Axis1FinalSpinner.Position = [251 389 73 22];
+
+            % Create Axis2FinalSpinner
+            app.Axis2FinalSpinner = uispinner(app.FinalJointTab);
+            app.Axis2FinalSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis2FinalSpinnerValueChanging, true);
+            app.Axis2FinalSpinner.Limits = [-137.5 137.5];
+            app.Axis2FinalSpinner.Position = [251 338 73 22];
+
+            % Create Axis3FinalSpinner
+            app.Axis3FinalSpinner = uispinner(app.FinalJointTab);
+            app.Axis3FinalSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis3FinalSpinnerValueChanging, true);
+            app.Axis3FinalSpinner.Limits = [-150 150];
+            app.Axis3FinalSpinner.Position = [251 286 73 22];
+
+            % Create Axis4FinalSpinner
+            app.Axis4FinalSpinner = uispinner(app.FinalJointTab);
+            app.Axis4FinalSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis4FinalSpinnerValueChanging, true);
+            app.Axis4FinalSpinner.Limits = [-270 270];
+            app.Axis4FinalSpinner.Position = [251 236 73 22];
+
+            % Create Axis5FinalSpinner
+            app.Axis5FinalSpinner = uispinner(app.FinalJointTab);
+            app.Axis5FinalSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis5FinalSpinnerValueChanging, true);
+            app.Axis5FinalSpinner.Limits = [-105 120];
+            app.Axis5FinalSpinner.Position = [251 185 73 22];
+
+            % Create Axis6FinalSpinner
+            app.Axis6FinalSpinner = uispinner(app.FinalJointTab);
+            app.Axis6FinalSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis6FinalSpinnerValueChanging, true);
+            app.Axis6FinalSpinner.Limits = [-270 270];
+            app.Axis6FinalSpinner.Position = [251 134 73 22];
+
+            % Create Axis7FinalSpinner
+            app.Axis7FinalSpinner = uispinner(app.FinalJointTab);
+            app.Axis7FinalSpinner.ValueChangingFcn = createCallbackFcn(app, @Axis7FinalSpinnerValueChanging, true);
+            app.Axis7FinalSpinner.Limits = [-270 270];
+            app.Axis7FinalSpinner.Position = [251 83 73 22];
+
+            % Create GripperFinalSpinner
+            app.GripperFinalSpinner = uispinner(app.FinalJointTab);
+            app.GripperFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @GripperFinalSpinnerValueChanging, true);
+            app.GripperFinalSpinner.Limits = [-270 270];
+            app.GripperFinalSpinner.Position = [251 32 73 22];
+
+            % Create Axis1FinalLabel
+            app.Axis1FinalLabel = uilabel(app.FinalJointTab);
+            app.Axis1FinalLabel.HorizontalAlignment = 'right';
+            app.Axis1FinalLabel.WordWrap = 'on';
+            app.Axis1FinalLabel.Position = [6 374 40 30];
+            app.Axis1FinalLabel.Text = {'Joint 1'; '(deg)'};
+
+            % Create Axis1FinalSlider
+            app.Axis1FinalSlider = uislider(app.FinalJointTab);
+            app.Axis1FinalSlider.ValueChangingFcn = createCallbackFcn(app, @Axis1FinalSliderValueChanging, true);
+            app.Axis1FinalSlider.Position = [65 398 170 3];
+
+            % Create Axis2FinalLabel
+            app.Axis2FinalLabel = uilabel(app.FinalJointTab);
+            app.Axis2FinalLabel.HorizontalAlignment = 'right';
+            app.Axis2FinalLabel.WordWrap = 'on';
+            app.Axis2FinalLabel.Position = [7 323 40 30];
+            app.Axis2FinalLabel.Text = {'Joint 2'; '(deg)'};
+
+            % Create Axis2FinalSlider
+            app.Axis2FinalSlider = uislider(app.FinalJointTab);
+            app.Axis2FinalSlider.ValueChangingFcn = createCallbackFcn(app, @Axis2FinalSliderValueChanging, true);
+            app.Axis2FinalSlider.Position = [65 347 170 3];
+
+            % Create Axis3FinalLabel
+            app.Axis3FinalLabel = uilabel(app.FinalJointTab);
+            app.Axis3FinalLabel.HorizontalAlignment = 'right';
+            app.Axis3FinalLabel.WordWrap = 'on';
+            app.Axis3FinalLabel.Position = [8 272 40 30];
+            app.Axis3FinalLabel.Text = {'Joint 3'; '(deg)'};
+
+            % Create Axis3FinalSlider
+            app.Axis3FinalSlider = uislider(app.FinalJointTab);
+            app.Axis3FinalSlider.ValueChangingFcn = createCallbackFcn(app, @Axis3FinalSliderValueChanging, true);
+            app.Axis3FinalSlider.Position = [65 296 170 3];
+
+            % Create Axis4FinalLabel
+            app.Axis4FinalLabel = uilabel(app.FinalJointTab);
+            app.Axis4FinalLabel.HorizontalAlignment = 'right';
+            app.Axis4FinalLabel.WordWrap = 'on';
+            app.Axis4FinalLabel.Position = [9 223 40 30];
+            app.Axis4FinalLabel.Text = {'Joint 4'; '(deg)'};
+
+            % Create Axis4FinalSlider
+            app.Axis4FinalSlider = uislider(app.FinalJointTab);
+            app.Axis4FinalSlider.ValueChangingFcn = createCallbackFcn(app, @Axis4FinalSliderValueChanging, true);
+            app.Axis4FinalSlider.Position = [65 245 170 3];
+
+            % Create Axis5FinalLabel
+            app.Axis5FinalLabel = uilabel(app.FinalJointTab);
+            app.Axis5FinalLabel.HorizontalAlignment = 'right';
+            app.Axis5FinalLabel.WordWrap = 'on';
+            app.Axis5FinalLabel.Position = [9 170 40 30];
+            app.Axis5FinalLabel.Text = {'Joint 5'; '(deg)'};
+
+            % Create Axis5FinalSlider
+            app.Axis5FinalSlider = uislider(app.FinalJointTab);
+            app.Axis5FinalSlider.ValueChangingFcn = createCallbackFcn(app, @Axis5FinalSliderValueChanging, true);
+            app.Axis5FinalSlider.Position = [65 194 170 3];
+
+            % Create Axis6FinalLabel
+            app.Axis6FinalLabel = uilabel(app.FinalJointTab);
+            app.Axis6FinalLabel.HorizontalAlignment = 'right';
+            app.Axis6FinalLabel.WordWrap = 'on';
+            app.Axis6FinalLabel.Position = [10 119 40 30];
+            app.Axis6FinalLabel.Text = {'Joint 6'; '(deg)'};
+
+            % Create Axis6FinalSlider
+            app.Axis6FinalSlider = uislider(app.FinalJointTab);
+            app.Axis6FinalSlider.ValueChangingFcn = createCallbackFcn(app, @Axis6FinalSliderValueChanging, true);
+            app.Axis6FinalSlider.Position = [65 143 170 3];
+
+            % Create Axis7FinalLabel
+            app.Axis7FinalLabel = uilabel(app.FinalJointTab);
+            app.Axis7FinalLabel.HorizontalAlignment = 'right';
+            app.Axis7FinalLabel.WordWrap = 'on';
+            app.Axis7FinalLabel.Position = [10 66 40 30];
+            app.Axis7FinalLabel.Text = {'Joint 7'; '(deg)'};
+
+            % Create Axis7FinalSlider
+            app.Axis7FinalSlider = uislider(app.FinalJointTab);
+            app.Axis7FinalSlider.ValueChangingFcn = createCallbackFcn(app, @Axis7FinalSliderValueChanging, true);
+            app.Axis7FinalSlider.Position = [65 92 170 3];
+
+            % Create GripperFinalLabel
+            app.GripperFinalLabel = uilabel(app.FinalJointTab);
+            app.GripperFinalLabel.HorizontalAlignment = 'right';
+            app.GripperFinalLabel.WordWrap = 'on';
+            app.GripperFinalLabel.Position = [6 17 45 30];
+            app.GripperFinalLabel.Text = {'Gripper'; '(mm)'};
+
+            % Create GripperFinalSlider
+            app.GripperFinalSlider = uislider(app.FinalJointTab);
+            app.GripperFinalSlider.ValueChangingFcn = createCallbackFcn(app, @GripperFinalSliderValueChanging, true);
+            app.GripperFinalSlider.Position = [65 41 170 3];
+
+            % Create InitialTaskTab
+            app.InitialTaskTab = uitab(app.RightTabGroup);
+            app.InitialTaskTab.Title = 'Initial Task';
+            app.InitialTaskTab.ButtonDownFcn = createCallbackFcn(app, @InitialTaskTabButtonDown, true);
+
+            % Create XAxisInitialSpinner
+            app.XAxisInitialSpinner = uispinner(app.InitialTaskTab);
+            app.XAxisInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @XAxisInitialSpinnerValueChanging, true);
+            app.XAxisInitialSpinner.Limits = [-160 160];
+            app.XAxisInitialSpinner.Position = [251 389 73 22];
+
+            % Create YAxisInitialSpinner
+            app.YAxisInitialSpinner = uispinner(app.InitialTaskTab);
+            app.YAxisInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @YAxisInitialSpinnerValueChanging, true);
+            app.YAxisInitialSpinner.Limits = [-137.5 137.5];
+            app.YAxisInitialSpinner.Position = [251 338 73 22];
+
+            % Create ZAxisInitialSpinner
+            app.ZAxisInitialSpinner = uispinner(app.InitialTaskTab);
+            app.ZAxisInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @ZAxisInitialSpinnerValueChanging, true);
+            app.ZAxisInitialSpinner.Limits = [-150 150];
+            app.ZAxisInitialSpinner.Position = [251 286 73 22];
+
+            % Create PhiInitialSpinner
+            app.PhiInitialSpinner = uispinner(app.InitialTaskTab);
+            app.PhiInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @PhiInitialSpinnerValueChanging, true);
+            app.PhiInitialSpinner.Limits = [-270 270];
+            app.PhiInitialSpinner.Position = [251 236 73 22];
+
+            % Create ThetaInitialSpinner
+            app.ThetaInitialSpinner = uispinner(app.InitialTaskTab);
+            app.ThetaInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @ThetaInitialSpinnerValueChanging, true);
+            app.ThetaInitialSpinner.Limits = [-105 120];
+            app.ThetaInitialSpinner.Position = [251 185 73 22];
+
+            % Create PsiInitialSpinner
+            app.PsiInitialSpinner = uispinner(app.InitialTaskTab);
+            app.PsiInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @PsiInitialSpinnerValueChanging, true);
+            app.PsiInitialSpinner.Limits = [-270 270];
+            app.PsiInitialSpinner.Position = [251 134 73 22];
+
+            % Create Axis7InitialSpinner_2
+            app.Axis7InitialSpinner_2 = uispinner(app.InitialTaskTab);
+            app.Axis7InitialSpinner_2.Limits = [-270 270];
+            app.Axis7InitialSpinner_2.Visible = 'off';
+            app.Axis7InitialSpinner_2.Position = [251 83 73 22];
+
+            % Create GripperTaskInitialSpinner
+            app.GripperTaskInitialSpinner = uispinner(app.InitialTaskTab);
+            app.GripperTaskInitialSpinner.ValueChangingFcn = createCallbackFcn(app, @GripperTaskInitialSpinnerValueChanging, true);
+            app.GripperTaskInitialSpinner.Limits = [-270 270];
+            app.GripperTaskInitialSpinner.Position = [251 32 73 22];
+
+            % Create XAxisInitialLabel
+            app.XAxisInitialLabel = uilabel(app.InitialTaskTab);
+            app.XAxisInitialLabel.HorizontalAlignment = 'right';
+            app.XAxisInitialLabel.WordWrap = 'on';
+            app.XAxisInitialLabel.Position = [6 374 40 30];
+            app.XAxisInitialLabel.Text = {'X-Axis'; '(mm)  '};
+
+            % Create XAxisInitialSlider
+            app.XAxisInitialSlider = uislider(app.InitialTaskTab);
+            app.XAxisInitialSlider.ValueChangingFcn = createCallbackFcn(app, @XAxisInitialSliderValueChanging, true);
+            app.XAxisInitialSlider.Position = [65 398 170 3];
+
+            % Create YAxisInitialLabel
+            app.YAxisInitialLabel = uilabel(app.InitialTaskTab);
+            app.YAxisInitialLabel.HorizontalAlignment = 'right';
+            app.YAxisInitialLabel.WordWrap = 'on';
+            app.YAxisInitialLabel.Position = [7 323 40 30];
+            app.YAxisInitialLabel.Text = {'Y-Axis'; '(mm)  '};
+
+            % Create YAxisInitialSlider
+            app.YAxisInitialSlider = uislider(app.InitialTaskTab);
+            app.YAxisInitialSlider.ValueChangingFcn = createCallbackFcn(app, @YAxisInitialSliderValueChanging, true);
+            app.YAxisInitialSlider.Position = [65 347 170 3];
+
+            % Create ZAxisInitialLabel
+            app.ZAxisInitialLabel = uilabel(app.InitialTaskTab);
+            app.ZAxisInitialLabel.HorizontalAlignment = 'right';
+            app.ZAxisInitialLabel.WordWrap = 'on';
+            app.ZAxisInitialLabel.Position = [8 272 40 30];
+            app.ZAxisInitialLabel.Text = {'Z-Axis'; '(mm)  '};
+
+            % Create ZAxisInitialSlider
+            app.ZAxisInitialSlider = uislider(app.InitialTaskTab);
+            app.ZAxisInitialSlider.ValueChangingFcn = createCallbackFcn(app, @ZAxisInitialSliderValueChanging, true);
+            app.ZAxisInitialSlider.Position = [65 296 170 3];
+
+            % Create PhiInitialLabel
+            app.PhiInitialLabel = uilabel(app.InitialTaskTab);
+            app.PhiInitialLabel.HorizontalAlignment = 'right';
+            app.PhiInitialLabel.WordWrap = 'on';
+            app.PhiInitialLabel.Position = [9 223 40 30];
+            app.PhiInitialLabel.Text = {'Phi    '; '(deg)  '};
+
+            % Create PhiInitialSlider
+            app.PhiInitialSlider = uislider(app.InitialTaskTab);
+            app.PhiInitialSlider.ValueChangingFcn = createCallbackFcn(app, @PhiInitialSliderValueChanging, true);
+            app.PhiInitialSlider.Position = [65 245 170 3];
+
+            % Create ThetaInitialLabel
+            app.ThetaInitialLabel = uilabel(app.InitialTaskTab);
+            app.ThetaInitialLabel.HorizontalAlignment = 'right';
+            app.ThetaInitialLabel.WordWrap = 'on';
+            app.ThetaInitialLabel.Position = [9 170 40 30];
+            app.ThetaInitialLabel.Text = {'Theta  '; '(deg)  '};
+
+            % Create ThetaInitialSlider
+            app.ThetaInitialSlider = uislider(app.InitialTaskTab);
+            app.ThetaInitialSlider.ValueChangingFcn = createCallbackFcn(app, @ThetaInitialSliderValueChanging, true);
+            app.ThetaInitialSlider.Position = [65 194 170 3];
+
+            % Create PsiInitialLabel
+            app.PsiInitialLabel = uilabel(app.InitialTaskTab);
+            app.PsiInitialLabel.HorizontalAlignment = 'right';
+            app.PsiInitialLabel.WordWrap = 'on';
+            app.PsiInitialLabel.Position = [10 119 40 30];
+            app.PsiInitialLabel.Text = {'Psi    '; '(deg)  '};
+
+            % Create PsiInitialSlider
+            app.PsiInitialSlider = uislider(app.InitialTaskTab);
+            app.PsiInitialSlider.ValueChangingFcn = createCallbackFcn(app, @PsiInitialSliderValueChanging, true);
+            app.PsiInitialSlider.Position = [65 143 170 3];
+
+            % Create Axis7InitialLabel_2
+            app.Axis7InitialLabel_2 = uilabel(app.InitialTaskTab);
+            app.Axis7InitialLabel_2.HorizontalAlignment = 'right';
+            app.Axis7InitialLabel_2.WordWrap = 'on';
+            app.Axis7InitialLabel_2.Visible = 'off';
+            app.Axis7InitialLabel_2.Position = [10 66 40 30];
+            app.Axis7InitialLabel_2.Text = {'Joint 7'; '(deg)  '};
+
+            % Create Axis7InitialSlider_2
+            app.Axis7InitialSlider_2 = uislider(app.InitialTaskTab);
+            app.Axis7InitialSlider_2.Visible = 'off';
+            app.Axis7InitialSlider_2.Position = [65 92 170 3];
+
+            % Create GripperTaskInitialLabel
+            app.GripperTaskInitialLabel = uilabel(app.InitialTaskTab);
+            app.GripperTaskInitialLabel.HorizontalAlignment = 'right';
+            app.GripperTaskInitialLabel.WordWrap = 'on';
+            app.GripperTaskInitialLabel.Position = [6 17 45 30];
+            app.GripperTaskInitialLabel.Text = {'Gripper'; '(mm)  '};
+
+            % Create GripperTaskInitialSlider
+            app.GripperTaskInitialSlider = uislider(app.InitialTaskTab);
+            app.GripperTaskInitialSlider.ValueChangingFcn = createCallbackFcn(app, @GripperTaskInitialSliderValueChanging, true);
+            app.GripperTaskInitialSlider.Position = [65 41 170 3];
+
+            % Create FinalTaskTab
+            app.FinalTaskTab = uitab(app.RightTabGroup);
+            app.FinalTaskTab.Title = 'Final Task';
+            app.FinalTaskTab.ButtonDownFcn = createCallbackFcn(app, @FinalTaskTabButtonDown, true);
+
+            % Create XAxisFinalSpinner
+            app.XAxisFinalSpinner = uispinner(app.FinalTaskTab);
+            app.XAxisFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @XAxisFinalSpinnerValueChanging, true);
+            app.XAxisFinalSpinner.Limits = [-160 160];
+            app.XAxisFinalSpinner.Position = [251 389 73 22];
+
+            % Create YAxisFinalSpinner
+            app.YAxisFinalSpinner = uispinner(app.FinalTaskTab);
+            app.YAxisFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @YAxisFinalSpinnerValueChanging, true);
+            app.YAxisFinalSpinner.Limits = [-137.5 137.5];
+            app.YAxisFinalSpinner.Position = [251 338 73 22];
+
+            % Create ZAxisFinalSpinner
+            app.ZAxisFinalSpinner = uispinner(app.FinalTaskTab);
+            app.ZAxisFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @ZAxisFinalSpinnerValueChanging, true);
+            app.ZAxisFinalSpinner.Limits = [-150 150];
+            app.ZAxisFinalSpinner.Position = [251 286 73 22];
+
+            % Create PhiFinalSpinner
+            app.PhiFinalSpinner = uispinner(app.FinalTaskTab);
+            app.PhiFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @PhiFinalSpinnerValueChanging, true);
+            app.PhiFinalSpinner.Limits = [-270 270];
+            app.PhiFinalSpinner.Position = [251 236 73 22];
+
+            % Create ThetaFinalSpinner
+            app.ThetaFinalSpinner = uispinner(app.FinalTaskTab);
+            app.ThetaFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @ThetaFinalSpinnerValueChanging, true);
+            app.ThetaFinalSpinner.Limits = [-105 120];
+            app.ThetaFinalSpinner.Position = [251 185 73 22];
+
+            % Create PsiFinalSpinner
+            app.PsiFinalSpinner = uispinner(app.FinalTaskTab);
+            app.PsiFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @PsiFinalSpinnerValueChanging, true);
+            app.PsiFinalSpinner.Limits = [-270 270];
+            app.PsiFinalSpinner.Position = [251 134 73 22];
+
+            % Create Axis7FinalSpinner_2
+            app.Axis7FinalSpinner_2 = uispinner(app.FinalTaskTab);
+            app.Axis7FinalSpinner_2.Limits = [-270 270];
+            app.Axis7FinalSpinner_2.Visible = 'off';
+            app.Axis7FinalSpinner_2.Position = [251 83 73 22];
+
+            % Create GripperTaskFinalSpinner
+            app.GripperTaskFinalSpinner = uispinner(app.FinalTaskTab);
+            app.GripperTaskFinalSpinner.ValueChangingFcn = createCallbackFcn(app, @GripperTaskFinalSpinnerValueChanging, true);
+            app.GripperTaskFinalSpinner.Limits = [-270 270];
+            app.GripperTaskFinalSpinner.Position = [251 32 73 22];
+
+            % Create XAxisFinalLabel
+            app.XAxisFinalLabel = uilabel(app.FinalTaskTab);
+            app.XAxisFinalLabel.HorizontalAlignment = 'right';
+            app.XAxisFinalLabel.WordWrap = 'on';
+            app.XAxisFinalLabel.Position = [6 374 40 30];
+            app.XAxisFinalLabel.Text = {'X-Axis'; '(mm)  '};
+
+            % Create XAxisFinalSlider
+            app.XAxisFinalSlider = uislider(app.FinalTaskTab);
+            app.XAxisFinalSlider.ValueChangingFcn = createCallbackFcn(app, @XAxisFinalSliderValueChanging, true);
+            app.XAxisFinalSlider.Position = [65 398 170 3];
+
+            % Create YAxisFinalLabel
+            app.YAxisFinalLabel = uilabel(app.FinalTaskTab);
+            app.YAxisFinalLabel.HorizontalAlignment = 'right';
+            app.YAxisFinalLabel.WordWrap = 'on';
+            app.YAxisFinalLabel.Position = [7 323 40 30];
+            app.YAxisFinalLabel.Text = {'Y-Axis'; '(mm)  '};
+
+            % Create YAxisFinalSlider
+            app.YAxisFinalSlider = uislider(app.FinalTaskTab);
+            app.YAxisFinalSlider.ValueChangingFcn = createCallbackFcn(app, @YAxisFinalSliderValueChanging, true);
+            app.YAxisFinalSlider.Position = [65 347 170 3];
+
+            % Create ZAxisFinalLabel
+            app.ZAxisFinalLabel = uilabel(app.FinalTaskTab);
+            app.ZAxisFinalLabel.HorizontalAlignment = 'right';
+            app.ZAxisFinalLabel.WordWrap = 'on';
+            app.ZAxisFinalLabel.Position = [8 272 40 30];
+            app.ZAxisFinalLabel.Text = {'Z-Axis'; '(mm)  '};
+
+            % Create ZAxisFinalSlider
+            app.ZAxisFinalSlider = uislider(app.FinalTaskTab);
+            app.ZAxisFinalSlider.ValueChangingFcn = createCallbackFcn(app, @ZAxisFinalSliderValueChanging, true);
+            app.ZAxisFinalSlider.Position = [65 296 170 3];
+
+            % Create PhiFinalLabel
+            app.PhiFinalLabel = uilabel(app.FinalTaskTab);
+            app.PhiFinalLabel.HorizontalAlignment = 'right';
+            app.PhiFinalLabel.WordWrap = 'on';
+            app.PhiFinalLabel.Position = [9 223 40 30];
+            app.PhiFinalLabel.Text = {'Phi    '; '(deg)  '};
+
+            % Create PhiFinalSlider
+            app.PhiFinalSlider = uislider(app.FinalTaskTab);
+            app.PhiFinalSlider.ValueChangingFcn = createCallbackFcn(app, @PhiFinalSliderValueChanging, true);
+            app.PhiFinalSlider.Position = [65 245 170 3];
+
+            % Create ThetaFinalLabel
+            app.ThetaFinalLabel = uilabel(app.FinalTaskTab);
+            app.ThetaFinalLabel.HorizontalAlignment = 'right';
+            app.ThetaFinalLabel.WordWrap = 'on';
+            app.ThetaFinalLabel.Position = [9 170 40 30];
+            app.ThetaFinalLabel.Text = {'Theta  '; '(deg)  '};
+
+            % Create ThetaFinalSlider
+            app.ThetaFinalSlider = uislider(app.FinalTaskTab);
+            app.ThetaFinalSlider.ValueChangingFcn = createCallbackFcn(app, @ThetaFinalSliderValueChanging, true);
+            app.ThetaFinalSlider.Position = [65 194 170 3];
+
+            % Create PsiFinalLabel
+            app.PsiFinalLabel = uilabel(app.FinalTaskTab);
+            app.PsiFinalLabel.HorizontalAlignment = 'right';
+            app.PsiFinalLabel.WordWrap = 'on';
+            app.PsiFinalLabel.Position = [10 119 40 30];
+            app.PsiFinalLabel.Text = {'Psi    '; '(deg)  '};
+
+            % Create PsiFinalSlider
+            app.PsiFinalSlider = uislider(app.FinalTaskTab);
+            app.PsiFinalSlider.ValueChangingFcn = createCallbackFcn(app, @PsiFinalSliderValueChanging, true);
+            app.PsiFinalSlider.Position = [65 143 170 3];
+
+            % Create Axis7FinalLabel_2
+            app.Axis7FinalLabel_2 = uilabel(app.FinalTaskTab);
+            app.Axis7FinalLabel_2.HorizontalAlignment = 'right';
+            app.Axis7FinalLabel_2.WordWrap = 'on';
+            app.Axis7FinalLabel_2.Visible = 'off';
+            app.Axis7FinalLabel_2.Position = [10 66 40 30];
+            app.Axis7FinalLabel_2.Text = {'Joint 7'; '(deg)  '};
+
+            % Create Axis7FinalSlider_2
+            app.Axis7FinalSlider_2 = uislider(app.FinalTaskTab);
+            app.Axis7FinalSlider_2.Visible = 'off';
+            app.Axis7FinalSlider_2.Position = [65 92 170 3];
+
+            % Create GripperTaskFinalLabel
+            app.GripperTaskFinalLabel = uilabel(app.FinalTaskTab);
+            app.GripperTaskFinalLabel.HorizontalAlignment = 'right';
+            app.GripperTaskFinalLabel.WordWrap = 'on';
+            app.GripperTaskFinalLabel.Position = [6 17 45 30];
+            app.GripperTaskFinalLabel.Text = {'Gripper'; '(mm)  '};
+
+            % Create GripperTaskFinalSlider
+            app.GripperTaskFinalSlider = uislider(app.FinalTaskTab);
+            app.GripperTaskFinalSlider.ValueChangingFcn = createCallbackFcn(app, @GripperTaskFinalSliderValueChanging, true);
+            app.GripperTaskFinalSlider.Position = [65 41 170 3];
+
+            % Create TrajectoryPanel
+            app.TrajectoryPanel = uipanel(app.RightPanel);
+            app.TrajectoryPanel.Title = 'Trajectory';
+            app.TrajectoryPanel.Position = [6 7 330 88];
+
+            % Create LimitsLabel
+            app.LimitsLabel = uilabel(app.TrajectoryPanel);
+            app.LimitsLabel.Position = [6 7 40 22];
+            app.LimitsLabel.Text = 'Limits:';
+
+            % Create VelPrcLabel
+            app.VelPrcLabel = uilabel(app.TrajectoryPanel);
+            app.VelPrcLabel.Position = [123 8 18 22];
+            app.VelPrcLabel.Text = '%';
+
+            % Create AccPrcLabel
+            app.AccPrcLabel = uilabel(app.TrajectoryPanel);
+            app.AccPrcLabel.Position = [211 8 16 22];
+            app.AccPrcLabel.Text = '%';
+
+            % Create InterpolationLabel
+            app.InterpolationLabel = uilabel(app.TrajectoryPanel);
+            app.InterpolationLabel.HorizontalAlignment = 'right';
+            app.InterpolationLabel.Position = [1 39 74 22];
+            app.InterpolationLabel.Text = 'Interpolation:';
+
+            % Create InterpolationDropDown
+            app.InterpolationDropDown = uidropdown(app.TrajectoryPanel);
+            app.InterpolationDropDown.Items = {'Linear', 'Cubic', 'Quintic'};
+            app.InterpolationDropDown.ValueChangedFcn = createCallbackFcn(app, @InterpolationDropDownValueChanged, true);
+            app.InterpolationDropDown.Position = [123 39 97 22];
+            app.InterpolationDropDown.Value = 'Quintic';
+
+            % Create AccEditFieldLabel
+            app.AccEditFieldLabel = uilabel(app.TrajectoryPanel);
+            app.AccEditFieldLabel.HorizontalAlignment = 'center';
+            app.AccEditFieldLabel.Position = [148 7 26 22];
+            app.AccEditFieldLabel.Text = 'Acc';
+
+            % Create AccEditField
+            app.AccEditField = uieditfield(app.TrajectoryPanel, 'numeric');
+            app.AccEditField.Limits = [0 100];
+            app.AccEditField.ValueChangedFcn = createCallbackFcn(app, @AccEditFieldValueChanged, true);
+            app.AccEditField.Position = [177 8 30 22];
+            app.AccEditField.Value = 10;
+
+            % Create VelEditFieldLabel
+            app.VelEditFieldLabel = uilabel(app.TrajectoryPanel);
+            app.VelEditFieldLabel.HorizontalAlignment = 'center';
+            app.VelEditFieldLabel.Position = [62 7 25 22];
+            app.VelEditFieldLabel.Text = 'Vel';
+
+            % Create VelEditField
+            app.VelEditField = uieditfield(app.TrajectoryPanel, 'numeric');
+            app.VelEditField.Limits = [0 100];
+            app.VelEditField.ValueChangedFcn = createCallbackFcn(app, @VelEditFieldValueChanged, true);
+            app.VelEditField.Position = [89 8 30 22];
+            app.VelEditField.Value = 10;
+
+            % Create TrajSpaceButtonGroup
+            app.TrajSpaceButtonGroup = uibuttongroup(app.TrajectoryPanel);
+            app.TrajSpaceButtonGroup.SelectionChangedFcn = createCallbackFcn(app, @TrajSpaceButtonGroupSelectionChanged, true);
+            app.TrajSpaceButtonGroup.BorderType = 'none';
+            app.TrajSpaceButtonGroup.Position = [226 8 100 44];
+
+            % Create JointButton
+            app.JointButton = uiradiobutton(app.TrajSpaceButtonGroup);
+            app.JointButton.Text = 'Joint';
+            app.JointButton.Position = [40 21 58 22];
+            app.JointButton.Value = true;
+
+            % Create TaskButton
+            app.TaskButton = uiradiobutton(app.TrajSpaceButtonGroup);
+            app.TaskButton.Text = 'Task';
+            app.TaskButton.Position = [40 -1 58 22];
+
+            % Create OnButton
+            app.OnButton = uibutton(app.TrajectoryPanel, 'state');
+            app.OnButton.ValueChangedFcn = createCallbackFcn(app, @OnButtonValueChanged, true);
+            app.OnButton.Text = 'On';
+            app.OnButton.Position = [86 39 33 22];
+
+            % Show the figure after all components are created
+            app.UIFigure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = MainApp2
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            % Execute the startup function
+            runStartupFcn(app, @startupFcn)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end

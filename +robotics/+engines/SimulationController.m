@@ -210,7 +210,10 @@ classdef SimulationController < handle
             % Update default control parameters from the robot object (when stopped)
             if obj.model.running_flag == 0
                 if ~isfield(obj.model.ctr, 'algo')
-                    obj.model.ctr.algo = 1;
+                    obj.model.ctr.algo = 0;
+                end
+                if ~isfield(obj.model.ctr, 'space')
+                    obj.model.ctr.space = 0;
                 end
                 algo = obj.model.ctr.algo;
                 default_ctr = obj.robot.getDefaultControlParams(algo);
@@ -255,6 +258,11 @@ classdef SimulationController < handle
             % Halt the simulation gracefully
             obj.model.running_flag = 0;
             obj.renderer.updateView(obj.model);
+        end
+
+        function setEllipsoidVisibility(obj, isVisible)
+            obj.model.ellipsoid_on = double(isVisible);
+            obj.updateView();
         end
         
     end

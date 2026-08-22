@@ -66,5 +66,83 @@ classdef TestKinematics < matlab.unittest.TestCase
             testCase.verifyEqual(norm(R_solved - RGoal, 'fro'), 0.0, 'AbsTol', 5e-3);
         end
 
+        function testForwardKinematicsHelper(testCase)
+            robot = robotics.models.RobotFactory.create(1); % Franka Emika
+            kin = robot.getKinematicParameters(0);
+            q = deg2rad([10; -20; 30; -40; 50; -60; 70]);
+            TI_0 = eye(4);
+
+            T_ee = robotics.engines.KinematicsEngine.forwardKinematics(TI_0, kin, q);
+            testCase.verifySize(T_ee, [4, 4]);
+
+            TI_i = robotics.engines.KinematicsEngine.getTransMatrix(TI_0, kin.a_j, kin.alpha_j, kin.d_j, kin.theta_O_j, kin.j_type, q);
+            testCase.verifyEqual(T_ee, TI_i(:, :, end), 'AbsTol', 1e-12);
+        end
+
+        function testManipulabilityAndLimitMargin(testCase)
+            robot = robotics.models.RobotFactory.create(1); % Franka Emika
+            kin = robot.getKinematicParameters(0);
+            TI_0 = eye(4);
+
+            % Nominal reachable pose
+            q_nominal = deg2rad([0; -30; 0; -90; 0; 60; 0]);
+            [w_nom, status_nom, ~] = robotics.engines.KinematicsEngine.computeManipulability(TI_0, kin, q_nominal);
+            testCase.verifyGreaterThan(w_nom, 0.015);
+            testCase.verifyTrue(strcmp(status_nom, 'NOMINAL') || strcmp(status_nom, 'CAUTION'));
+
+            % Joint limit margin
+            [marginDeg, closestJ] = robotics.engines.KinematicsEngine.computeLimitMargin(kin, q_nominal);
+            testCase.verifyGreaterThan(marginDeg, 0);
+            testCase.verifyTrue(closestJ >= 1 && closestJ <= kin.n);
+        end
+
+        function testManipulabilityEllipsoidSVD(testCase)
+            robot = robotics.models.RobotFactory.create(1); % Franka Emika
+            kin = robot.getKinematicParameters(0);
+            TI_0 = eye(4);
+            q = deg2rad([15; -25; 35; -45; 55; -65; 75]);
+
+            [U_v, sigma_v, U_w, sigma_w] = robotics.engines.KinematicsEngine.computeManipulabilityEllipsoid(TI_0, kin, q);
+
+            % Principal directions matrix U_v must be 3x3 and orthogonal (U'*U = I)
+            testCase.verifyEqual(size(U_v), [3, 3]);
+            testCase.verifyEqual(U_v' * U_v, eye(3), 'AbsTol', 1e-10);
+
+            % Singular values must be 3x1 and non-negative
+            testCase.verifyEqual(length(sigma_v), 3);
+            testCase.verifyTrue(all(sigma_v >= 0));
+            testCase.verifyTrue(sigma_v(1) >= sigma_v(2) && sigma_v(2) >= sigma_v(3), 'Singular values must be sorted in descending order');
+
+            % Verify consistency with Jacobian SVD
+            J = robotics.engines.KinematicsEngine.getGeometricJacobian(TI_0, kin, q);
+            [~, S_exp, ~] = svd(J(1:3, :));
+            testCase.verifyEqual(sigma_v, diag(S_exp(1:3, 1:3)), 'AbsTol', 1e-10);
+
+            % Rotational ellipsoid properties
+            testCase.verifyEqual(size(U_w), [3, 3]);
+            testCase.verifyEqual(U_w' * U_w, eye(3), 'AbsTol', 1e-10);
+            testCase.verifyTrue(all(sigma_w >= 0));
+        end
+
+        function testEllipsoidSurfaceData(testCase)
+            p_ee = [0.3; 0.2; 0.5];
+            U = eye(3);
+            sigma = [0.8; 0.5; 0.2];
+            scale = 0.15;
+            n_pts = 16;
+
+            [X, Y, Z, axesLines] = robotics.engines.KinematicsEngine.getEllipsoidSurfaceData(p_ee, U, sigma, scale, n_pts);
+
+            testCase.verifyEqual(size(X), [n_pts + 1, n_pts + 1]);
+            testCase.verifyEqual(size(Y), [n_pts + 1, n_pts + 1]);
+            testCase.verifyEqual(size(Z), [n_pts + 1, n_pts + 1]);
+
+            % Principal axes lines count and dimensions
+            testCase.verifyEqual(length(axesLines), 3);
+            for i = 1:3
+                testCase.verifyEqual(size(axesLines{i}), [3, 2]);
+            end
+        end
+
     end
 end

@@ -35,3 +35,5 @@ codegen/
 # buildtool cache folder
 .buildtool/
 
+# Legacy backup folder
+legacy_code/

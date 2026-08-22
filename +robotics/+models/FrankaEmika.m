@@ -36,19 +36,10 @@ classdef FrankaEmika < robotics.models.RobotModel
         end
         
         function ctr = getDefaultControlParams(obj, algo_id)
-            ctr.tcyc = 0.001;
-            if algo_id == 1
-                ctr.Kp_jnt_idc = [150;150;150;150;65;65;65];
-                ctr.Ki_jnt_idc = [0;0;0;0;0;0;0];
-                ctr.Kd_jnt_idc = [15;15;15;15;10;10;10];
-                ctr.Kp_jnt_pid = ctr.Kp_jnt_idc;
-                ctr.Ki_jnt_pid = ctr.Ki_jnt_idc;
-                ctr.Kd_jnt_pid = ctr.Kd_jnt_idc;
-            else
-                ctr.Kp_jnt_pid = [100;100;100;100;60;60;60];
-                ctr.Ki_jnt_pid = [0;0;0;0;0;0;0];
-                ctr.Kd_jnt_pid = [10;10;10;10;5;5;5];
+            if nargin < 2
+                algo_id = 0;
             end
+            ctr = robotics.engines.GainTuningEngine.computeOptimalGains(obj, algo_id, 0, 0.001);
         end
         
         function tau_frc = getFrictionTorque(obj, q_vel)

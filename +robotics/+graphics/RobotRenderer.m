@@ -6,6 +6,8 @@ classdef RobotRenderer < handle
         Pobj_f
         Pobj_r
         LineHandles = struct()
+        EllipsoidSurface
+        EllipsoidAxisLines
     end
     
     methods
@@ -476,7 +478,7 @@ function updateView(obj, state)
 
     if state.running_flag == 1
         TactI_h = robotics.engines.KinematicsEngine.getTransMatrix(state.TI_0,state.kin.a_j,state.kin.alpha_j,state.kin.d_j,state.kin.theta_O_j,state.kin.j_type,state.act.q_pos);
-        if isfield(state, 'sim_mode') && state.sim_mode == 0
+        if (isprop(state, 'sim_mode') || isfield(state, 'sim_mode')) && state.sim_mode == 0
             TdesI_h = state.fin.Ti;
         else
             TdesI_h = robotics.engines.KinematicsEngine.getTransMatrix(state.TI_0,state.kin.a_j,state.kin.alpha_j,state.kin.d_j,state.kin.theta_O_j,state.kin.j_type,state.des.q_pos);
@@ -887,6 +889,71 @@ function updateView(obj, state)
                         set(obj.LineHandles.ref_frame_y, 'Visible', 'off');
                         set(obj.LineHandles.ref_frame_z, 'Visible', 'off');
                     end
+                end
+            end
+        end
+    end
+
+    % -------------------------------------------------------------
+    % 3D Manipulability Ellipsoid Rendering (for both CAD & Stick modes)
+    % -------------------------------------------------------------
+    isEllipOn = (isprop(state, 'ellipsoid_on') && state.ellipsoid_on == 1) || ...
+                (isfield(state, 'ellipsoid_on') && state.ellipsoid_on == 1);
+    if isEllipOn && ~isempty(obj.AxesHandle) && isvalid(obj.AxesHandle)
+        % Determine active joint configuration
+        if state.running_flag == 1
+            q_ellip = state.act.q_pos;
+        elseif (isprop(state, 'sim_mode') && state.sim_mode == 0) || (isfield(state, 'sim_mode') && state.sim_mode == 0)
+            q_ellip = state.ini.q_pos;
+        else
+            q_ellip = state.fin.q_pos;
+        end
+        
+        if isempty(TactI_h) || size(TactI_h, 3) < state.kin.n+2
+            TactI_h = robotics.engines.KinematicsEngine.getTransMatrix(state.TI_0, state.kin.a_j, state.kin.alpha_j, state.kin.d_j, state.kin.theta_O_j, state.kin.j_type, q_ellip);
+        end
+        p_ee = TactI_h(1:3, 4, state.kin.n+2);
+        [U_v, sigma_v] = robotics.engines.KinematicsEngine.computeManipulabilityEllipsoid(state.TI_0, state.kin, q_ellip);
+        [Xe, Ye, Ze, axesLines] = robotics.engines.KinematicsEngine.getEllipsoidSurfaceData(p_ee, U_v, sigma_v, 0.20, 24);
+        
+        % Lazy instantiation of surface and axis lines if needed
+        if isempty(obj.EllipsoidSurface) || ~isvalid(obj.EllipsoidSurface)
+            obj.EllipsoidSurface = surface(obj.AxesHandle, Xe, Ye, Ze, ...
+                'FaceColor', [0.15 0.75 0.95], ...
+                'FaceAlpha', 0.40, ...
+                'EdgeColor', [0.0 0.45 0.85], ...
+                'EdgeAlpha', 0.35, ...
+                'FaceLighting', 'gouraud', ...
+                'Tag', 'ManipulabilityEllipsoid');
+        else
+            set(obj.EllipsoidSurface, 'XData', Xe, 'YData', Ye, 'ZData', Ze, 'Visible', 'on');
+        end
+        
+        axisColors = {[0.9 0.2 0.2], [0.15 0.75 0.25], [0.2 0.45 0.95]};
+        if isempty(obj.EllipsoidAxisLines) || ~all(isvalid(obj.EllipsoidAxisLines))
+            obj.EllipsoidAxisLines = gobjects(3, 1);
+            for axIdx = 1:3
+                obj.EllipsoidAxisLines(axIdx) = plot3(obj.AxesHandle, ...
+                    axesLines{axIdx}(1, :), axesLines{axIdx}(2, :), axesLines{axIdx}(3, :), ...
+                    'Color', axisColors{axIdx}, 'LineWidth', 2.5, 'Visible', 'on', ...
+                    'Tag', 'ManipulabilityEllipsoidAxis');
+            end
+        else
+            for axIdx = 1:3
+                set(obj.EllipsoidAxisLines(axIdx), ...
+                    'XData', axesLines{axIdx}(1, :), ...
+                    'YData', axesLines{axIdx}(2, :), ...
+                    'ZData', axesLines{axIdx}(3, :), 'Visible', 'on');
+            end
+        end
+    else
+        if ~isempty(obj.EllipsoidSurface) && isvalid(obj.EllipsoidSurface)
+            set(obj.EllipsoidSurface, 'Visible', 'off');
+        end
+        if ~isempty(obj.EllipsoidAxisLines)
+            for axIdx = 1:length(obj.EllipsoidAxisLines)
+                if isvalid(obj.EllipsoidAxisLines(axIdx))
+                    set(obj.EllipsoidAxisLines(axIdx), 'Visible', 'off');
                 end
             end
         end

@@ -157,15 +157,37 @@ classdef CustomRobot < robotics.models.RobotModel
         end
         
         function ctr = getDefaultControlParams(obj, algo_id)
-            if ~isempty(obj.customParams) && isfield(obj.customParams, 'kin') && isfield(obj.customParams.kin, 'n')
-                n = obj.customParams.kin.n;
-            else
-                n = 7;
+            if nargin < 2
+                algo_id = 0;
             end
-            ctr.tcyc = 0.001;
-            ctr.Kp_jnt_pid = zeros(n,1);
-            ctr.Ki_jnt_pid = zeros(n,1);
-            ctr.Kd_jnt_pid = zeros(n,1);
+            try
+                ctr = robotics.engines.GainTuningEngine.computeOptimalGains(obj, algo_id, 0, 0.001);
+            catch
+                if ~isempty(obj.customParams) && isfield(obj.customParams, 'kin') && isfield(obj.customParams.kin, 'n')
+                    n = obj.customParams.kin.n;
+                else
+                    n = 7;
+                end
+                ctr.tcyc = 0.001;
+                ctr.Kp_tsk_pid = [1500; 1500; 1500; 100; 100; 100];
+                ctr.Ki_tsk_pid = zeros(6, 1);
+                ctr.Kd_tsk_pid = [150; 150; 150; 10; 10; 10];
+                ctr.Kp_tsk_idc = [1600; 1600; 1600; 110; 110; 110];
+                ctr.Ki_tsk_idc = zeros(6, 1);
+                ctr.Kd_tsk_idc = [160; 160; 160; 11; 11; 11];
+                if algo_id == 1
+                    ctr.Kp_jnt_idc = 100 * ones(n, 1);
+                    ctr.Ki_jnt_idc = zeros(n, 1);
+                    ctr.Kd_jnt_idc = 10 * ones(n, 1);
+                    ctr.Kp_jnt_pid = ctr.Kp_jnt_idc;
+                    ctr.Ki_jnt_pid = ctr.Ki_jnt_idc;
+                    ctr.Kd_jnt_pid = ctr.Kd_jnt_idc;
+                else
+                    ctr.Kp_jnt_pid = 100 * ones(n, 1);
+                    ctr.Ki_jnt_pid = zeros(n, 1);
+                    ctr.Kd_jnt_pid = 10 * ones(n, 1);
+                end
+            end
         end
     end
 end

@@ -135,10 +135,10 @@ classdef StaubliRX160L < robotics.models.RobotModel
         end
         
         function ctr = getDefaultControlParams(obj, algo_id)
-            ctr.tcyc = 0.004;
-            ctr.Kp_jnt_pid = [1000;2000;2000;120;100;50];
-            ctr.Ki_jnt_pid = [0;0;0;0;0;0];
-            ctr.Kd_jnt_pid = [30;40;40;10;7.5;5];
+            if nargin < 2
+                algo_id = 0;
+            end
+            ctr = robotics.engines.GainTuningEngine.computeOptimalGains(obj, algo_id, 0, 0.004);
         end
         
         function tau_spr = getSpringTorque(obj, q_pos)

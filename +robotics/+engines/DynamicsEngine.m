@@ -381,5 +381,31 @@ classdef DynamicsEngine
                 tau_gj(j) = kin.zj_j'*ni_fi;
             end
         end
+
+        function M = computeMassMatrix(kin, dyn, q)
+            % COMPUTEMASSMATRIX Computes the generalized inertia/mass matrix M(q) via RNEA.
+            %   M = COMPUTEMASSMATRIX(KIN, DYN, Q) returns the symmetric (NxN) mass matrix.
+            n = kin.n;
+            M = zeros(n, n);
+            zero_v = zeros(n, 1);
+            zero_g = zeros(3, 1);
+            
+            for j = 1:n
+                unit_acc = zeros(n, 1);
+                unit_acc(j) = 1.0;
+                M(:, j) = robotics.engines.DynamicsEngine.inverseDynamicsMNEA(...
+                    kin, q, zero_v, zero_v, unit_acc, zero_g, dyn.pj_j);
+            end
+            
+            % Enforce numerical symmetry
+            M = 0.5 * (M + M');
+        end
+
+        function Ek = computeKineticEnergy(kin, dyn, q, q_vel)
+            % COMPUTEKINETICENERGY Evaluates instantaneous kinetic energy 0.5 * q_vel' * M(q) * q_vel.
+            %   EK = COMPUTEKINETICENERGY(KIN, DYN, Q, Q_VEL)
+            M = robotics.engines.DynamicsEngine.computeMassMatrix(kin, dyn, q);
+            Ek = 0.5 * (q_vel(:)' * M * q_vel(:));
+        end
     end
 end
